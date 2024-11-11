@@ -1,0 +1,7 @@
+{
+  "name": "MealsMyWay",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
