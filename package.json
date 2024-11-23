@@ -1,5 +1,13 @@
 {
   "dependencies": {
     "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "scripts": {
+    "start": "concurrently \"npm run ionic-start\" \"npm run express-start\"",
+    "ionic-start": "cd ionic && ionic serve",
+    "express-start": "cd Express && node server.js"
   }
 }
