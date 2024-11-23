@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const pool = require('./db');
+const pool = require('./database');
 
 // Middleware
 app.use(cors()); // Allow requests from Ionic app
