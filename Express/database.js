@@ -42,7 +42,20 @@ async function listUsers() {
   }
 }
 
+async function listRecipes() {
+  try {
+    const result = await db.query('SELECT * FROM Recipes');
+    console.log('Recipes in the recipes table:');
+    result.rows.forEach(user => {
+      console.log(user);
+    });
+  } catch (err) {
+    console.error('Error retrieving recipes:', err.stack);
+  }
+}
+
 // Call the function to print all users
 listUsers();
+listRecipes();
 
 module.exports = db;
