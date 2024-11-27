@@ -1,5 +1,7 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const axios = require('axios');
+
 
 // Log environment variables to check they are being loaded correctly
 console.log(process.env.DB_HOST);
@@ -54,8 +56,48 @@ async function listRecipes() {
   }
 }
 
+async function listRecipeDetails() {
+  try {
+    const result = await db.query('SELECT * FROM Recipes');
+    console.log('Recipes in the recipes table:');
+
+    for (const recipe of result.rows) {
+      console.log(`Title: ${recipe.title}`);
+      
+      if (recipe.api_id) {
+        const response = await axios.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${recipe.api_id}`);
+        const meal = response.data.meals[0];
+
+        const ingredients = [];
+        for (let i = 1; i <= 20; i++) {
+          const ingredient = meal[`strIngredient${i}`];
+          const measure = meal[`strMeasure${i}`];
+          if (ingredient && ingredient.trim()) {
+            ingredients.push(`${ingredient} (${measure || 'to taste'})`);
+          }
+        }
+
+        console.log('Ingredients (from API):');
+        console.log(ingredients.join(', '));
+        console.log('Instructions (from API):');
+        console.log(meal.strInstructions);
+      } else {
+        console.log('Ingredients (from database):');
+        console.log(recipe.ingredients || 'No ingredients provided');
+        console.log('Instructions (from database):');
+        console.log(recipe.instructions || 'No instructions provided');
+      }
+
+      console.log('-----------------------------------');
+    }
+  } catch (err) {
+    console.error('Error retrieving recipes:', err.stack);
+  }
+}
+
 // Call the function to print all users
-listUsers();
-listRecipes();
+//listUsers();
+//listRecipes();
+listRecipeDetails();
 
 module.exports = db;
