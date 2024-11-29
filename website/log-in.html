@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/logging-in.css">
+    <title>Log In Page</title>
+</head>
+<body>
+    <div class="login-container">
+        <form action="/login" method="POST" id="loginForm">
+            <h1>Login to MealsMyWay</h1>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <button type="submit">Login</button>
+
+            <!-- Message and link inside the form box -->
+            <div class="create-account-message">
+                <p>Don't have an account?</p>
+                <a href="register.html">Create one here</a>
+            </div>
+        </form>
+    </div>
+    
+</body>
+</html>
