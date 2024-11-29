@@ -1,0 +1,123 @@
+/* CSS File for Global page formatting, and the home page */
+
+/* ========================= */
+/* General Page Formatting */
+/* ========================= */
+
+ion-content {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: var(--ion-padding);
+    background-color: #cbddd1; /* Ensure this matches your intended color */
+    color: var(--ion-text-color);
+}
+
+body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    background-color: #cbddd1; /* Fallback for non-Ionic elements */
+}
+
+ion-title {
+    font-size: 2.5rem;
+    color: #1F5014;
+    text-align: center;
+    font-weight: bold;
+    display: block;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #1F5014;
+    margin: 20px auto;
+}
+
+h3 {
+    text-align: center;
+    font-size: 25px;
+    color: var(--ion-text-color);
+}
+
+/* ========================= */
+/* Header and Logo Section */
+/* ========================= */
+
+/* Header Container */
+.header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column-reverse;
+    padding: var(--ion-padding);
+    background-color: #cbddd1;
+}
+
+/* Title inside of the header */
+.header ion-title {
+    color: #1F5014;
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 0;
+    padding: 10px 0;
+}
+
+/* Logo link container */
+.logo-section {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    z-index: 3;
+    padding-bottom: 50px;
+}
+
+/* Logo Size and Formatting */
+.logo {
+    width: 160px;
+    height: 160px;
+    border-radius: 20%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Nav bar container */
+.nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+/* Nav link container */
+.nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Nav link icon formatting */
+.nav-icon {
+    width: 100px;
+    height: auto;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 60px;
+}
+
+/* Profile nav link formatting */
+.prof-nav-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+/* Nav link icon label */
+.nav-label {
+    margin-top: 5px;
+    font-size: 14px;
+    color: var(--ion-text-color);
+}
