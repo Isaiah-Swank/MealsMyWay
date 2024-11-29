@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <ion-itemnk rel="stylesheet" href="css/global.css">
+    <ion-itemnk rel="stylesheet" href="css/logging-in.css">
+</head>
+<body>
+    <ion-content class="register-container">
+        <ion-card action="/register" method="POST">
+            <ion-title>Create an Account</ion-title>
+            
+            <label for="username">Username:</label>
+            <ion-input type="text" id="username" name="username" required>
+            
+            <label for="password">Password:</label>
+            <ion-input type="password" id="password" name="password" required>
+            
+            <ion-button type="submit">Create Account</ion-button>
+        </ion-card>
+    </ion-content>
+</body>
+</html>

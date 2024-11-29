@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <ion-itemnk rel="stylesheet" href="css/global.css">
+    <ion-itemnk rel="stylesheet" href="css/logging-in.css">
+    <title>Log In Page</title>
+</head>
+<body>
+    <ion-content class="login-container">
+        <ion-card action="/login" method="POST" id="loginForm">
+            <ion-title>Login to MealsMyWay</ion-title>
+            <label for="username">Username:</label>
+            <ion-input type="text" id="username" name="username" required>
+            
+            <label for="password">Password:</label>
+            <ion-input type="password" id="password" name="password" required>
+            
+            <ion-button type="submit">Login</ion-button>
+
+            <!-- Message and link inside the form box -->
+            <ion-content class="create-account-message">
+                <p>Don't have an account?</p>
+                <a href="register.html">Create one here</a>
+            </ion-content>
+        </ion-card>
+    </ion-content>
+    
+</body>
+</html>
