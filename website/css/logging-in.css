@@ -1,0 +1,84 @@
+/* CSS File for logging in and creating an account */
+
+/*  Log In Container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* Login container format */
+form {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Login information format*/
+form input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Login in button */
+form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #246d48;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+/* Hovering over log in button */
+form button:hover {
+    background-color: #1F5014;
+}
+
+/* Message to create an account */
+.create-account-message {
+    text-align: center; 
+    margin-top: 20px; 
+}
+
+/* Create an account font format*/
+.create-account-message p {
+    margin-bottom: 10px; /* Small space below the paragraph */
+    font-size: 14px; /* Smaller font size for the message */
+}
+
+/* Create an account button */
+.create-account-message a {
+    color: #14360c;
+    text-decoration: none;
+    font-size: 16px;
+    background-color: #f3f3f3;
+    padding: 10px 20px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+/* Hovering over create account button */
+.create-account-message a:hover {
+    background-color: #cbddd1;
+}
+
+/* Create an account container format */
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}

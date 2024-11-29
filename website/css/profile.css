@@ -1,0 +1,35 @@
+/* CSS File for the Profile Page */
+
+/* Profile Settings Container*/
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    gap: 10px;
+    margin-top: 20px;
+    margin-left: 20px;
+}
+
+/* Settings item container */
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 24px;
+}
+
+/* Size of the settings image */
+.user-settings {
+    width: 75px;
+    height: 75px;
+}
+
+/* Settings link */
+.profile-nav-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    gap: 10px;
+}

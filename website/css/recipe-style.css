@@ -1,0 +1,239 @@
+/* CSS File for the Recipe's Page */
+
+/* Recipe Book Container */
+.book-container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    padding: 20px;
+    background-color: #cbddd1;
+    position: relative;
+    z-index: 1;
+}
+
+/* My/Chosen Recipes and Choose Recipes Container */
+.my-recipes-container, .recipes-container {
+    flex: 1;
+    padding: 20px;
+    background-color: #fdf5d1;
+    border: 15px solid #1F5014;
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Allow for overlap */
+    z-index: 2; /* Bring containers to front */
+}
+
+/* Spacing for my recipes side */
+.my-recipes-container {
+    border-radius: 15px 0 0 15px;
+    margin-right: -30px; /* Overlap the spine */
+}
+
+/* Spacing for Choose recipes side */
+.recipes-container {
+    border-radius: 0 15px 15px 0;
+    margin-left: -30px; /* Overlap the spine */
+}
+
+/* Create new recipe button */
+.create-new-recipe {
+    background-color: #1F5014;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Create new recipe button hover */
+.create-new-recipe:hover {
+    background-color: #0b311b;
+}
+
+/* Favorite recipe format */
+.favorite {
+    color: gold;
+    cursor: pointer;
+}
+
+/* Recipe Search Bar */
+.search-bar {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    align-self: center;
+}
+
+/* Recipe Book Spine */
+.book-spine {
+    width: 100px; /* Increase width for visibility */
+    background-color: #0b311b;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 0; /* Ensure spine stays below containers */
+    position: relative;
+}
+
+/* Creating a recipe form */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Ensure it covers the entire viewport */
+    z-index: 1000; /* Ensure it appears above other elements */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent background */
+    overflow-y: auto; /* Allows scrolling if content overflows */
+}
+
+/* Center the modal content */
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 50%;
+    max-width: 600px;
+    margin: 50px auto; /* Center horizontally with auto margins */
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex; /* Flexbox for centering */
+    flex-direction: column; /* Ensure items stack vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    box-sizing: border-box;
+}
+
+/* Close Button */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #999;
+    font-size: 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+/* Close Button Hover */
+.close-button:hover {
+    color: #333;
+}
+
+/* Background of the recipe form */
+#recipe-form
+{
+    align-items: center;
+    background-color: #cbddd1;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 75%;
+}
+
+/* Recipe Form Styling */
+#recipe-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+/* Data input area for create new recipe form */
+#recipe-form input,
+#recipe-form textarea {
+    width: 100%; /* Ensure inputs span the full width of the modal content */
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    box-sizing: border-box; /* Includes padding in width calculations */
+}
+
+#recipe-form input:focus,
+#recipe-form textarea:focus {
+    border-color: #4CAF50; /* Adds a green outline on focus */
+    outline: none;
+}
+
+/* Add recipe button inside of form */
+#recipe-form button {
+    background-color: #1F5014;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Add recipe button inside of form hover */
+#recipe-form button:hover {
+    background-color: #45a049;
+}
+
+
+/* Recipe List Container */
+.recipe-list {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    flex-grow: 1; /* Ensure recipe list expands to fill space */
+}
+
+/* Recipe list item formatting */
+.recipe-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    background-color: #f5f5dc; /* Match the background of existing recipes */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* Recipe list item hovering */
+.recipe-list li:hover {
+    background-color: #eaeac4; /* Slightly lighter on hover */
+}
+
+/* Recipe Name Styling */
+.recipe-name {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Recipe Details Styling */
+.recipe-details {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+    display: none; /* Hidden by default */
+}
+
+.recipe-list li strong {
+    font-size: 18px;
+    color: #333;
+}
+
+.recipe-list li .favorite {
+    float: right;
+    color: #f39c12;
+    font-size: 20px;
+}
+

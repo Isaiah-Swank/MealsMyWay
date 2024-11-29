@@ -1,0 +1,108 @@
+/* CSS File for the Pantry/Freezer Page */
+
+/* Container for Pantry and Freezer */
+.container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin: 50px auto;
+    max-width: 1200px;
+}
+
+/* Pantry and Freezer containers */
+.pantry, .freezer {
+    padding: 20px;
+    border-radius: 10px;
+    width: 45%;
+    text-align: center;
+}
+
+/* Pantry Styles */
+.pantry {
+    background-color: #f6f6e9;
+}
+
+.pantry h2 {
+    color: #1F5014;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.pantry ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.pantry li {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    color: #1F5014;
+}
+
+/* Freezer Styles */
+.freezer {
+    position: relative;
+    background-color: #f6f6e9;
+    padding-top: 40px; /* To make room for the icicle image */
+}
+
+.icicles {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: auto;
+    max-height: 100px; /* Adjust the size as needed */
+    z-index: 1;
+}
+
+.freezer h2 {
+    color: #1F5014;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.freezer ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.freezer li {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    color: #1F5014;
+}
+
+/* Edit Button Styles */
+.edit-button-pantry {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #cbddd1;
+    color: #000000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit-button-freezer {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #cbddd1;
+    color: #000000;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit-button-pantry:hover {
+    background-color: #246d48;
+}
+
+.edit-button-freezer:hover {
+    background-color: #246d48;
+}
