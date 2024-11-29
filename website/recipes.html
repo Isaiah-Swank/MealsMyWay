@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/recipe-style.css">
     <title>Recipes Page</title>
 </head>
 <body>
@@ -23,6 +24,26 @@
                 <li>Beef Noodles <span class="favorite">&#9733;</span></li>
                 <li>Peruvian Puff Pepper Chili</li>
             </ul>
+            <ul id="new-recipe-list"></ul>
+        </div>
+        
+        <div id="recipe-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Create a New Recipe</h2>
+                <form id="recipe-form">
+                    <label for="recipe-name">Recipe Name:</label>
+                    <input type="text" id="recipe-name" required><br>
+                    <label for="recipe-steps">Steps:</label>
+                    <textarea id="recipe-steps" rows="4" required></textarea><br>
+                    <label for="recipe-ingredients">Ingredients:</label>
+                    <textarea id="recipe-ingredients" rows="4" required></textarea><br>
+                    <label for="recipe-author">Author:</label>
+                    <input type="text" id="recipe-author" required><br>
+                    <button type="submit">Add Recipe</button>
+                </form>
+                <ul id="new-recipe-list"></ul>
+            </div>
         </div>
 
         <div class="book-spine"></div>
@@ -39,6 +60,7 @@
             </ul>
         </div>
     </div>
+
     <script src="scripts/script.js"></script>
 </body>
 </html>
