@@ -1,0 +1,47 @@
+/* Default layout for desktop/tablet */
+.recipes-container {
+    display: flex;
+    flex-direction: row-reverse; /* Recipe list on the right side */
+    gap: 20px; /* Space between the list and the details */
+    padding: 10px;
+  }
+  
+  /* Recipe list styles */
+  .recipes-list {
+    width: 40%; /* Adjust width as needed */
+    max-height: 100%; /* Ensure the list takes up full height */
+    overflow-y: auto; /* Make the list scrollable if there are many recipes */
+  }
+  
+  /* Recipe details styles */
+  .recipe-details {
+    width: 60%; /* Adjust width as needed */
+    max-height: 100%; /* Ensure the details section takes up full height */
+    overflow-y: auto; /* Make the details scrollable if content overflows */
+  }
+  
+  /* Mobile-specific layout */
+  .mobile-view {
+    flex-direction: column; /* Stack the list and details vertically */
+  }
+  
+  .mobile-view .recipes-list {
+    width: 100%; /* Full width for the recipe list */
+    margin-bottom: 20px; /* Space between the list and details */
+  }
+  
+  .mobile-view .recipe-details {
+    width: 100%; /* Full width for recipe details */
+  }
+  
+  /* Optional: Add responsive padding for mobile */
+  @media (max-width: 767px) {
+    .recipes-container {
+      padding: 10px;
+    }
+  
+    .recipe-details {
+      padding: 15px; /* Add padding to recipe details */
+    }
+  }
+  

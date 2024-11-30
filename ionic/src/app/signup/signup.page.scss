@@ -1,0 +1,33 @@
+.signup-container {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100% !important;
+    padding: 20px !important;
+}
+
+form {
+    width: 100% !important;
+    max-width: 400px !important;
+}
+
+ion-item {
+    margin-bottom: 20px !important; /* Add spacing between input fields */
+}
+
+ion-label {
+    margin-bottom: 5px !important; /* Add a little space between the label and the input field */
+}
+
+ion-input {
+    padding-left: 10px !important; /* Add some padding inside the input field */
+}
+
+ion-button {
+    margin-top: 20px !important; /* Add some space before the submit button */
+}
+
+ion-button[fill="clear"] {
+    margin-top: 10px !important; /* Add space before the login navigation button */
+}

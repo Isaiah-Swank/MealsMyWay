@@ -1,79 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Calendar</title>
-    <ion-itemnk rel="stylesheet" href="css/global.css">
-    <ion-itemnk rel="stylesheet" href="css/calendar.css">
-</head>
-<body>
-    <ion-header class="header">
-        <a href="index.html" class="logo-section">
-            <img src="images/Trans-Meals-My-Way-Logo.png" alt="MealsMyWay Logo" class="logo">
-        </a>
-        <h1>Weekly Meal Prep Calendar</h1>
+<ion-header [translucent]="true">
+    <ion-toolbar>
+      <ion-title>
+        Calendar
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-content [fullscreen]="true">
+    <ion-header collapse="condense">
+      <ion-toolbar>
+        <ion-title size="large">calendar</ion-title>
+      </ion-toolbar>
     </ion-header>
-
-    <ion-content class="calendar-container">
-        <ion-content class="calendar-header">
-            <ion-button id="prev-week">Previous Week</ion-button>
-            <h2 id="current-week">Week of: </h2>
-            <ion-button id="next-week">Next Week</ion-button>
-        </ion-content>
-        <ion-content class="calendar">
-            <ion-content class="day" id="sunday">
-                <h3>Sunday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="monday">
-                <h3>Monday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="tuesday">
-                <h3>Tuesday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="wednesday">
-                <h3>Wednesday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="thursday">
-                <h3>Thursday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="friday">
-                <h3>Friday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-            <ion-content class="day" id="saturday">
-                <h3>Saturday</h3>
-                <ion-content class="events"></ion-content>
-            </ion-content>
-        </ion-content>
-
-        <!-- Add Event Container -->
-        <ion-content class="add-event-container">
-            <h3>Add Meal</h3>
-            <ion-input type="text" id="event-name" placeholder="Enter Meal">
-            <select id="event-day">
-                <option value="sunday">Sunday</option>
-                <option value="monday">Monday</option>
-                <option value="tuesday">Tuesday</option>
-                <option value="wednesday">Wednesday</option>
-                <option value="thursday">Thursday</option>
-                <option value="friday">Friday</option>
-                <option value="saturday">Saturday</option>
-            </select>
-            <ion-button id="add-event">Add Meal</ion-button>
-        </ion-content>
-
-        <ion-content class="button-container">
-            <ion-button id="generate-shopping-list">Generate Shopping List</ion-button>
-            <ion-button id="generate-prep-list">Generate Prep List</ion-button>
-        </ion-content>
-    </ion-content>
-
-    <script src="scripts/script.js"></script>
-</body>
-</html>
+  
+  </ion-content>

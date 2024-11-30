@@ -1,6 +1,13 @@
 require('dotenv').config();
+const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
+const app = express();
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(cors());
 
 
 // Log environment variables to check they are being loaded correctly
@@ -43,6 +50,34 @@ async function listUsers() {
     console.error('Error retrieving users:', err.stack);
   }
 }
+
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send({ message: 'Username and password are required' });
+  }
+
+  try {
+    // Query the users table to check if the username and password exist
+    const query = 'SELECT * FROM users WHERE username = $1 AND password = $2';
+    const values = [username, password];
+    const result = await client.query(query, values);
+
+    if (result.rows.length > 0) {
+      // User found, respond with success
+      return res.status(200).send({ message: 'Login successful' });
+    } else {
+      // User not found
+      return res.status(401).send({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('Error executing query', error.stack);
+    return res.status(500).send({ message: 'Server error' });
+  }
+});
+
+
 
 async function listRecipes() {
   try {
