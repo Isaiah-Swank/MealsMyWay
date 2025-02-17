@@ -1,1 +1,16 @@
+ion-content {
+    --background: #246d48;
 
+}
+
+ion-tab-button {
+  --color-selected: #cbddd1; /* Replace with your desired light green */
+}
+
+ion-tab-button:hover ion-icon,
+ion-tab-button:hover ion-label {
+  color: #246d48; /* Your desired darker green */
+}
+
+
+  

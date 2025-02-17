@@ -5,15 +5,40 @@
     align-items: center !important;
     height: 100% !important;
     padding: 20px !important;
+    background: #cbddd1;
+
+    ion-button {
+        margin-top: 20px !important; /* Add some space before the submit button */
+        background-color: #246d48;
+        color: #cbddd1;
+    }
+
+    form{
+        width: 100% !important;
+        max-width: 400px !important;
+    }
 }
 
-form {
-    width: 100% !important;
-    max-width: 400px !important;
+/* Header styling */
+ion-title{
+    font-size: 32px;
+    justify-self: center;
+    color: #246d48;
+}
+
+/* Sign Up Button Styling */
+ion-button[type="submit"] {
+    --background: #246d48;
+    --color: #cbddd1;
 }
 
 ion-item {
     margin-bottom: 20px !important; /* Add spacing between input fields */
+
+    ion-label {
+        margin-bottom: 5px !important; /* Add a little space between the label and the input field */
+        color: #246d48;
+    }
 }
 
 ion-label {
@@ -22,10 +47,6 @@ ion-label {
 
 ion-input {
     padding-left: 10px !important; /* Add some padding inside the input field */
-}
-
-ion-button {
-    margin-top: 20px !important; /* Add some space before the submit button */
 }
 
 ion-button[fill="clear"] {

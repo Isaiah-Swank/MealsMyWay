@@ -1,37 +1,43 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Login</ion-title>
-  </ion-toolbar>
+    <ion-toolbar>
+      <ion-title>Log In</ion-title>
+    </ion-toolbar>
 </ion-header>
-
+  
 <ion-content [fullscreen]="true">
-  <div class="login-container">
-    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-      <ion-item>
-        <ion-label position="floating">Username</ion-label>
-        <ion-input 
-          type="text" 
-          [(ngModel)]="username" 
-          name="username" 
-          required>
-        </ion-input>
-      </ion-item>
-
-      <ion-item>
-        <ion-label position="floating">Password</ion-label>
-        <ion-input 
-          type="password" 
-          [(ngModel)]="password" 
-          name="password" 
-          required>
-        </ion-input>
-      </ion-item>
-
-      <ion-button expand="block" type="submit" [disabled]="!loginForm.form.valid">
-        Login
-      </ion-button>
-    </form>
-
-    <ion-button fill="clear" routerLink="/signup">Don't have an account? Sign up</ion-button>
-  </div>
+    <div class="login-container">
+      <form action="/login" method="POST" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <ion-item>
+          <ion-label position="floating">Username</ion-label>
+          <ion-input 
+            type="text" 
+            id="username" 
+            name="username" 
+            [(ngModel)]="username" 
+            required>
+          </ion-input>
+        </ion-item>
+  
+        <ion-item>
+          <ion-label position="floating">Password</ion-label>
+          <ion-input 
+            type="password" 
+            id="password" 
+            name="password" 
+            [(ngModel)]="password" 
+            required>
+          </ion-input>
+        </ion-item>
+  
+        <ion-button expand="block" type="submit" [disabled]="!loginForm.form.valid">
+          Login
+        </ion-button>
+  
+        <div class="create-account-message">
+          <p>Don't have an account?</p>
+          <ion-button fill="clear" routerLink="/signup">Create one here</ion-button>
+        </div>
+      </form>
+    </div>
 </ion-content>
+  

@@ -1,8 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Profile
-    </ion-title>
+    <ion-title>Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -13,8 +11,32 @@
     </ion-toolbar>
   </ion-header>
 
-  <!-- Display Username -->
   <div class="profile-container">
-    <h2>Welcome, {{ username }}!</h2> <!-- Bind the username here -->
+    <h2>Welcome, {{ username }}!</h2>
+    
+    <div class="settings-container">
+      <div class="settings-item">
+        <img src="assets/images/email.png" alt="User Email" class="user-settings">
+        <p>Email</p>
+      </div>
+      <div class="settings-item">
+        <img src="assets/images/password.png" alt="User Password" class="user-settings">
+        <p>Password</p>
+      </div>
+      <div class="settings-item">
+        <img src="assets/images/privacy.png" alt="Privacy Settings" class="user-settings">
+        <p>Privacy</p>
+      </div>
+      <div class="settings-item">
+        <img src="assets/images/share.png" alt="Shared Plans" class="user-settings">
+        <p>Shared Plans</p>
+      </div>
+      <div class="settings-item">
+        <a routerLink="/login" class="profile-nav-link">
+          <img src="assets/images/sign-out.png" alt="Sign Out" class="user-settings">
+          <p>Sign Out</p>
+        </a>
+      </div>
+    </div>
   </div>
 </ion-content>

@@ -1,68 +1,68 @@
-/* CSS File for the Calendar Page */
+ion-content{
+    --background: #cbddd1;
+}
+
+ion-title{
+  font-size: 32px;
+  justify-self: center;
+  color: #246d48;
+}
 
 /* Container for the calendar */
-.ion-grid {
+.calendar-container {
     width: 80%;
     max-width: 900px;
     margin: 20px auto;
 }
-
-/* Header for Previous Week, Week of, and Next Week */
+  
+  /* Calendar Header for Previous Week, Week of, and Next Week */
 .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
-
-/* Text for Week of (current date) */
+  
 .calendar-header h2 {
-    color: var(--ion-text-color);
+    color: #246d48;
 }
-
-/* Previous Week and Next Week Button */
+  
+  /* Override Ionic button styling to match our design */
 ion-button {
-    padding: var(--ion-padding);
-    background-color: #1F5014;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
+    --background: #246d48;
+    --color: #fff;
+    --border-radius: 5px;
+    padding: 10px;
     cursor: pointer;
 }
-
-/* Previous Week and Next Week Button Hover */
-ion-button:hover {
-    background-color: #14360c;
-}
-
-/* Calendar formatting */
+  
+  /* Calendar Grid Styling */
 .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 10px;
 }
-
-/* Day Cell Formatting */
-.day {
+  
+  /* Day Cell Styling */
+.day 
+  {
     background-color: #fff;
-    padding: var(--ion-padding);
+    padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    color: var(--ion-text-color);
+    color: #246d48;
 }
-
-/* Name of the day formatting */
+  
 .day h3 {
     margin: 0;
     font-size: 18px;
-    color: var(--ion-text-color);
+    color: #246d48;
 }
-
-/* Spacing below the name of day for added meals */
-.events {
+  
+  .events {
     margin-top: 10px;
 }
-
+  
 /* Add Meal Container */
 .add-event-container {
     margin: 20px auto;
@@ -72,63 +72,46 @@ ion-button:hover {
     flex-direction: column;
     gap: 10px;
 }
-
-/* Formatting for Enter meal and picking the day section */
-.add-event-container input,
-.add-event-container select,
+  
+  /* Style Ionic inputs, selects, and buttons in Add Meal Container */
+.add-event-container ion-input,
+.add-event-container ion-select,
 .add-event-container ion-button {
-    padding: var(--ion-padding);
-    margin-top: 5px;
+    padding: 10px;
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
-
-/* Add Meal Button Formatting */
+  
+  /* Adjust Add Meal Button (overriding any Ionic defaults) */
 .add-event-container ion-button {
-    background-color: #1F5014;
-    color: #fff;
+    --background: #246d48;
+    --color: #fff;
     cursor: pointer;
 }
 
-/* Add Meal Button Hovering */
-.add-event-container ion-button:hover {
-    background-color: #14360c;
+.add-event-container h3 {
+  text-align: center;
+  color: #246d48;
 }
-
-/* Meal inside of calendar formatting */
-.event-item {
-    margin-top: 5px;
-    padding: var(--ion-padding);
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    color: var(--ion-text-color);
-}
-
-/* Generate Grocery List and Prep List Button Container */
-.ion-button-container {
+  
+  /* Bottom Button Container */
+.button-container {
     margin: 40px auto;
     display: flex;
     justify-content: space-around;
     width: 80%;
     max-width: 900px;
 }
-
-/* Generate Grocery List and Prep List Buttons */
-#generate-shopping-list,
-#generate-prep-list {
-    padding: var(--ion-padding);
+  
+  /* Adjust Bottom Buttons */
+.button-container ion-button {
+    padding: 10px 15px;
     font-size: 16px;
-    background-color: #1F5014;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
+    --background: #246d48;
+    --color: #fff;
+    --border-radius: 5px;
     cursor: pointer;
 }
-
-/* Generate Grocery List and Prep List Button Hovering */
-#generate-shopping-list:hover,
-#generate-prep-list:hover {
-    background-color: #0b311b;
-}
+  
+  

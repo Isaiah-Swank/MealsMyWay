@@ -1,0 +1,106 @@
+ion-content {
+    --background: #cbddd1;
+}
+
+ion-title{
+  font-size: 32px;
+  justify-self: center;
+  color: #246d48;
+}
+
+/* Container for Pantry and Freezer */
+.container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  margin: 50px auto;
+  max-width: 1200px;
+  flex-wrap: wrap;
+}
+
+/* Pantry and Freezer containers */
+.pantry,
+.freezer {
+  padding: 20px;
+  border-radius: 10px;
+  width: 45%;
+  text-align: center;
+  background-color: #f6f6e9;
+}
+
+/* Pantry Styles */
+.pantry h2 {
+  color: #246d48;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.pantry ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.pantry li {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  color: #246d48;
+}
+
+/* Freezer Styles */
+.freezer {
+  position: relative;
+  padding-top: 40px; /* Space for the icicle image */
+}
+
+.icicles {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: auto;
+  max-height: 80px;
+  z-index: 1;
+}
+
+.freezer h2 {
+  color: #1F5014;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.freezer ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.freezer li {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  color: #246d48;
+}
+
+/* Edit Button Styles */
+/* Ionic buttons can be styled via CSS custom properties */
+.edit-button-pantry,
+.edit-button-freezer {
+  margin-top: 20px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --background: #246d48;
+  --color: #cbddd1;
+  --border-radius: 5px;
+  --border: none;
+}
+
+.edit-button-pantry:hover,
+.edit-button-freezer:hover {
+  --background: #246d48;
+}
+
