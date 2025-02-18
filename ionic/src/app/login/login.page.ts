@@ -38,8 +38,8 @@ export class LoginPage {
           // Handle response and navigate if authentication is successful
           if (response.message === 'Login successful') {
             this.userService.setUsername(this.username);
-            // Navigate to home if successful
-            this.router.navigate(['/tabs/home']);
+            // Navigate to calendar/home if successful
+            this.router.navigate(['/tabs/calendar']);
           } else {
             alert('Invalid credentials');
           }
