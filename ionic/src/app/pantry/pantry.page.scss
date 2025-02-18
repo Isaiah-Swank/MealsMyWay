@@ -23,6 +23,7 @@ ion-title{
 .freezer {
   padding: 20px;
   border-radius: 10px;
+  border: 10px solid #77ba8f;
   width: 45%;
   text-align: center;
   background-color: #f6f6e9;
@@ -104,3 +105,37 @@ ion-title{
   --background: #246d48;
 }
 
+.pantry ul li:hover,
+.freezer ul li:hover {
+  background-color: #cbddd1; /* light gray background on hover */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* For the freezer list items, use flex to space out content */
+.freezer ul li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Style the container for plus and minus controls */
+.freezer ul li .item-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Style the plus and minus controls */
+.freezer ul li .item-controls span {
+  background-color: #f6f6e9;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for the plus and minus controls */
+.freezer ul li .item-controls span:hover {
+  background-color: #77ba8f;
+}
