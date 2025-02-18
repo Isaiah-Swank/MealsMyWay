@@ -1,8 +1,8 @@
-ion-content{
-    --background: #cbddd1;
+ion-content {
+  --background: #cbddd1;
 }
 
-ion-title{
+ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
@@ -10,108 +10,146 @@ ion-title{
 
 /* Container for the calendar */
 .calendar-container {
-    width: 80%;
-    max-width: 900px;
-    margin: 20px auto;
+  width: 90%;
+  max-width: 1600px;
+  margin: 20px auto;
 }
-  
-  /* Calendar Header for Previous Week, Week of, and Next Week */
+
+/* Calendar Header: arranged as a column */
 .calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+  display: flex;
+  position: relative;
+  justify-content: center;
+  padding: 10px;
+  margin-bottom: 20px;
 }
-  
-.calendar-header h2 {
-    color: #246d48;
+
+/*
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center; centers the week-of text 
+  position: relative;
+  padding: 10px;
+  margin-bottom: 20px;
 }
-  
-  /* Override Ionic button styling to match our design */
+*/
+
+/* Restrict the width and prevent stretching of the dropdown */
+.previous-plan-container {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  flex: 0 0 auto; /* Prevents flex from stretching it */
+  width: auto;
+  min-width: 200px; /* Set a minimum width if needed */
+  max-width: 300px; /* Set a maximum width if needed */
+}
+
+/* Row for the dropdown: align left */
+.header-dropdown {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+
+/* Row for the "Week of:" message: centered */
+.header-date {
+  text-align: center;
+  font-size: 1.5em;
+  width: 100%;
+  color: #246d48;
+}
+
+/* Override Ionic button styling */
 ion-button {
-    --background: #246d48;
-    --color: #fff;
-    --border-radius: 5px;
-    padding: 10px;
-    cursor: pointer;
+  --background: #246d48;
+  --color: #fff;
+  --border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
 }
-  
-  /* Calendar Grid Styling */
+
+/* Calendar Grid Styling */
 .calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
 }
-  
-  /* Day Cell Styling */
-.day 
-  {
-    background-color: #fff;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    color: #246d48;
+
+/* Day Cell Styling */
+.day {
+  background-color: #fff;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  color: #246d48;
 }
-  
+
 .day h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #246d48;
+  margin: 0;
+  font-size: 18px;
+  color: #246d48;
 }
-  
-  .events {
-    margin-top: 10px;
+
+.events {
+  margin-top: 10px;
 }
-  
+
 /* Add Meal Container */
 .add-event-container {
-    margin: 20px auto;
-    width: 80%;
-    max-width: 900px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-  
-  /* Style Ionic inputs, selects, and buttons in Add Meal Container */
+
+/* Style Ionic inputs, selects, and buttons in Add Meal Container */
 .add-event-container ion-input,
 .add-event-container ion-select,
 .add-event-container ion-button {
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
-  
-  /* Adjust Add Meal Button (overriding any Ionic defaults) */
+
 .add-event-container ion-button {
-    --background: #246d48;
-    --color: #fff;
-    cursor: pointer;
+  --background: #246d48;
+  --color: #fff;
+  cursor: pointer;
 }
 
 .add-event-container h3 {
   text-align: center;
   color: #246d48;
 }
-  
-  /* Bottom Button Container */
+
+/* Bottom Button Container */
 .button-container {
-    margin: 40px auto;
-    display: flex;
-    justify-content: space-around;
-    width: 80%;
-    max-width: 900px;
+  margin: 40px auto;
+  display: flex;
+  justify-content: space-around;
+  width: 80%;
+  max-width: 900px;
 }
-  
-  /* Adjust Bottom Buttons */
+
+/* Adjust Bottom Buttons */
 .button-container ion-button {
-    padding: 10px 15px;
-    font-size: 16px;
-    --background: #246d48;
-    --color: #fff;
-    --border-radius: 5px;
-    cursor: pointer;
+  padding: 10px 15px;
+  font-size: 16px;
+  --background: #246d48;
+  --color: #fff;
+  --border-radius: 5px;
+  cursor: pointer;
 }
-  
-  
+
+/* Limit the height of the popover for the ion-select dropdown */
+::ng-deep .select-popover .popover-content {
+  max-height: 300px; /* Adjust as needed */
+  overflow-y: auto;
+}
+
+

@@ -8,57 +8,119 @@
   <div class="calendar-container">
     <!-- Calendar Header -->
     <div class="calendar-header">
-      <ion-button id="prev-week">Previous Week</ion-button>
-      <h2 id="current-week">Week of: </h2>
-      <ion-button id="next-week">Next Week</ion-button>
+      <!-- Previous Plans Dropdown with custom class to restrict width -->
+      <ion-item>
+        <ion-select 
+          class="previous-plan-select" 
+          placeholder="Previous Plans" 
+          [(ngModel)]="selectedPlan" 
+          selectedText="Previous Plans"
+          interface="popover">
+          <ion-select-option *ngFor="let plan of plans" [value]="plan">
+            {{ plan | date:'longDate' }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <!-- "Week of:" Header -->
+      <h2 id="current-week" class="header-date">
+        Week of: {{ selectedPlan | date:'longDate' }}
+      </h2>
+
+      <ion-button id="generate-shopping-list">Save Calendar</ion-button>
     </div>
 
     <!-- Calendar Grid -->
     <div class="calendar">
+      <!-- Sunday Column -->
       <div class="day" id="sunday">
         <h3>Sunday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['sunday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Monday Column -->
       <div class="day" id="monday">
         <h3>Monday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['monday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Tuesday Column -->
       <div class="day" id="tuesday">
         <h3>Tuesday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['tuesday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Wednesday Column -->
       <div class="day" id="wednesday">
         <h3>Wednesday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['wednesday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Thursday Column -->
       <div class="day" id="thursday">
         <h3>Thursday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['thursday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Friday Column -->
       <div class="day" id="friday">
         <h3>Friday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['friday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
+      <!-- Saturday Column -->
       <div class="day" id="saturday">
         <h3>Saturday</h3>
-        <div class="events"></div>
+        <div class="events">
+          <div *ngFor="let event of currentWeekEvents['saturday']">
+            {{ event.title }}
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Add Meal Section -->
     <div class="add-event-container">
       <h3>Add Meal</h3>
-      <ion-input type="text" id="event-name" placeholder="Enter Meal"></ion-input>
-      <ion-select id="event-day" placeholder="Select Day">
-        <ion-select-option value="sunday">Sunday</ion-select-option>
-        <ion-select-option value="monday">Monday</ion-select-option>
-        <ion-select-option value="tuesday">Tuesday</ion-select-option>
-        <ion-select-option value="wednesday">Wednesday</ion-select-option>
-        <ion-select-option value="thursday">Thursday</ion-select-option>
-        <ion-select-option value="friday">Friday</ion-select-option>
-        <ion-select-option value="saturday">Saturday</ion-select-option>
-      </ion-select>
-      <ion-button id="add-event">Add Meal</ion-button>
+      <!-- Select Meal Dropdown using popover interface -->
+      <ion-item>
+        <ion-select placeholder="Select Meal" [(ngModel)]="selectedMeal" interface="popover">
+          <ion-select-option *ngFor="let recipe of recipes" [value]="recipe">
+            {{ recipe.title }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <!-- Select Day Dropdown -->
+      <ion-item>
+        <ion-select placeholder="Select Day" [(ngModel)]="selectedDay">
+          <ion-select-option value="sunday">Sunday</ion-select-option>
+          <ion-select-option value="monday">Monday</ion-select-option>
+          <ion-select-option value="tuesday">Tuesday</ion-select-option>
+          <ion-select-option value="wednesday">Wednesday</ion-select-option>
+          <ion-select-option value="thursday">Thursday</ion-select-option>
+          <ion-select-option value="friday">Friday</ion-select-option>
+          <ion-select-option value="saturday">Saturday</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <!-- Add Meal Button -->
+      <ion-button (click)="addMeal()">Add Meal</ion-button>
     </div>
 
     <!-- Bottom Buttons Container -->
