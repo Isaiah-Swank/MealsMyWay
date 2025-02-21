@@ -1,4 +1,7 @@
-ion-content {
+/******************************************
+ * Global page background and title
+ ******************************************/
+ ion-content {
   --background: #cbddd1;
 }
 
@@ -8,14 +11,21 @@ ion-title {
   color: #246d48;
 }
 
-/* Container for the calendar */
+/******************************************
+ * Main container for the calendar layout
+ ******************************************/
 .calendar-container {
   width: 90%;
   max-width: 1600px;
   margin: 20px auto;
 }
 
-/* Calendar Header: arranged as a column */
+/******************************************
+ * Calendar header at top
+ * - Includes "Previous Plans" dropdown
+ * - Shows "Week of:" text
+ * - "Share Calendar" button
+ ******************************************/
 .calendar-header {
   display: flex;
   position: relative;
@@ -24,36 +34,7 @@ ion-title {
   margin-bottom: 20px;
 }
 
-/*
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center; centers the week-of text 
-  position: relative;
-  padding: 10px;
-  margin-bottom: 20px;
-}
-*/
-
-/* Restrict the width and prevent stretching of the dropdown */
-.previous-plan-container {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  flex: 0 0 auto; /* Prevents flex from stretching it */
-  width: auto;
-  min-width: 200px; 
-  max-width: 300px; 
-}
-
-/* Row for the dropdown: align left */
-.header-dropdown {
-  align-self: flex-start;
-  margin-bottom: 10px;
-}
-
-/* Row for the "Week of:" message: centered */
+/* Header date text */
 .header-date {
   text-align: center;
   font-size: 1.5em;
@@ -61,7 +42,7 @@ ion-title {
   color: #246d48;
 }
 
-/* Override Ionic button styling */
+/* Override Ionic button styling for general usage */
 ion-button {
   --background: #246d48;
   --color: #fff;
@@ -70,14 +51,16 @@ ion-button {
   cursor: pointer;
 }
 
-/* Calendar Grid Styling */
+/******************************************
+ * Calendar grid: 7 columns for days
+ ******************************************/
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;
 }
 
-/* Day Cell Styling */
+/* Each day cell styling */
 .day {
   background-color: #fff;
   padding: 10px;
@@ -96,82 +79,27 @@ ion-button {
   margin-top: 10px;
 }
 
-/* Add Meal Container */
-.add-event-container {
-  margin: 20px auto;
-  width: 80%;
-  max-width: 900px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Hover effect for each event in the calendar */
+.calendar .events div:hover {
+  background-color: #cbddd1;
+  transition: background-color 0.3s ease;
 }
 
-/* Style Ionic inputs, selects, and buttons in Add Meal Container */
-.add-event-container ion-input,
-.add-event-container ion-select,
-.add-event-container ion-button {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
+/******************************************
+ * (REMOVED) .add-event-container 
+ * Previously used for adding events,
+ * replaced by .add-meal-form
+ ******************************************/
 
-.add-event-container ion-button {
-  --background: #246d48;
-  --color: #fff;
-  cursor: pointer;
-}
-
-.add-event-container h3 {
-  text-align: center;
-  color: #246d48;
-}
-
-/* Bottom Button Container 
-.button-container {
-  margin: 40px auto;
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  max-width: 1200px;
-}
-
-*/
-
-/* Adjust Bottom Buttons 
-.button-container ion-button {
-  padding: 10px 15px;
-  font-size: 16px;
-  --background: #246d48;
-  --color: #fff;
-  --border-radius: 5px;
-  cursor: pointer;
-}
-
-*/
-
-/* Limit the height of the popover for the ion-select dropdown */
-::ng-deep .select-popover .popover-content {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-ion-button .calendar-button {
-  --width: 200px;
-  --height: 50px;
-  --background: #246d48;
-  --color: #fff;
-  --border-radius: 5px;
-  padding: 10px;
-  cursor: pointer;
-}
-
-/* Bottom Button Container */
+/******************************************
+ * Bottom button container
+ * - Aligns the 3 main feature buttons
+ ******************************************/
 .button-container {
   margin: 40px auto;
   display: flex;
   justify-content: center;
-  gap: 40px; /* Adjust this value to bring buttons closer or further apart */
+  gap: 40px;
   width: 100%;
   max-width: 1200px;
 }
@@ -186,4 +114,60 @@ ion-button .calendar-button {
   --color: #fff;
   --border-radius: 5px;
   cursor: pointer;
+}
+
+/******************************************
+ * Meal Section Container
+ * - Two columns: Recipe Details & Add Meal
+ ******************************************/
+.meal-section-container {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 40px;
+  margin: 20px auto;
+  width: 90%;
+  max-width: 1200px;
+  align-items: stretch;
+}
+
+/* Left side: recipe details or recipe list */
+.recipe-details {
+  flex: 2;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border: 15px solid #246d48;
+  border-radius: 5px;
+}
+
+/* Right side: add meal form */
+.add-meal-form {
+  flex: 1;
+  background-color: #fff;
+  padding: 15px;
+  border: 15px solid #246d48;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-meal-form .form-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+/* Common heading styling in these sections */
+.recipe-details h3,
+.add-meal-form h3 {
+  text-align: center;
+  color: #246d48;
+}
+
+/******************************************
+ * Force smaller popover height for ion-select
+ ******************************************/
+::ng-deep .select-popover .popover-content {
+  max-height: 300px;
+  overflow-y: auto;
 }

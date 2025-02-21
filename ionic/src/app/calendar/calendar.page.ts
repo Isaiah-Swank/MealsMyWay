@@ -7,44 +7,92 @@ import { RecipeService } from '../services/recipe.service';
   styleUrls: ['calendar.page.scss']
 })
 export class Tab2Page implements OnInit {
-  // The current week's Sunday
+  /**
+   * The date (Sunday) that starts the "current" week.
+   */
   currentWeekStart!: Date;
-  // Array of weeks including the current week and previous weeks (each starting on Sunday)
+
+  /**
+   * Array of weeks (each starts on a Sunday) 
+   * including the current week and previous weeks.
+   */
   plans: Date[] = [];
-  // The selected week (defaults to the current week)
+
+  /**
+   * The selected plan/week from the dropdown;
+   * defaults to the current week's start date.
+   */
   selectedPlan!: Date;
 
-  // --- New properties for meals ---
+  /**
+   * All recipes loaded from RecipeService.
+   */
   recipes: any[] = [];
+
+  /**
+   * Currently selected recipe (for the add-meal form).
+   */
   selectedMeal: any = null;
+
+  /**
+   * Currently selected day of the week (for the add-meal form).
+   */
   selectedDay: string = '';
-  // Events are stored per week (keyed by the week's date string), then per day.
+
+  /**
+   * Event storage structure:
+   * {
+   *   'WeekKey (toDateString)': {
+   *       sunday: [{...mealObj}, ...],
+   *       monday: [...],
+   *       ...
+   *   },
+   *   ...
+   * }
+   */
   events: { [week: string]: { [day: string]: any[] } } = {};
+
+  /**
+   * The recipe the user is currently hovering over,
+   * used to display recipe details in the UI.
+   */
+  hoveredRecipe: any = null;
 
   constructor(private recipeService: RecipeService) {}
 
+  /**
+   * Lifecycle hook:
+   * - Sets current week's start date (Sunday)
+   * - Initializes selectedPlan to current week
+   * - Builds list of previous weeks
+   * - Loads recipes from the service
+   */
   ngOnInit() {
     this.setCurrentWeekStart();
-    // Initialize selectedPlan to the current week.
     this.selectedPlan = this.currentWeekStart;
     this.generatePlans();
     this.loadRecipes();
   }
 
-  // Calculate and set the current week's Sunday.
+  /**
+   * Calculates the date of the most recent Sunday
+   * (start of the current week).
+   */
   setCurrentWeekStart() {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, etc.
+    const dayOfWeek = today.getDay(); // Sunday=0, Monday=1, ...
     const sunday = new Date(today);
     sunday.setDate(today.getDate() - dayOfWeek);
     this.currentWeekStart = sunday;
   }
 
-  // Generate an array of plans including the current week and previous weeks.
+  /**
+   * Generate an array of weeks:
+   * - Current week is first
+   * - Followed by 19 previous weeks
+   */
   generatePlans() {
-    // Include the current week at the top.
     this.plans.push(this.currentWeekStart);
-    // Generate 19 previous weeks so the dropdown has a total of 20 weeks.
     const numberOfPreviousWeeks = 19;
     for (let i = 1; i <= numberOfPreviousWeeks; i++) {
       const previousSunday = new Date(this.currentWeekStart);
@@ -53,7 +101,10 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  // Load recipes from RecipeService
+  /**
+   * Fetches recipes from the RecipeService 
+   * and populates this.recipes.
+   */
   loadRecipes() {
     this.recipeService.getRecipes().subscribe(
       (recipes) => {
@@ -65,11 +116,13 @@ export class Tab2Page implements OnInit {
     );
   }
 
-  // Helper getter to retrieve the events for the currently selected week.
+  /**
+   * Return events for the selected week.
+   * If none, initialize an empty structure.
+   */
   get currentWeekEvents() {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
-      // Initialize the week if it doesn't exist.
       this.events[weekKey] = {
         sunday: [],
         monday: [],
@@ -83,14 +136,18 @@ export class Tab2Page implements OnInit {
     return this.events[weekKey];
   }
 
-  // Add the selected meal to the chosen day's events for the current week.
+  /**
+   * Adds the chosen meal to the current week's 
+   * events object under the chosen day.
+   */
   addMeal() {
     if (!this.selectedMeal || !this.selectedDay) {
       alert('Please select both a meal and a day.');
       return;
     }
     const weekKey = this.selectedPlan.toDateString();
-    // Ensure the week exists in events.
+
+    // Ensure the week exists.
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
         sunday: [],
@@ -102,10 +159,59 @@ export class Tab2Page implements OnInit {
         saturday: []
       };
     }
-    // Add a copy of the selectedMeal to the events array for the selected day.
+
+    // Push a copy of the selected meal into the correct day array
     this.events[weekKey][this.selectedDay].push({ ...this.selectedMeal });
-    // Clear the selections.
+
+    // Clear form selections
     this.selectedMeal = null;
     this.selectedDay = '';
+  }
+
+  /**
+   * On hover, fetch extra details if needed 
+   * (especially if recipe has an external API ID),
+   * then display in hoveredRecipe.
+   */
+  onRecipeHover(recipe: any) {
+    if (recipe) {
+      // If the recipe has an API ID but no instructions yet, fetch from API
+      if (recipe.api_id && !recipe.instructions) {
+        this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
+          (response: any) => {
+            const meal = response.meals[0];
+            let ingredients: string[] = [];
+            for (let i = 1; i <= 20; i++) {
+              const ingredient = meal[`strIngredient${i}`];
+              if (ingredient) {
+                ingredients.push(ingredient);
+              } else {
+                break;
+              }
+            }
+            recipe.ingredients = ingredients;
+            recipe.instructions = meal.strInstructions;
+            this.hoveredRecipe = recipe;
+          },
+          (error) => {
+            console.error('Error fetching recipe details from API:', error);
+            this.hoveredRecipe = recipe;
+          }
+        );
+      } else {
+        // No API call needed; ensure ingredients is an array
+        if (typeof recipe.ingredients === 'string') {
+          recipe.ingredients = recipe.ingredients
+            .split(',')
+            .map((ing: string) => ing.trim());
+        } else {
+          recipe.ingredients = recipe.ingredients || [];
+        }
+        recipe.instructions = recipe.instructions || '';
+        this.hoveredRecipe = recipe;
+      }
+    } else {
+      this.hoveredRecipe = null;
+    }
   }
 }
