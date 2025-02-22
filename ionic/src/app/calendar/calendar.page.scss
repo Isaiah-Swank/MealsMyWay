@@ -22,9 +22,6 @@ ion-title {
 
 /******************************************
  * Calendar header at top
- * - Includes "Previous Plans" dropdown
- * - Shows "Week of:" text
- * - "Share Calendar" button
  ******************************************/
 .calendar-header {
   display: flex;
@@ -34,7 +31,6 @@ ion-title {
   margin-bottom: 20px;
 }
 
-/* Header date text */
 .header-date {
   text-align: center;
   font-size: 1.5em;
@@ -42,7 +38,6 @@ ion-title {
   color: #246d48;
 }
 
-/* Override Ionic button styling for general usage */
 ion-button {
   --background: #246d48;
   --color: #fff;
@@ -60,7 +55,6 @@ ion-button {
   gap: 10px;
 }
 
-/* Each day cell styling */
 .day {
   background-color: #fff;
   padding: 10px;
@@ -79,32 +73,37 @@ ion-button {
   margin-top: 10px;
 }
 
-/* Hover effect for each event in the calendar */
 .calendar .events div:hover {
   background-color: #cbddd1;
   transition: background-color 0.3s ease;
 }
 
 /******************************************
- * (REMOVED) .add-event-container 
- * Previously used for adding events,
- * replaced by .add-meal-form
- ******************************************/
-
-/******************************************
- * Bottom button container
- * - Aligns the 3 main feature buttons
+ * Bottom button container and group styling
  ******************************************/
 .button-container {
   margin: 40px auto;
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: 100px;
   width: 100%;
   max-width: 1200px;
 }
 
-/* Updated styling for ion-buttons within the button-container */
+.generate-shopping-list,
+.generate-prep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;  // Reduced vertical spacing
+}
+
+.save-calendar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Shared button styling within the container */
 .button-container ion-button {
   padding: 10px 15px;
   font-size: 16px;
@@ -118,7 +117,6 @@ ion-button {
 
 /******************************************
  * Meal Section Container
- * - Two columns: Recipe Details & Add Meal
  ******************************************/
 .meal-section-container {
   display: flex;
@@ -130,7 +128,6 @@ ion-button {
   align-items: stretch;
 }
 
-/* Left side: recipe details or recipe list */
 .recipe-details {
   flex: 2;
   background-color: #f9f9f9;
@@ -139,7 +136,6 @@ ion-button {
   border-radius: 5px;
 }
 
-/* Right side: add meal form */
 .add-meal-form {
   flex: 1;
   background-color: #fff;
@@ -157,7 +153,6 @@ ion-button {
   justify-content: space-evenly;
 }
 
-/* Common heading styling in these sections */
 .recipe-details h3,
 .add-meal-form h3 {
   text-align: center;

@@ -7,12 +7,7 @@
 <ion-content [fullscreen]="true">
   <div class="calendar-container">
     
-    <!-- 
-      CALENDAR HEADER:
-      - Dropdown for previous plans
-      - "Week of" text displaying selected week's date
-      - "Share Calendar" button (functionality placeholder)
-    -->
+    <!-- CALENDAR HEADER -->
     <div class="calendar-header">
       <!-- Previous Plans Dropdown -->
       <ion-item>
@@ -32,16 +27,11 @@
         Week of: {{ selectedPlan | date:'longDate' }}
       </h2>
 
-      <!-- Share Calendar Button (no current TS method, placeholder) -->
+      <!-- Share Calendar Button (placeholder) -->
       <ion-button>Share Calendar</ion-button>
     </div>
 
-    <!-- 
-      CALENDAR GRID:
-      - 7 columns for Sunday through Saturday
-      - Each day displays its respective events (meals)
-      - Hovering over an event triggers recipe detail display 
-    -->
+    <!-- CALENDAR GRID -->
     <div class="calendar">
       <!-- Sunday Column -->
       <div class="day sunday">
@@ -54,7 +44,6 @@
           </div>
         </div>
       </div>
-
       <!-- Monday Column -->
       <div class="day monday">
         <h3>Monday</h3>
@@ -66,7 +55,6 @@
           </div>
         </div>
       </div>
-
       <!-- Tuesday Column -->
       <div class="day tuesday">
         <h3>Tuesday</h3>
@@ -78,7 +66,6 @@
           </div>
         </div>
       </div>
-
       <!-- Wednesday Column -->
       <div class="day wednesday">
         <h3>Wednesday</h3>
@@ -90,7 +77,6 @@
           </div>
         </div>
       </div>
-
       <!-- Thursday Column -->
       <div class="day thursday">
         <h3>Thursday</h3>
@@ -102,7 +88,6 @@
           </div>
         </div>
       </div>
-
       <!-- Friday Column -->
       <div class="day friday">
         <h3>Friday</h3>
@@ -114,7 +99,6 @@
           </div>
         </div>
       </div>
-
       <!-- Saturday Column -->
       <div class="day saturday">
         <h3>Saturday</h3>
@@ -128,39 +112,52 @@
       </div>
     </div>
 
-    <!-- 
-      MEAL SECTION CONTAINER:
-      - Left: Recipe Details (on hover) OR Recipe List
-      - Right: Add Meal Form (select day and meal, add to calendar)
-    -->
+    <!-- MEAL SECTION CONTAINER -->
     <div class="meal-section-container">
 
-      <!-- RECIPE DETAILS / LIST -->
+      <!-- RECIPE DETAILS / SHOPPING LIST -->
       <div class="recipe-details">
-        <h3>{{ hoveredRecipe ? 'Recipe Details' : 'Recipe List' }}</h3>
-        <div class="details-container">
-          <ng-container *ngIf="hoveredRecipe; else defaultDetails">
-            <p><strong>Title:</strong> {{ hoveredRecipe.title }}</p>
-            <p *ngIf="hoveredRecipe.ingredients && hoveredRecipe.ingredients.length">
-              <strong>Ingredients:</strong>
-              <span *ngFor="let ingredient of hoveredRecipe.ingredients; let i = index">
-                {{ ingredient }}<span *ngIf="i < hoveredRecipe.ingredients.length - 1">, </span>
-              </span>
-            </p>
-            <p *ngIf="hoveredRecipe.instructions">
-              <strong>Instructions:</strong> {{ hoveredRecipe.instructions }}
-            </p>
+        <h3>
+          <ng-container *ngIf="showShoppingList; else recipeHeader">
+            Shopping List
           </ng-container>
-          <ng-template #defaultDetails>
-            <div *ngIf="recipes && recipes.length > 0; else noRecipes">
-              <ul class="all-recipes-list">
-                <li *ngFor="let recipe of recipes">
-                  {{ recipe.title }}
-                </li>
-              </ul>
-            </div>
-            <ng-template #noRecipes>
-              <p>No recipes found in the database.</p>
+          <ng-template #recipeHeader>
+            {{ hoveredRecipe ? 'Recipe Details' : 'Recipe List' }}
+          </ng-template>
+        </h3>
+        <div class="details-container">
+          <ng-container *ngIf="showShoppingList; else recipeDetailsContent">
+            <ul>
+              <li *ngFor="let ingredient of shoppingListKeys">
+                {{ ingredient }}: {{ shoppingList[ingredient] }}
+              </li>
+            </ul>
+            <ion-button (click)="showShoppingList = false">Close</ion-button>
+          </ng-container>
+          <ng-template #recipeDetailsContent>
+            <ng-container *ngIf="hoveredRecipe; else defaultDetails">
+              <p><strong>Title:</strong> {{ hoveredRecipe.title }}</p>
+              <p *ngIf="hoveredRecipe.ingredients && hoveredRecipe.ingredients.length">
+                <strong>Ingredients:</strong>
+                <span *ngFor="let ingredient of hoveredRecipe.ingredients; let i = index">
+                  {{ ingredient }}<span *ngIf="i < hoveredRecipe.ingredients.length - 1">, </span>
+                </span>
+              </p>
+              <p *ngIf="hoveredRecipe.instructions">
+                <strong>Instructions:</strong> {{ hoveredRecipe.instructions }}
+              </p>
+            </ng-container>
+            <ng-template #defaultDetails>
+              <div *ngIf="recipes && recipes.length > 0; else noRecipes">
+                <ul class="all-recipes-list">
+                  <li *ngFor="let recipe of recipes">
+                    {{ recipe.title }}
+                  </li>
+                </ul>
+              </div>
+              <ng-template #noRecipes>
+                <p>No recipes found in the database.</p>
+              </ng-template>
             </ng-template>
           </ng-template>
         </div>
@@ -196,14 +193,21 @@
       </div>
     </div>
 
-    <!-- 
-      BOTTOM BUTTONS CONTAINER: 
-      - Buttons for future features (generate shopping list, save calendar, generate prep list)
-    -->
+    <!-- BOTTOM BUTTONS CONTAINER -->
     <div class="button-container">
-      <ion-button>Generate Shopping List</ion-button>
-      <ion-button>Save Calendar</ion-button>
-      <ion-button>Generate Prep List</ion-button>
+      <div class="generate-shopping-list">
+        <ion-button (click)="generateShoppingList()">Generate Shopping List</ion-button>
+        <ion-button (click)="viewShoppingList()">View Shopping List</ion-button>
+      </div>
+      <div class="save-calendar">
+        <ion-button>Save Calendar</ion-button>
+      </div>
+      <div class="generate-prep-list">
+        <ion-button>Generate Prep List</ion-button>
+        <ion-button>View Prep List</ion-button>
+      </div>
     </div>
+
+  <!-- Close the calendar container -->
   </div>
 </ion-content>
