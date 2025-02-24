@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { UserService } from '../services/user.service';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
   status: string;
@@ -30,7 +31,7 @@ export class LoginPage {
 
     if (this.username && this.password) {
       // Send the credentials to the backend
-      this.http.post<LoginResponse>('http://localhost:3000/login', {
+      this.http.post<LoginResponse>(`${environment.apiUrl}/login`, {
         username: this.username,
         password: this.password
       }).subscribe(
