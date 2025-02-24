@@ -3,6 +3,7 @@ import { RecipeService } from '../services/recipe.service';
 import { AlertController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-tab2',
@@ -395,7 +396,7 @@ export class Tab2Page implements OnInit {
     };
 
     // POST the calendar data (including grocery list) to the server.
-    this.http.post<{ message: string }>('http://localhost:3000/calendar', payload)
+    this.http.post<{ message: string }>(`${environment.apiUrl}/calendar`, payload)
       .subscribe(
         (response) => {
           console.log('Calendar saved successfully:', response);
@@ -451,7 +452,7 @@ export class Tab2Page implements OnInit {
     console.log('About to POST this payload:', payload);
 
     // Send a POST request to save the calendar.
-    this.http.post<{ message: string }>('http://localhost:3000/calendar', payload)
+    this.http.post<{ message: string }>(`${environment.apiUrl}/calendar`, payload)
       .subscribe(
         (response) => {
           console.log('Calendar saved successfully:', response);
@@ -471,7 +472,7 @@ export class Tab2Page implements OnInit {
     // Format the selected plan's date to "YYYY-MM-DD" to match the saved format.
     const weekParam = this.selectedPlan.toISOString().split('T')[0];
     // Send a GET request with the start_date and user_id as query parameters.
-    this.http.get<any[]>(`http://localhost:3000/calendar?start_date=${weekParam}&user_id=${this.currentUser.id}`)
+    this.http.get<any[]>(`${environment.apiUrl}/calendar?start_date=${weekParam}&user_id=${this.currentUser.id}`)
       .subscribe(
         (response) => {
           const weekKey = this.selectedPlan.toDateString();

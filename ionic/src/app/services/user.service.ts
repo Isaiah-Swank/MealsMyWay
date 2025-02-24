@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -39,12 +40,12 @@ export class UserService {
 
   // Provide a helper method to fetch user from /userbyusername
   fetchUserByUsername(username: string): Observable<any[]> {
-    return this.http.get<any[]>(`http://localhost:3000/userbyusername?username=${username}`);
+    return this.http.get<any[]>(`${environment.apiUrl}/userbyusername?username=${username}`);
   }
 
   // If you need to fetch by ID (your old approach), you still can
   fetchUserById(id: number): Observable<any[]> {
-    return this.http.get<any[]>(`http://localhost:3000/user?id=${id}`);
+    return this.http.get<any[]>(`/user?id=${id}`);
   }
 
   setUser(user: any) {
