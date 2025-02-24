@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
-import { HttpClient } from '@angular/common/http';  // Import HttpClient
-import { Router } from '@angular/router';  // If you are using routing for navigation
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { UserService } from '../services/user.service';
 
 interface LoginResponse {
   status: string;
   message: string;
+  user?: any; // <-- We'll assume 'user' is returned from the backend
 }
 
 @Component({
@@ -18,9 +19,9 @@ export class LoginPage {
   password: string = '';
 
   constructor(
-    private http: HttpClient,  // Inject HttpClient
-    private router: Router,  // Inject Router to navigate after successful login
-    private userService: UserService     
+    private http: HttpClient,
+    private router: Router,
+    private userService: UserService
   ) {}
 
   onSubmit() {
@@ -37,9 +38,22 @@ export class LoginPage {
           console.log('Backend Response:', response);
           // Handle response and navigate if authentication is successful
           if (response.message === 'Login successful') {
+            // Optional: store username in your UserService
             this.userService.setUsername(this.username);
-            // Navigate to calendar/home if successful
-            this.router.navigate(['/tabs/calendar']);
+
+            // If the backend also returns a "user" object:
+            //   e.g. response.user = { id: 3, username: 'iswank', ... }
+            if (response.user) {
+              // Pass the user object to the Calendar page via router state
+              this.router.navigate(['/tabs/calendar'], {
+                state: { user: response.user }
+              });
+            } else {
+              // If there's no user object in the response, handle accordingly
+              console.warn('No user object returned from server');
+              // Just navigate or show an error, depending on your needs
+              // this.router.navigate(['/tabs/calendar']);
+            }
           } else {
             alert('Invalid credentials');
           }

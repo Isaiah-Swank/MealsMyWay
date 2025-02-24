@@ -14,6 +14,7 @@
         <ion-select
           placeholder="Previous Plans"
           [(ngModel)]="selectedPlan"
+          (ionChange)="onPlanChange()"
           selectedText="Previous Plans"
           interface="popover">
           <ion-select-option *ngFor="let plan of plans" [value]="plan">
@@ -200,7 +201,7 @@
         <ion-button (click)="viewShoppingList()">View Shopping List</ion-button>
       </div>
       <div class="save-calendar">
-        <ion-button>Save Calendar</ion-button>
+        <ion-button (click)="saveCalendar()">Save Calendar</ion-button>
       </div>
       <div class="generate-prep-list">
         <ion-button>Generate Prep List</ion-button>
@@ -208,6 +209,5 @@
       </div>
     </div>
 
-  <!-- Close the calendar container -->
   </div>
 </ion-content>

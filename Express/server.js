@@ -1,12 +1,12 @@
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
-const { Pool } = require('pg');  // Use the Pool from pg for DB connections
+const { Pool } = require('pg');
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // Parse JSON request bodies
+app.use(express.json());
 
 // Set up the database connection using environment variables
 const db = new Pool({
@@ -16,7 +16,7 @@ const db = new Pool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: {
-    rejectUnauthorized: false, // Allows self-signed certificates
+    rejectUnauthorized: false,
   },
 });
 
@@ -38,16 +38,14 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    // Query the users table to check if the username and password exist
     const query = 'SELECT * FROM users WHERE username = $1 AND password = $2';
     const values = [username, password];
-    const result = await db.query(query, values); // Use db.query here
+    const result = await db.query(query, values);
 
     if (result.rows.length > 0) {
-      // User found, respond with success
-      return res.status(200).send({ message: 'Login successful' });
+      // User found; send user data in the response
+      return res.status(200).send({ message: 'Login successful', user: result.rows[0] });
     } else {
-      // User not found
       return res.status(401).send({ message: 'Invalid credentials' });
     }
   } catch (error) {
@@ -56,7 +54,50 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.get('/userbyusername', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    return res.status(400).send({ message: 'Username query parameter is required' });
+  }
+  try {
+    const result = await db.query(
+      'SELECT id, username, email, privacy, shared_plans FROM users WHERE username = $1',
+      [username]
+    );
+    if (result.rows.length > 0) {
+      res.json(result.rows);
+    } else {
+      return res.status(404).send({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user by username:', error.stack);
+    return res.status(500).send({ message: 'Server error' });
+  }
+});
 
+// GET Route for User Data by ID
+app.get('/user', async (req, res) => {
+  const { id } = req.query;
+  if (!id) {
+    return res.status(400).send({ message: 'ID query parameter is required' });
+  }
+  try {
+    const result = await db.query(
+      'SELECT id, username, email, privacy, shared_plans FROM users WHERE id = $1',
+      [id]
+    );
+    if (result.rows.length > 0) {
+      res.json(result.rows);
+    } else {
+      return res.status(404).send({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user', error.stack);
+    return res.status(500).send({ message: 'Server error' });
+  }
+});
+
+// Signup Route
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
 
@@ -65,22 +106,18 @@ app.post('/signup', async (req, res) => {
   }
 
   try {
-    // Check if the username already exists
     const checkUserQuery = 'SELECT * FROM users WHERE username = $1';
     const checkUserValues = [username];
     const result = await db.query(checkUserQuery, checkUserValues);
 
     if (result.rows.length > 0) {
-      // Username already exists
       return res.status(400).send({ message: 'Username already exists' });
     }
 
-    // Insert the new user into the database, including email
     const insertUserQuery = 'INSERT INTO users (username, password, email) VALUES ($1, $2, $3)';
     const insertUserValues = [username, password, email];
     await db.query(insertUserQuery, insertUserValues);
 
-    // Respond with success
     res.status(201).send({ message: 'User created successfully' });
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -88,6 +125,7 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+// Recipes Routes
 app.get('/recipes', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM Recipes');
@@ -98,29 +136,17 @@ app.get('/recipes', async (req, res) => {
   }
 });
 
-
 app.post('/recipes', async (req, res) => {
   const { author, title, ingredients, instructions } = req.body;
 
-  // Validate the input data
   if (!author || !title || !ingredients || !instructions) {
     return res.status(400).send({ message: 'All fields (author, title, ingredients, instructions) are required' });
   }
 
   try {
-    // Split ingredients by comma and trim spaces if necessary
-    //const ingredientList = ingredients.split(',').map(ingredient => ingredient.trim());
-
-    // Insert the new recipe into the database
     const insertRecipeQuery = 'INSERT INTO Recipes (author, title, ingredients, instructions) VALUES ($1, $2, $3, $4) RETURNING *';
     const insertRecipeValues = [author, title, ingredients, instructions];
-    //console.log(ingredients);
     const result = await db.query(insertRecipeQuery, insertRecipeValues);
-
-    // Get the newly inserted recipe (optional if you want to return it)
-    const newRecipe = result.rows[0];
-
-    // Return the success response
     res.status(201).send({ message: 'Recipe created successfully' });
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -128,10 +154,52 @@ app.post('/recipes', async (req, res) => {
   }
 });
 
+// Calendar Routes
+
+// POST Route for Saving Calendar Data
+app.post('/calendar', async (req, res) => {
+  const { user_ids, week, start_date } = req.body;
+  if (!user_ids || !week || !start_date) {
+    return res.status(400).send({ message: 'Missing required fields: user_ids, week, and start_date' });
+  }
+  try {
+    const insertCalendarQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
+    const result = await db.query(insertCalendarQuery, [user_ids, week, start_date]);
+    res.status(201).send({ message: 'Calendar created successfully', calendar: result.rows[0] });
+  } catch (error) {
+    console.error('Error inserting calendar:', error.stack);
+    res.status(500).send({ message: 'Server error' });
+  }
+});
+
+// GET Route for Retrieving Calendar Data for a Specific Week and User
+app.get('/calendar', async (req, res) => {
+  const { start_date, user_id } = req.query;
+  if (!user_id) {
+    return res.status(400).send({ message: 'Missing user_id query parameter' });
+  }
+  try {
+    if (start_date) {
+      const query = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
+      const values = [start_date, Number(user_id)];
+      const result = await db.query(query, values);
+      if (result.rows.length === 0) {
+        return res.status(404).send({ message: 'No calendar found for the given week and user' });
+      }
+      return res.status(200).json(result.rows);
+    } else {
+      const query = 'SELECT * FROM calendar WHERE $1 = ANY(user_ids) ORDER BY start_date DESC';
+      const result = await db.query(query, [Number(user_id)]);
+      return res.status(200).json(result.rows);
+    }
+  } catch (error) {
+    console.error('Error fetching calendar data:', error.stack);
+    return res.status(500).send({ message: 'Server error' });
+  }
+});
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-
