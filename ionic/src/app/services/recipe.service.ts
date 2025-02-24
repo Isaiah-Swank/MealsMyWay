@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ export class RecipeService {
 
   // Fetch all recipes from the backend
   getRecipes() {
-    return this.http.get<any[]>('http://localhost:3000/recipes'); // Change URL to match your API
+    return this.http.get<any[]>(`${environment.apiUrl}/recipes`); // Change URL to match your API
   }
 
   // Save recipes into the service variable

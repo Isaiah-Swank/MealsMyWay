@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { Platform, ModalController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface RecipeResponse {
   message: string;
@@ -65,7 +66,7 @@ export class RecipesPage implements OnInit {
     };
   
     if (this.newRecipe.author && this.newRecipe.title && this.newRecipe.ingredients && this.newRecipe.instructions) {
-      this.http.post<RecipeResponse>('http://localhost:3000/recipes', recipeData).subscribe(
+      this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
         (response) => {
           console.log('Backend Response:', response);
           if (response && response.message === 'Recipe created successfully') {
