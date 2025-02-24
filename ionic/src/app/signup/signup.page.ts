@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-signup',
@@ -17,7 +18,7 @@ export class SignupPage {
   onSubmit() {
     if (this.username && this.password) {
       // Send sign-up request to backend
-      this.http.post('http://localhost:3000/signup', {
+      this.http.post(`${environment.apiUrl}/signup`, {
         username: this.username,
         password: this.password,
         email: this.email,  // Include email in the request
