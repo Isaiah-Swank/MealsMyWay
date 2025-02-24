@@ -23,7 +23,7 @@ export class Tab2Page implements OnInit {
   // The day (e.g., 'monday', 'tuesday') selected for adding a meal.
   selectedDay: string = '';
   // Object storing events for each week and day.
-  // Format: { [weekDateString]: { sunday: [], monday: [], ... } }
+  // Format: { [weekDateString]: { sunday: [], monday: [], ..., grocery?: string[] } }
   events: { [week: string]: { [day: string]: any[] } } = {};
   // Recipe details that appear when the user hovers over a recipe.
   hoveredRecipe: any = null;
@@ -31,8 +31,10 @@ export class Tab2Page implements OnInit {
   shoppingList: { [ingredient: string]: number } = {};
   // Shopping lists stored for different weeks.
   shoppingLists: { [week: string]: { [ingredient: string]: number } } = {};
-  // Boolean flag to indicate if the shopping list should be displayed.
+  // Boolean flag to indicate if the shopping list (or grocery list) should be displayed.
   showShoppingList: boolean = false;
+  // (Display-only variable for the grocery list; not sent in payload)
+  groceryListDisplay: string[] = [];
   // Currently logged in user, passed from the login page.
   currentUser: any = null;
 
@@ -363,6 +365,20 @@ export class Tab2Page implements OnInit {
     console.log('Generated Shopping List for', weekKey, ':', aggregatedList);
     this.showShoppingList = true;
 
+    // Embed the grocery list (list of ingredient names) into the week’s events.
+    if (!this.events[weekKey]) {
+      this.events[weekKey] = {
+        sunday: [],
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: [],
+        saturday: []
+      };
+    }
+    this.events[weekKey]['grocery'] = Object.keys(aggregatedList);
+
     // Ensure the user is loaded before saving the calendar.
     if (!this.currentUser || !this.currentUser.id) {
       console.error('User details not loaded. Cannot save calendar.');
@@ -370,14 +386,15 @@ export class Tab2Page implements OnInit {
     }
     // Format the start date to YYYY-MM-DD.
     const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    // Prepare the payload to save the shopping list as a calendar entry.
+    // Prepare the payload to save the calendar entry.
+    // The week object now contains the grocery list within the "grocery" property.
     const payload = {
       user_ids: [this.currentUser.id],
-      week: aggregatedList,
+      week: this.events[weekKey],
       start_date: startDateString
     };
 
-    // POST the shopping list to the server.
+    // POST the calendar data (including grocery list) to the server.
     this.http.post<{ message: string }>('http://localhost:3000/calendar', payload)
       .subscribe(
         (response) => {
@@ -389,13 +406,17 @@ export class Tab2Page implements OnInit {
       );
   }
 
-  // Displays the shopping list if one has been generated for the selected week.
+  // Displays the grocery list if it exists in the loaded calendar.
   viewShoppingList() {
     const weekKey = this.selectedPlan.toDateString();
-    if (!this.shoppingLists[weekKey] || Object.keys(this.shoppingLists[weekKey]).length === 0) {
-      alert('No shopping list has been generated yet for this week. Please generate a shopping list first.');
+    const loadedWeek = this.events[weekKey];
+    console.log("Loaded week events for", weekKey, loadedWeek);
+    const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
+    if (!groceryList || groceryList.length === 0) {
+      alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
     } else {
-      this.shoppingList = this.shoppingLists[weekKey];
+      // For display purposes, update the groceryListDisplay variable and set the flag.
+      this.groceryListDisplay = groceryList;
       this.showShoppingList = true;
     }
   }
@@ -420,6 +441,7 @@ export class Tab2Page implements OnInit {
     // Format the start date to a YYYY-MM-DD string.
     const startDateString = this.selectedPlan.toISOString().split('T')[0];
     // Prepare the payload to be sent to the server.
+    // The calendarData object may include a "grocery" property if a grocery list was generated.
     const payload = {
       user_ids: [this.currentUser.id],
       week: calendarData,
@@ -452,23 +474,29 @@ export class Tab2Page implements OnInit {
     this.http.get<any[]>(`http://localhost:3000/calendar?start_date=${weekParam}&user_id=${this.currentUser.id}`)
       .subscribe(
         (response) => {
+          const weekKey = this.selectedPlan.toDateString();
           // If a calendar entry is found, update the events for the selected week.
           if (response.length > 0) {
             const calendarData = response[0];
-            this.events[this.selectedPlan.toDateString()] = calendarData.week;
+            // Ensure that the grocery list is included when setting the week events.
+            this.events[weekKey] = {
+              ...calendarData.week,
+              grocery: calendarData.week && calendarData.week.grocery ? calendarData.week.grocery : []
+            };
           } else {
-            // If not found, initialize an empty calendar for the week.
-            this.events[this.selectedPlan.toDateString()] = {
+            // If not found, initialize an empty calendar for the week including an empty grocery list.
+            this.events[weekKey] = {
               sunday: [],
               monday: [],
               tuesday: [],
               wednesday: [],
               thursday: [],
               friday: [],
-              saturday: []
+              saturday: [],
+              grocery: []
             };
           }
-          console.log('Loaded Calendar!');
+          console.log('Loaded Calendar!', this.events[weekKey]);
         },
         (error) => {
           console.error('Error loading calendar:', error);

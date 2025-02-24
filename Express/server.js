@@ -163,11 +163,25 @@ app.post('/calendar', async (req, res) => {
     return res.status(400).send({ message: 'Missing required fields: user_ids, week, and start_date' });
   }
   try {
-    const insertCalendarQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
-    const result = await db.query(insertCalendarQuery, [user_ids, week, start_date]);
-    res.status(201).send({ message: 'Calendar created successfully', calendar: result.rows[0] });
+    // Check if a calendar for this week already exists for the first user (assuming one user per calendar)
+    const checkQuery = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
+    const checkValues = [start_date, user_ids[0]];
+    const existingCalendar = await db.query(checkQuery, checkValues);
+
+    if (existingCalendar.rows.length > 0) {
+      // If found, update the existing record
+      const updateQuery = 'UPDATE calendar SET week = $1 WHERE start_date = $2 AND $3 = ANY(user_ids) RETURNING *';
+      const updateValues = [week, start_date, user_ids[0]];
+      const result = await db.query(updateQuery, updateValues);
+      return res.status(200).send({ message: 'Calendar updated successfully', calendar: result.rows[0] });
+    } else {
+      // Otherwise, insert a new record
+      const insertCalendarQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
+      const result = await db.query(insertCalendarQuery, [user_ids, week, start_date]);
+      return res.status(201).send({ message: 'Calendar created successfully', calendar: result.rows[0] });
+    }
   } catch (error) {
-    console.error('Error inserting calendar:', error.stack);
+    console.error('Error saving calendar:', error.stack);
     res.status(500).send({ message: 'Server error' });
   }
 });
