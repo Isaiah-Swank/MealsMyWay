@@ -78,6 +78,10 @@ app.post('/login', async (req, res) => {
 });
 
 
+// list ounces
+// add tags, add ounces
+// make the instructurions look better
+// make search work
 
 async function listRecipes() {
   try {

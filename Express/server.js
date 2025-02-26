@@ -29,7 +29,7 @@ db.connect((err, client, release) => {
   }
 });
 
-// Login Route
+// 📌 Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -43,7 +43,6 @@ app.post('/login', async (req, res) => {
     const result = await db.query(query, values);
 
     if (result.rows.length > 0) {
-      // User found; send user data in the response
       return res.status(200).send({ message: 'Login successful', user: result.rows[0] });
     } else {
       return res.status(401).send({ message: 'Invalid credentials' });
@@ -54,50 +53,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/userbyusername', async (req, res) => {
-  const { username } = req.query;
-  if (!username) {
-    return res.status(400).send({ message: 'Username query parameter is required' });
-  }
-  try {
-    const result = await db.query(
-      'SELECT id, username, email, privacy, shared_plans FROM users WHERE username = $1',
-      [username]
-    );
-    if (result.rows.length > 0) {
-      res.json(result.rows);
-    } else {
-      return res.status(404).send({ message: 'User not found' });
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error.stack);
-    return res.status(500).send({ message: 'Server error' });
-  }
-});
-
-// GET Route for User Data by ID
-app.get('/user', async (req, res) => {
-  const { id } = req.query;
-  if (!id) {
-    return res.status(400).send({ message: 'ID query parameter is required' });
-  }
-  try {
-    const result = await db.query(
-      'SELECT id, username, email, privacy, shared_plans FROM users WHERE id = $1',
-      [id]
-    );
-    if (result.rows.length > 0) {
-      res.json(result.rows);
-    } else {
-      return res.status(404).send({ message: 'User not found' });
-    }
-  } catch (error) {
-    console.error('Error fetching user', error.stack);
-    return res.status(500).send({ message: 'Server error' });
-  }
-});
-
-// Signup Route
+// 📌 Signup Route
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
 
@@ -125,10 +81,20 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// Recipes Routes
+// 📌 GET Recipes
 app.get('/recipes', async (req, res) => {
+  const { tag } = req.query;
+
   try {
-    const result = await db.query('SELECT * FROM Recipes');
+    let query = 'SELECT * FROM Recipes';
+    let values = [];
+
+    if (tag) {
+      query += ' WHERE tag = $1';
+      values.push(tag);
+    }
+
+    const result = await db.query(query, values);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching recipes:', err);
@@ -136,84 +102,87 @@ app.get('/recipes', async (req, res) => {
   }
 });
 
+// 📌 POST Create Recipe
 app.post('/recipes', async (req, res) => {
-  const { author, title, ingredients, instructions } = req.body;
+  const { author, title, ingredients, instructions, tag } = req.body;
 
   if (!author || !title || !ingredients || !instructions) {
-    return res.status(400).send({ message: 'All fields (author, title, ingredients, instructions) are required' });
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
-    const insertRecipeQuery = 'INSERT INTO Recipes (author, title, ingredients, instructions) VALUES ($1, $2, $3, $4) RETURNING *';
-    const insertRecipeValues = [author, title, ingredients, instructions];
-    const result = await db.query(insertRecipeQuery, insertRecipeValues);
-    res.status(201).send({ message: 'Recipe created successfully' });
+    const insertQuery = `
+      INSERT INTO Recipes (author, title, ingredients, instructions, tag) 
+      VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+    const values = [author, title, ingredients, instructions, tag || null];
+
+    const result = await db.query(insertQuery, values);
+    res.status(201).json({ message: 'Recipe created successfully', recipe: result.rows[0] });
   } catch (error) {
-    console.error('Error executing query', error.stack);
+    console.error('Error inserting recipe:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.put('/recipes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, ingredients, instructions, tag } = req.body;
+
+  console.log(`🔹 Received update request for ID: ${id}`);
+  console.log(`🔹 Request Body:`, req.body);
+
+  if (!title || !ingredients || !instructions) {
+    return res.status(400).send({ message: '⚠️ All fields are required' });
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE Recipes SET title = $1, ingredients = $2, instructions = $3, tag = $4
+      WHERE id = $5 RETURNING *`;
+    const values = [title, ingredients, instructions, tag, id];
+
+    const result = await db.query(updateQuery, values);
+    if (result.rows.length > 0) {
+      res.status(200).send({ message: '✅ Recipe updated successfully', recipe: result.rows[0] });
+    } else {
+      res.status(404).send({ message: '⚠️ Recipe not found' });
+    }
+  } catch (error) {
+    console.error('❌ Error updating recipe:', error);
     res.status(500).send({ message: 'Server error' });
   }
 });
 
-// Calendar Routes
 
-// POST Route for Saving Calendar Data
-app.post('/calendar', async (req, res) => {
-  const { user_ids, week, start_date } = req.body;
-  if (!user_ids || !week || !start_date) {
-    return res.status(400).send({ message: 'Missing required fields: user_ids, week, and start_date' });
-  }
+
+// 📌 DELETE Recipe
+app.delete('/recipes/:id', async (req, res) => {
+  const { id } = req.params;
+
   try {
-    // Check if a calendar for this week already exists for the first user (assuming one user per calendar)
-    const checkQuery = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
-    const checkValues = [start_date, user_ids[0]];
-    const existingCalendar = await db.query(checkQuery, checkValues);
+    const deleteQuery = 'DELETE FROM Recipes WHERE id = $1 RETURNING *';
+    const result = await db.query(deleteQuery, [id]);
 
-    if (existingCalendar.rows.length > 0) {
-      // If found, update the existing record
-      const updateQuery = 'UPDATE calendar SET week = $1 WHERE start_date = $2 AND $3 = ANY(user_ids) RETURNING *';
-      const updateValues = [week, start_date, user_ids[0]];
-      const result = await db.query(updateQuery, updateValues);
-      return res.status(200).send({ message: 'Calendar updated successfully', calendar: result.rows[0] });
+    if (result.rows.length > 0) {
+      res.status(200).send({ message: 'Recipe deleted successfully' });
     } else {
-      // Otherwise, insert a new record
-      const insertCalendarQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
-      const result = await db.query(insertCalendarQuery, [user_ids, week, start_date]);
-      return res.status(201).send({ message: 'Calendar created successfully', calendar: result.rows[0] });
+      res.status(404).send({ message: 'Recipe not found' });
     }
   } catch (error) {
-    console.error('Error saving calendar:', error.stack);
+    console.error('Error deleting recipe:', error);
     res.status(500).send({ message: 'Server error' });
-  }
-});
-
-// GET Route for Retrieving Calendar Data for a Specific Week and User
-app.get('/calendar', async (req, res) => {
-  const { start_date, user_id } = req.query;
-  if (!user_id) {
-    return res.status(400).send({ message: 'Missing user_id query parameter' });
-  }
-  try {
-    if (start_date) {
-      const query = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
-      const values = [start_date, Number(user_id)];
-      const result = await db.query(query, values);
-      if (result.rows.length === 0) {
-        return res.status(404).send({ message: 'No calendar found for the given week and user' });
-      }
-      return res.status(200).json(result.rows);
-    } else {
-      const query = 'SELECT * FROM calendar WHERE $1 = ANY(user_ids) ORDER BY start_date DESC';
-      const result = await db.query(query, [Number(user_id)]);
-      return res.status(200).json(result.rows);
-    }
-  } catch (error) {
-    console.error('Error fetching calendar data:', error.stack);
-    return res.status(500).send({ message: 'Server error' });
   }
 });
 
 // Start Server
+app._router.stack.forEach((r) => {
+  if (r.route && r.route.path) {
+    console.log(`Route available: ${r.route.stack[0].method.toUpperCase()} ${r.route.path}`);
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
