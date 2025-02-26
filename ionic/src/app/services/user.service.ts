@@ -8,22 +8,28 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class UserService {
+  // Holds the username for the logged in user.
   private username: string = '';
+  // Holds the complete user object.
   private user: any = null;
 
   constructor(private http: HttpClient) {}
 
-  // Let the login page set the username:
+  /**
+   * Sets the username and fetches the corresponding user object from the backend.
+   * Called in login.page.ts on successful login:
+   *    this.userService.setUsername(this.username);
+   */
   setUsername(username: string): void {
     this.username = username;
-
-    // As soon as we have a username, fetch the full user record
-    // from your new /userbyusername endpoint:
+    // Fetch the user record using the provided username.
     this.fetchUserByUsername(username).subscribe({
       next: (users: any[]) => {
         if (users && users.length > 0) {
-          this.user = users[0]; // The first matching user
+          this.user = users[0];
           console.log('[UserService] Fetched user by username:', this.user);
+          // Persist the fetched user in local storage for persistence.
+          localStorage.setItem('currentUser', JSON.stringify(this.user));
         } else {
           console.error('[UserService] No user found for username:', username);
         }
@@ -34,25 +40,52 @@ export class UserService {
     });
   }
 
+  /**
+   * Returns the stored username.
+   * Can be used anywhere in the application where the username is needed.
+   */
   getUsername(): string {
     return this.username;
   }
 
-  // Provide a helper method to fetch user from /userbyusername
+  /**
+   * Fetches the user record from the backend using the username.
+   * This function is called by setUsername().
+   */
   fetchUserByUsername(username: string): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/userbyusername?username=${username}`);
   }
 
-  // If you need to fetch by ID (your old approach), you still can
+  /**
+   * Fetches the user record from the backend using the user ID.
+   * This is available for use if you need to fetch by ID.
+   */
   fetchUserById(id: number): Observable<any[]> {
-    return this.http.get<any[]>(`/user?id=${id}`);
+    return this.http.get<any[]>(`${environment.apiUrl}/user?id=${id}`);
   }
 
+  /**
+   * Sets the complete user object in memory and in local storage.
+   * Called in login.page.ts after successful login:
+   *    this.userService.setUser(response.user);
+   */
   setUser(user: any) {
     this.user = user;
+    localStorage.setItem('currentUser', JSON.stringify(user));
   }
 
+  /**
+   * Retrieves the complete user object.
+   * It first checks in-memory and, if not available, retrieves from local storage.
+   * This function can be used in pages like calendar.page.ts to ensure the user is loaded.
+   */
   getUser(): any {
+    if (!this.user) {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        this.user = JSON.parse(storedUser);
+      }
+    }
     return this.user;
   }
 }

@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment';
 interface LoginResponse {
   status: string;
   message: string;
-  user?: any; // <-- We'll assume 'user' is returned from the backend
+  user?: any; // We'll assume 'user' is returned from the backend
 }
 
 @Component({
@@ -39,21 +39,22 @@ export class LoginPage {
           console.log('Backend Response:', response);
           // Handle response and navigate if authentication is successful
           if (response.message === 'Login successful') {
-            // Optional: store username in your UserService
+            // Set the username and user in the UserService
             this.userService.setUsername(this.username);
 
-            // If the backend also returns a "user" object:
-            //   e.g. response.user = { id: 3, username: 'iswank', ... }
             if (response.user) {
-              // Pass the user object to the Calendar page via router state
+              // Save user to local storage for persistence across refreshes
+              localStorage.setItem('currentUser', JSON.stringify(response.user));
+              // Also update the UserService's user object
+              this.userService.setUser(response.user);
+
+              // Pass the user object via navigation state as before
               this.router.navigate(['/tabs/calendar'], {
                 state: { user: response.user }
               });
             } else {
-              // If there's no user object in the response, handle accordingly
               console.warn('No user object returned from server');
-              // Just navigate or show an error, depending on your needs
-              // this.router.navigate(['/tabs/calendar']);
+              // Optionally handle this scenario
             }
           } else {
             alert('Invalid credentials');
