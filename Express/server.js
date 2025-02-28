@@ -37,6 +37,7 @@ db.connect((err) => {
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
+    console.log(`[LOGIN] 400 - Username or password missing`);
     return res.status(400).send({ message: 'Username and password are required.' });
   }
 
@@ -46,15 +47,18 @@ app.post('/login', async (req, res) => {
     const result = await db.query(query, values);
 
     if (result.rows.length > 0) {
+      console.log(`[LOGIN] 200 - User logged in:`, result.rows[0]);
       return res.status(200).send({ message: 'Login successful.', user: result.rows[0] });
     } else {
+      console.log(`[LOGIN] 401 - Invalid credentials`);
       return res.status(401).send({ message: 'Invalid credentials.' });
     }
   } catch (error) {
-    console.error('Error during login query execution:', error.stack);
+    console.error(`[LOGIN] 500 - Server error:`, error.stack);
     return res.status(500).send({ message: 'Server error.' });
   }
 });
+
 
 // Signup Route
 app.post('/signup', async (req, res) => {
@@ -224,7 +228,9 @@ app.delete('/recipes/:id', async (req, res) => {
 // Save or update calendar data
 app.post('/calendar', async (req, res) => {
   const { user_ids, week, start_date } = req.body;
+  
   if (!user_ids || !week || !start_date) {
+    console.log(`[POST /calendar] 400 - Missing required fields`);
     return res.status(400).send({ message: 'Missing required fields: user_ids, week, and start_date.' });
   }
 
@@ -235,17 +241,22 @@ app.post('/calendar', async (req, res) => {
     if (existingCalendar.rows.length > 0) {
       const updateQuery = 'UPDATE calendar SET week = $1 WHERE start_date = $2 AND $3 = ANY(user_ids) RETURNING *';
       const result = await db.query(updateQuery, [week, start_date, user_ids[0]]);
+      
+      console.log(`[POST /calendar] 200 - Calendar updated for user ${user_ids[0]}`);
       return res.status(200).send({ message: 'Calendar updated successfully.', calendar: result.rows[0] });
     } else {
       const insertQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
       const result = await db.query(insertQuery, [user_ids, week, start_date]);
+
+      console.log(`[POST /calendar] 201 - New calendar created for user ${user_ids[0]}`);
       return res.status(201).send({ message: 'Calendar created successfully.', calendar: result.rows[0] });
     }
   } catch (error) {
-    console.error('Error saving calendar data:', error.stack);
+    console.error(`[POST /calendar] 500 - Server error:`, error.stack);
     return res.status(500).send({ message: 'Server error.' });
   }
 });
+
 
 // Retrieve calendar data for a specific week and user, or all calendars for a user
 app.get('/calendar', async (req, res) => {
@@ -282,8 +293,12 @@ app._router.stack.forEach((layer) => {
   }
 });
 
+/**
+ * Start the server
+ */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+module.exports = app;

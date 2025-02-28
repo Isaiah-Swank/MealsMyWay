@@ -11,7 +11,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "mocha" 
+    "test": "mocha"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "chai": "^5.2.0",
     "mocha": "^11.1.0",
+    "sinon": "^19.0.2",
     "supertest": "^7.0.0"
   }
 }
