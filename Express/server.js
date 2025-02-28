@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Set up the database connection using environment variables
+// Configure PostgreSQL connection using environment variables
 const db = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -20,21 +20,24 @@ const db = new Pool({
   },
 });
 
-// Test the connection
-db.connect((err, client, release) => {
+// Test the database connection
+db.connect((err) => {
   if (err) {
-    console.error('Error connecting to the database:', err.stack);
+    console.error('Database connection error:', err.stack);
   } else {
     console.log('Connected to the PostgreSQL database');
   }
 });
 
-// 📌 Login Route
+/**
+ * User Authentication Routes
+ */
+
+// Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-
   if (!username || !password) {
-    return res.status(400).send({ message: 'Username and password are required' });
+    return res.status(400).send({ message: 'Username and password are required.' });
   }
 
   try {
@@ -43,150 +46,244 @@ app.post('/login', async (req, res) => {
     const result = await db.query(query, values);
 
     if (result.rows.length > 0) {
-      return res.status(200).send({ message: 'Login successful', user: result.rows[0] });
+      return res.status(200).send({ message: 'Login successful.', user: result.rows[0] });
     } else {
-      return res.status(401).send({ message: 'Invalid credentials' });
+      return res.status(401).send({ message: 'Invalid credentials.' });
     }
   } catch (error) {
-    console.error('Error executing query', error.stack);
-    return res.status(500).send({ message: 'Server error' });
+    console.error('Error during login query execution:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-// 📌 Signup Route
+// Signup Route
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
-
   if (!username || !password) {
-    return res.status(400).send({ message: 'Username and password are required' });
+    return res.status(400).send({ message: 'Username and password are required.' });
   }
 
   try {
     const checkUserQuery = 'SELECT * FROM users WHERE username = $1';
-    const checkUserValues = [username];
-    const result = await db.query(checkUserQuery, checkUserValues);
+    const result = await db.query(checkUserQuery, [username]);
 
     if (result.rows.length > 0) {
-      return res.status(400).send({ message: 'Username already exists' });
+      return res.status(400).send({ message: 'Username already exists.' });
     }
 
     const insertUserQuery = 'INSERT INTO users (username, password, email) VALUES ($1, $2, $3)';
-    const insertUserValues = [username, password, email];
-    await db.query(insertUserQuery, insertUserValues);
-
-    res.status(201).send({ message: 'User created successfully' });
+    await db.query(insertUserQuery, [username, password, email]);
+    return res.status(201).send({ message: 'User created successfully.' });
   } catch (error) {
-    console.error('Error executing query', error.stack);
-    res.status(500).send({ message: 'Server error' });
+    console.error('Error during signup query execution:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-// 📌 GET Recipes
-app.get('/recipes', async (req, res) => {
-  const { tag } = req.query;
+/**
+ * User Data Routes
+ */
+
+// Retrieve user by username
+app.get('/userbyusername', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    return res.status(400).send({ message: 'Username query parameter is required.' });
+  }
 
   try {
-    let query = 'SELECT * FROM Recipes';
-    let values = [];
+    const query = 'SELECT id, username, email, privacy, shared_plans FROM users WHERE username = $1';
+    const result = await db.query(query, [username]);
 
+    if (result.rows.length > 0) {
+      return res.json(result.rows);
+    } else {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error fetching user by username:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+// Retrieve user by ID
+app.get('/user', async (req, res) => {
+  const { id } = req.query;
+  if (!id) {
+    return res.status(400).send({ message: 'ID query parameter is required.' });
+  }
+
+  try {
+    const query = 'SELECT id, username, email, privacy, shared_plans FROM users WHERE id = $1';
+    const result = await db.query(query, [id]);
+
+    if (result.rows.length > 0) {
+      return res.json(result.rows);
+    } else {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+/**
+ * Recipes Routes
+ */
+
+// Retrieve recipes with optional tag filtering
+app.get('/recipes', async (req, res) => {
+  const { tag } = req.query;
+  try {
+    let query = 'SELECT * FROM Recipes';
+    const values = [];
     if (tag) {
       query += ' WHERE tag = $1';
       values.push(tag);
     }
-
     const result = await db.query(query, values);
-    res.json(result.rows);
+    return res.json(result.rows);
   } catch (err) {
     console.error('Error fetching recipes:', err);
-    res.status(500).send('Error fetching recipes');
+    return res.status(500).send('Error fetching recipes.');
   }
 });
 
-// 📌 POST Create Recipe
+// Create a new recipe with an optional tag
 app.post('/recipes', async (req, res) => {
   const { author, title, ingredients, instructions, tag } = req.body;
-
   if (!author || !title || !ingredients || !instructions) {
-    return res.status(400).json({ message: 'All fields are required' });
+    return res.status(400).send({ message: 'All fields (author, title, ingredients, instructions) are required.' });
   }
 
   try {
-    const insertQuery = `
+    const query = `
       INSERT INTO Recipes (author, title, ingredients, instructions, tag) 
-      VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+      VALUES ($1, $2, $3, $4, $5) RETURNING *
+    `;
     const values = [author, title, ingredients, instructions, tag || null];
-
-    const result = await db.query(insertQuery, values);
-    res.status(201).json({ message: 'Recipe created successfully', recipe: result.rows[0] });
+    const result = await db.query(query, values);
+    return res.status(201).send({ message: 'Recipe created successfully.', recipe: result.rows[0] });
   } catch (error) {
-    console.error('Error inserting recipe:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error creating recipe:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
+// Update an existing recipe
 app.put('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   const { title, ingredients, instructions, tag } = req.body;
-
-  console.log(`🔹 Received update request for ID: ${id}`);
-  console.log(`🔹 Request Body:`, req.body);
-
   if (!title || !ingredients || !instructions) {
-    return res.status(400).send({ message: '⚠️ All fields are required' });
+    return res.status(400).send({ message: 'All fields are required.' });
   }
 
   try {
-    const updateQuery = `
-      UPDATE Recipes SET title = $1, ingredients = $2, instructions = $3, tag = $4
-      WHERE id = $5 RETURNING *`;
+    const query = `
+      UPDATE Recipes 
+      SET title = $1, ingredients = $2, instructions = $3, tag = $4
+      WHERE id = $5 RETURNING *
+    `;
     const values = [title, ingredients, instructions, tag, id];
+    const result = await db.query(query, values);
 
-    const result = await db.query(updateQuery, values);
     if (result.rows.length > 0) {
-      res.status(200).send({ message: '✅ Recipe updated successfully', recipe: result.rows[0] });
+      return res.status(200).send({ message: 'Recipe updated successfully.', recipe: result.rows[0] });
     } else {
-      res.status(404).send({ message: '⚠️ Recipe not found' });
+      return res.status(404).send({ message: 'Recipe not found.' });
     }
   } catch (error) {
-    console.error('❌ Error updating recipe:', error);
-    res.status(500).send({ message: 'Server error' });
+    console.error('Error updating recipe:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-
-
-// 📌 DELETE Recipe
+// Delete a recipe
 app.delete('/recipes/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
-    const deleteQuery = 'DELETE FROM Recipes WHERE id = $1 RETURNING *';
-    const result = await db.query(deleteQuery, [id]);
+    const query = 'DELETE FROM Recipes WHERE id = $1 RETURNING *';
+    const result = await db.query(query, [id]);
 
     if (result.rows.length > 0) {
-      res.status(200).send({ message: 'Recipe deleted successfully' });
+      return res.status(200).send({ message: 'Recipe deleted successfully.' });
     } else {
-      res.status(404).send({ message: 'Recipe not found' });
+      return res.status(404).send({ message: 'Recipe not found.' });
     }
   } catch (error) {
-    console.error('Error deleting recipe:', error);
-    res.status(500).send({ message: 'Server error' });
+    console.error('Error deleting recipe:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-// Start Server
-app._router.stack.forEach((r) => {
-  if (r.route && r.route.path) {
-    console.log(`Route available: ${r.route.stack[0].method.toUpperCase()} ${r.route.path}`);
+/**
+ * Calendar Routes
+ */
+
+// Save or update calendar data
+app.post('/calendar', async (req, res) => {
+  const { user_ids, week, start_date } = req.body;
+  if (!user_ids || !week || !start_date) {
+    return res.status(400).send({ message: 'Missing required fields: user_ids, week, and start_date.' });
+  }
+
+  try {
+    const checkQuery = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
+    const existingCalendar = await db.query(checkQuery, [start_date, user_ids[0]]);
+
+    if (existingCalendar.rows.length > 0) {
+      const updateQuery = 'UPDATE calendar SET week = $1 WHERE start_date = $2 AND $3 = ANY(user_ids) RETURNING *';
+      const result = await db.query(updateQuery, [week, start_date, user_ids[0]]);
+      return res.status(200).send({ message: 'Calendar updated successfully.', calendar: result.rows[0] });
+    } else {
+      const insertQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
+      const result = await db.query(insertQuery, [user_ids, week, start_date]);
+      return res.status(201).send({ message: 'Calendar created successfully.', calendar: result.rows[0] });
+    }
+  } catch (error) {
+    console.error('Error saving calendar data:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-if (require.main === module) {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
-}
+// Retrieve calendar data for a specific week and user, or all calendars for a user
+app.get('/calendar', async (req, res) => {
+  const { start_date, user_id } = req.query;
+  if (!user_id) {
+    return res.status(400).send({ message: 'Missing user_id query parameter.' });
+  }
 
-module.exports = app;
+  try {
+    if (start_date) {
+      const query = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
+      const result = await db.query(query, [start_date, Number(user_id)]);
+      if (result.rows.length === 0) {
+        return res.status(404).send({ message: 'No calendar found for the specified week and user.' });
+      }
+      return res.status(200).json(result.rows);
+    } else {
+      const query = 'SELECT * FROM calendar WHERE $1 = ANY(user_ids) ORDER BY start_date DESC';
+      const result = await db.query(query, [Number(user_id)]);
+      return res.status(200).json(result.rows);
+    }
+  } catch (error) {
+    console.error('Error fetching calendar data:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
 
+/**
+ * Log all available routes
+ */
+app._router.stack.forEach((layer) => {
+  if (layer.route && layer.route.path) {
+    console.log(`Route available: ${layer.route.stack[0].method.toUpperCase()} ${layer.route.path}`);
+  }
+});
 
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
 
