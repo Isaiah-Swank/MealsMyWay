@@ -110,6 +110,28 @@ app.get('/userbyusername', async (req, res) => {
   }
 });
 
+// Retrieve users by partial username match
+app.get('/users', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    return res.status(400).send({ message: 'Username query parameter is required.' });
+  }
+
+  try {
+    const query = 'SELECT id, username, email FROM users WHERE username ILIKE $1';
+    const result = await db.query(query, [`%${username}%`]);
+
+    if (result.rows.length > 0) {
+      return res.json(result.rows);
+    } else {
+      return res.status(404).send({ message: 'No users found.' });
+    }
+  } catch (error) {
+    console.error('Error fetching users:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
 // Retrieve user by ID
 app.get('/user', async (req, res) => {
   const { id } = req.query;
@@ -257,6 +279,33 @@ app.post('/calendar', async (req, res) => {
   }
 });
 
+// Update calendar entry (PUT)
+app.put('/calendar', async (req, res) => {
+  const { user_ids, week, start_date } = req.body;
+  if (!user_ids || !week || !start_date) {
+    return res.status(400).send({ message: 'user_ids, week, and start_date are required.' });
+  }
+
+  try {
+    const query = `
+      UPDATE calendar
+      SET user_ids = $1, week = $2
+      WHERE start_date = $3
+      RETURNING *;
+    `;
+    const values = [user_ids, week, start_date];
+    const result = await db.query(query, values);
+
+    if (result.rows.length > 0) {
+      return res.json(result.rows[0]);
+    } else {
+      return res.status(404).send({ message: 'Calendar entry not found.' });
+    }
+  } catch (error) {
+    console.error('Error updating calendar:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
 
 // Retrieve calendar data for a specific week and user, or all calendars for a user
 app.get('/calendar', async (req, res) => {
