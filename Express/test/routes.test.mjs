@@ -3,6 +3,7 @@ import request from 'supertest';
 import sinon from 'sinon';
 import app from '../server.js';
 import pkg from 'pg';  // Import entire pg module
+import argon2 from 'argon2';
 const { Pool } = pkg;
 
 describe('🔍 Backend Route Tests', () => {
@@ -27,15 +28,37 @@ describe('🔍 Backend Route Tests', () => {
       expect(res.status).to.equal(400);
       expect(res.body.message).to.equal('Username and password are required.');
     });
-
+  
     it('should return 200 on successful login', async () => {
-      dbStub.resolves({ rows: [{ id: 1, username: 'testUser', password: 'testPass' }] });
-
+      const hashedPassword = await argon2.hash('testPass'); // Hash password before mocking DB
+      dbStub.resolves({ rows: [{ id: 1, username: 'testUser', password: hashedPassword }] });
+  
       const res = await request(app).post('/login').send({ username: 'testUser', password: 'testPass' });
+  
       expect(res.status).to.equal(200);
       expect(res.body.message).to.equal('Login successful.');
     });
+  
+    it('should return 401 for an incorrect password', async () => {
+      const hashedPassword = await argon2.hash('correctPass'); // Hash the real stored password
+      dbStub.resolves({ rows: [{ id: 1, username: 'testUser', password: hashedPassword }] });
+  
+      const res = await request(app).post('/login').send({ username: 'testUser', password: 'wrongPass' });
+  
+      expect(res.status).to.equal(401);
+      expect(res.body.message).to.equal('Invalid username or password.');
+    });
+  
+    it('should return 401 if user does not exist', async () => {
+      dbStub.resolves({ rows: [] });
+  
+      const res = await request(app).post('/login').send({ username: 'nonExistentUser', password: 'somePass' });
+  
+      expect(res.status).to.equal(401);
+      expect(res.body.message).to.equal('Invalid username or password.');
+    });
   });
+  
 
   describe('POST /signup', () => {
     it('should return 400 when username or password is missing', async () => {
