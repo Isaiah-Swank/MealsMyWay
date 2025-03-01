@@ -231,6 +231,14 @@ export class Tab2Page implements OnInit {
     }
   }
 
+  onRecipeClick(recipe: any) {
+    if (recipe) {
+      this.hoveredRecipe = recipe;
+    } else {
+      this.hoveredRecipe = null;
+    }
+  }
+
   // Retrieve the list of ingredients for a meal, handling different formats
   getIngredientsForMeal(meal: any): Promise<string[]> {
     return new Promise((resolve) => {
@@ -389,16 +397,7 @@ export class Tab2Page implements OnInit {
 
   // Display the shopping list for the selected week
   viewShoppingList() {
-    const weekKey = this.selectedPlan.toDateString();
-    const loadedWeek = this.events[weekKey];
-    console.log("Loaded week events for", weekKey, loadedWeek);
-    const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
-    if (!groceryList || groceryList.length === 0) {
-      alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
-    } else {
-      this.groceryListDisplay = groceryList;
-      this.showShoppingList = true;
-    }
+    this.displayGroceryList();
   }
 
   // Save the current calendar events to the server
@@ -453,8 +452,14 @@ export class Tab2Page implements OnInit {
             const calendarData = response[0];
             // Merge loaded week data with a fallback for grocery items
             this.events[weekKey] = {
-              ...calendarData.week,
-              grocery: calendarData.week && calendarData.week.grocery ? calendarData.week.grocery : []
+              sunday: calendarData.week.sunday || [],
+              monday: calendarData.week.monday || [],
+              tuesday: calendarData.week.tuesday || [],
+              wednesday: calendarData.week.wednesday || [],
+              thursday: calendarData.week.thursday || [],
+              friday: calendarData.week.friday || [],
+              saturday: calendarData.week.saturday || [],
+              grocery: calendarData.week.grocery || []
             };
           } else {
             // Initialize empty events if no data is returned
@@ -480,5 +485,19 @@ export class Tab2Page implements OnInit {
   // Called when the user changes the plan (week), triggering a calendar load
   onPlanChange() {
     this.loadCalendar();
+  }
+
+  displayGroceryList() {
+    const weekKey = this.selectedPlan.toDateString();
+    const loadedWeek = this.events[weekKey];
+    console.log("Loaded week events for", weekKey, loadedWeek);
+    const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
+    if (!groceryList || groceryList.length === 0) {
+      alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
+    } else {
+      console.log('Grocery list for the week:', groceryList);
+      this.groceryListDisplay = groceryList;
+      this.showShoppingList = true;
+    }
   }
 }

@@ -85,7 +85,7 @@ export class RecipesPage implements OnInit {
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
         console.log('Backend Response:', response);
-        if (response.message === 'Recipe created successfully') {
+        if (response.message === 'Recipe created successfully.') {
           this.loadRecipes();
           this.closeForm();
         } else {
