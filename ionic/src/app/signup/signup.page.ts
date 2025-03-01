@@ -25,7 +25,7 @@ export class SignupPage {
       }).subscribe(
         (response: any) => {
           console.log('Backend Response:', response);
-          if (response.message === 'User created successfully') {
+          if (response.message === 'User created successfully.') {
             // Redirect to login page after successful sign up
             this.router.navigate(['/login']);
           } else {

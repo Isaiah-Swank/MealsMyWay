@@ -39,8 +39,7 @@
         <h3>Sunday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['sunday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -50,8 +49,7 @@
         <h3>Monday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['monday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -61,8 +59,7 @@
         <h3>Tuesday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['tuesday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -72,8 +69,7 @@
         <h3>Wednesday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['wednesday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -83,8 +79,7 @@
         <h3>Thursday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['thursday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -94,8 +89,7 @@
         <h3>Friday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['friday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -105,8 +99,7 @@
         <h3>Saturday</h3>
         <div class="events">
           <div *ngFor="let event of currentWeekEvents['saturday']"
-               (mouseover)="onRecipeHover(event)"
-               (mouseout)="onRecipeHover(null)">
+               (click)="onRecipeClick(event)">
             {{ event.title }}
           </div>
         </div>
@@ -129,8 +122,8 @@
         <div class="details-container">
           <ng-container *ngIf="showShoppingList; else recipeDetailsContent">
             <ul>
-              <li *ngFor="let ingredient of shoppingListKeys">
-                {{ ingredient }}: {{ shoppingList[ingredient] }}
+              <li *ngFor="let ingredient of groceryListDisplay">
+                {{ ingredient }}
               </li>
             </ul>
             <ion-button (click)="showShoppingList = false">Close</ion-button>
@@ -147,6 +140,7 @@
               <p *ngIf="hoveredRecipe.instructions">
                 <strong>Instructions:</strong> {{ hoveredRecipe.instructions }}
               </p>
+              <ion-button (click)="hoveredRecipe = null">Close</ion-button>
             </ng-container>
             <ng-template #defaultDetails>
               <div *ngIf="recipes && recipes.length > 0; else noRecipes">
@@ -192,6 +186,7 @@
           <ion-button (click)="addMeal()">Add Meal</ion-button>
         </div>
       </div>
+
     </div>
 
     <!-- BOTTOM BUTTONS CONTAINER -->

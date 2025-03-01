@@ -38,7 +38,7 @@ export class LoginPage {
         (response) => {
           console.log('Backend Response:', response);
           // Handle response and navigate if authentication is successful
-          if (response.message === 'Login successful') {
+          if (response.message === 'Login successful.') {
             // Set the username and user in the UserService
             this.userService.setUsername(this.username);
 
