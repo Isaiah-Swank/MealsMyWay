@@ -28,8 +28,23 @@
         Week of: {{ selectedPlan | date:'longDate' }}
       </h2>
 
-      <!-- Share Calendar Button (placeholder) -->
-      <ion-button>Share Calendar</ion-button>
+      <!-- Share Calendar Button -->
+      <ion-button (click)="toggleShareCalendar()">Share Calendar</ion-button>
+    </div>
+
+    <!-- Search Bar for Sharing Calendar -->
+    <div *ngIf="showShareCalendar">
+      <ion-item>
+        <ion-input placeholder="Search for a user" [(ngModel)]="searchQuery" (ionInput)="searchUsers()"></ion-input>
+      </ion-item>
+      <div *ngIf="searchResults.length > 0">
+        <ul>
+          <li *ngFor="let user of searchResults">
+            {{ user.username }}
+            <ion-button (click)="addUserToCalendar(user)">Add to Calendar</ion-button>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <!-- CALENDAR GRID -->

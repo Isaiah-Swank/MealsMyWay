@@ -30,6 +30,9 @@ export class Tab2Page implements OnInit {
   showShoppingList: boolean = false;  // Flag to toggle shopping list display
   groceryListDisplay: string[] = [];  // Array to hold grocery items for display
   currentUser: any = null;  // Object to store current user's data
+  searchQuery: string = ''; // Search query for user search
+  searchResults: any[] = []; // Array to store search results
+  showShareCalendar: boolean = false; // Flag to toggle share calendar display
 
   // Dependency injection of required services in the constructor
   constructor(
@@ -233,6 +236,15 @@ export class Tab2Page implements OnInit {
 
   onRecipeClick(recipe: any) {
     if (recipe) {
+      // Ensure ingredients are in array format
+      if (typeof recipe.ingredients === 'string') {
+        recipe.ingredients = recipe.ingredients
+          .split(',')
+          .map((ingredient: string) => ingredient.trim());
+      } else {
+        recipe.ingredients = recipe.ingredients || [];
+      }
+      recipe.instructions = recipe.instructions || '';
       this.hoveredRecipe = recipe;
     } else {
       this.hoveredRecipe = null;
@@ -461,6 +473,8 @@ export class Tab2Page implements OnInit {
               saturday: calendarData.week.saturday || [],
               grocery: calendarData.week.grocery || []
             };
+            console.log('Loaded Calendar for week:', weekKey);
+            console.log('User IDs in this calendar:', calendarData.user_ids);
           } else {
             // Initialize empty events if no data is returned
             this.events[weekKey] = {
@@ -473,6 +487,7 @@ export class Tab2Page implements OnInit {
               saturday: [],
               grocery: []
             };
+            console.log('No calendar data found for week:', weekKey);
           }
           console.log('Loaded Calendar!', this.events[weekKey]);
         },
@@ -499,5 +514,66 @@ export class Tab2Page implements OnInit {
       this.groceryListDisplay = groceryList;
       this.showShoppingList = true;
     }
+  }
+
+  toggleShareCalendar() {
+    this.showShareCalendar = !this.showShareCalendar;
+  }
+
+  searchUsers() {
+    if (this.searchQuery.trim() === '') {
+      this.searchResults = [];
+      return;
+    }
+  
+    this.http.get<any[]>(`${environment.apiUrl}/users?username=${this.searchQuery}`)
+      .subscribe(
+        (response) => {
+          this.searchResults = response;
+        },
+        (error) => {
+          console.error('Error searching users:', error);
+          this.searchResults = [];
+        }
+      );
+  }
+
+  addUserToCalendar(user: any) {
+    const weekKey = this.selectedPlan.toDateString();
+    const calendarData = this.events[weekKey] || {
+      sunday: [],
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      user_ids: [this.currentUser.id] // Initialize with the current user's ID
+    };
+  
+    if (!calendarData['user_ids']) {
+      calendarData['user_ids'] = [this.currentUser.id];
+    }
+  
+    if (!calendarData['user_ids'].includes(user.id)) {
+      calendarData['user_ids'].push(user.id);
+    }
+  
+    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const payload = {
+      user_ids: calendarData['user_ids'],
+      week: calendarData,
+      start_date: startDateString
+    };
+  
+    this.http.put<{ message: string }>(`${environment.apiUrl}/calendar`, payload)
+      .subscribe(
+        (response) => {
+          console.log('User added to calendar successfully:', response);
+        },
+        (error) => {
+          console.error('Error adding user to calendar:', error);
+        }
+      );
   }
 }
