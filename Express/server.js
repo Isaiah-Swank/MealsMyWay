@@ -3,6 +3,8 @@ require('dotenv').config();
 const cors = require('cors');
 const { Pool } = require('pg');
 const app = express();
+const argon2 = require('argon2');
+
 
 /**
  * Express Middleware Configuration
@@ -68,17 +70,28 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    const query = 'SELECT * FROM users WHERE username = $1 AND password = $2';
-    const values = [username, password];
-    const result = await db.query(query, values);
+    // Fetch the user by username
+    const query = 'SELECT * FROM users WHERE username = $1';
+    const result = await db.query(query, [username]);
 
-    if (result.rows.length > 0) {
-      console.log(`[LOGIN] 200 - User logged in:`, result.rows[0]);
-      return res.status(200).send({ message: 'Login successful.', user: result.rows[0] });
-    } else {
+    if (result.rows.length === 0) {
       console.log(`[LOGIN] 401 - Invalid credentials`);
-      return res.status(401).send({ message: 'Invalid credentials.' });
+      return res.status(401).send({ message: 'Invalid username or password.' });
     }
+
+    const user = result.rows[0];
+    const storedHash = user.password;
+
+    // Verify password using Argon2
+    const isPasswordValid = await argon2.verify(storedHash, password);
+
+    if (!isPasswordValid) {
+      console.log(`[LOGIN] 401 - Invalid credentials`);
+      return res.status(401).send({ message: 'Invalid username or password.' });
+    }
+
+    console.log(`[LOGIN] 200 - User logged in:`, user);
+    return res.status(200).send({ message: 'Login successful.', user });
   } catch (error) {
     console.error(`[LOGIN] 500 - Server error:`, error.stack);
     return res.status(500).send({ message: 'Server error.' });
@@ -94,6 +107,7 @@ app.post('/login', async (req, res) => {
  * - Inserts a new user record into the 'users' table.
  * - Returns HTTP 201 on successful user creation, or appropriate error statuses.
  */
+// Signup Route with Password Hashing
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password) {
@@ -101,21 +115,33 @@ app.post('/signup', async (req, res) => {
   }
 
   try {
+    // Check if the username already exists
     const checkUserQuery = 'SELECT * FROM users WHERE username = $1';
-    const result = await db.query(checkUserQuery, [username]);
+    const existingUser = await db.query(checkUserQuery, [username]);
 
-    if (result.rows.length > 0) {
+    if (existingUser.rows.length > 0) {
       return res.status(400).send({ message: 'Username already exists.' });
     }
 
+    // Hash the password before storing
+    const hashedPassword = await argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16, // 64MB memory usage (resistant to GPU attacks)
+      timeCost: 3,         // Iterations (adjust for performance/security)
+      parallelism: 2       // Parallel threads
+    });
+
+    // Insert the user with the hashed password
     const insertUserQuery = 'INSERT INTO users (username, password, email) VALUES ($1, $2, $3)';
-    await db.query(insertUserQuery, [username, password, email]);
+    await db.query(insertUserQuery, [username, hashedPassword, email]);
+
     return res.status(201).send({ message: 'User created successfully.' });
   } catch (error) {
-    console.error('Error during signup query execution:', error.stack);
+    console.error('Error during signup:', error.stack);
     return res.status(500).send({ message: 'Server error.' });
   }
 });
+
 
 /**
  * User Data Routes
