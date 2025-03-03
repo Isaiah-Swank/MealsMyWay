@@ -42,15 +42,22 @@
     <div class="book-spine"></div>
 
     <!-- Right Container: List of All Recipes -->
+        <!-- Right Container: List of All Recipes -->
     <div class="recipes-container">
       <h1>Choose Recipes</h1>
       <ion-searchbar class="search-bar" placeholder="Search..." (ionInput)="filterRecipes($event)"></ion-searchbar>
 
       <ion-list class="recipe-list">
-        <ion-item *ngFor="let recipe of filteredRecipes" (click)="selectRecipe(recipe)">
+        <ion-item *ngFor="let recipe of filteredRecipes">
+          <ion-checkbox slot="start" (ionChange)="toggleRecipeSelection(recipe)"></ion-checkbox>
           <ion-label>{{ recipe.title }}</ion-label>
         </ion-item>
       </ion-list>
+
+      <!-- Button to add selected recipes to the calendar -->
+      <ion-button expand="full" (click)="addToCalendar()" [disabled]="selectedRecipes.length === 0">
+        Add Selected to Calendar
+      </ion-button>
     </div>
   </div>
 
