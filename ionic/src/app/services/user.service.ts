@@ -1,7 +1,6 @@
-// user.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -87,5 +86,16 @@ export class UserService {
       }
     }
     return this.user;
+  }
+
+  /**
+   * Searches for users based on the provided search query.
+   * Returns an observable emitting an array of matching users.
+   */
+  searchUsers(query: string): Observable<any[]> {
+    if (query.trim() === '') {
+      return of([]);
+    }
+    return this.http.get<any[]>(`${environment.apiUrl}/users?username=${query}`);
   }
 }
