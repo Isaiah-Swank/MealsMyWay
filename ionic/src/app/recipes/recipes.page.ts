@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { Platform, ModalController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router'; // ✅ Import Router
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 interface RecipeResponse {
@@ -17,12 +17,12 @@ interface RecipeResponse {
 export class RecipesPage implements OnInit {
   recipes: any[] = [];
   filteredRecipes: any[] = [];
-  selectedRecipe: any = null;
+  selectedRecipesList: any[] = []; // ✅ Left panel (stacked selected recipes)
+  selectedRecipes: any[] = []; // ✅ Right-side checkboxes (checked recipes)
   isMobile: boolean = false;
   isFormOpen: boolean = false;
   isEditFormOpen: boolean = false;
-  selectedRecipes: any[] = [];
-  isSubmitting: boolean = false; // ✅ Prevent double submission
+  isSubmitting: boolean = false;
 
   // New Recipe Model
   newRecipe = {
@@ -48,7 +48,7 @@ export class RecipesPage implements OnInit {
     private platform: Platform,
     private http: HttpClient,
     private modalCtrl: ModalController,
-    private router: Router // ✅ Inject Router
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -79,7 +79,7 @@ export class RecipesPage implements OnInit {
   }
 
   submitRecipe() {
-    if (this.isSubmitting) return; // ✅ Prevent duplicate submission
+    if (this.isSubmitting) return;
     this.isSubmitting = true;
 
     const recipeData = { ...this.newRecipe };
@@ -90,7 +90,7 @@ export class RecipesPage implements OnInit {
       return;
     }
 
-    console.log('Submitting recipe:', recipeData); // ✅ Debugging
+    console.log('Submitting recipe:', recipeData);
 
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
@@ -127,44 +127,35 @@ export class RecipesPage implements OnInit {
     );
   }
 
-  selectRecipe(recipe: any) {
-    if (this.selectedRecipe === recipe) {
-      this.selectedRecipe = null;
-    } else {
-      this.selectedRecipe = recipe;
+  isRecipeSelected(recipe: any): boolean {
+    return this.selectedRecipes.some(r => r.id === recipe.id);
+  }
 
-      if (recipe.api_id) {
-        this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
-          (response: any) => {
-            const meal = response.meals[0];
-            console.log(meal);
-
-            let ingredients: string[] = [];
-            for (let i = 1; i <= 20; i++) {
-              const ingredient = meal[`strIngredient${i}`];
-              if (ingredient) {
-                ingredients.push(ingredient);
-              } else {
-                break;
-              }
-            }
-
-            this.selectedRecipe.ingredients = ingredients;
-            this.selectedRecipe.instructions = meal.strInstructions;
-          },
-          (error) => {
-            console.error('Error fetching recipe details from API:', error);
-          }
-        );
-      } else {
-        if (typeof recipe.ingredients === 'string') {
-          this.selectedRecipe.ingredients = recipe.ingredients.split(',').map((ingredient: string) => ingredient.trim());
-        } else {
-          this.selectedRecipe.ingredients = recipe.ingredients || [];
-        }
-        this.selectedRecipe.instructions = recipe.instructions || '';
+  toggleRecipeSelection(recipe: any, event: any) {
+    if (event.detail.checked) {
+      // ✅ Add to selected list (right-side checkboxes)
+      if (!this.isRecipeSelected(recipe)) {
+        this.selectedRecipes.push(recipe);
       }
+
+      // ✅ Add to the left panel (stacked view)
+      if (!this.selectedRecipesList.some(r => r.id === recipe.id)) {
+        this.selectedRecipesList.push(recipe);
+      }
+    } else {
+      // ❌ Remove from selected list (right-side checkboxes)
+      this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipe.id);
+
+      // ❌ Remove from the left panel (stacked view)
+      this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
     }
+  }
+
+  removeSelectedRecipe(recipe: any) {
+    this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
+    
+    // Also uncheck the checkbox when removing manually
+    this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipe.id);
   }
 
   filterRecipes(event: any) {
@@ -201,29 +192,20 @@ export class RecipesPage implements OnInit {
       );
   }
 
-  closeRecipe() {
-    this.selectedRecipe = null;
-  }
-
-  toggleRecipeSelection(recipe: any) {
-    const index = this.selectedRecipes.findIndex(r => r.id === recipe.id);
-    if (index > -1) {
-      this.selectedRecipes.splice(index, 1); // Remove if already selected
-    } else {
-      this.selectedRecipes.push(recipe); // Add if not selected
-    }
-  }
-
-  addToCalendar() {
-  console.log("Selected recipes before navigating:", this.selectedRecipes);
+addToCalendar() {
+  console.log("Checked recipes before navigating:", this.selectedRecipes);
 
   if (this.selectedRecipes.length === 0) {
     alert("No recipes selected! Please select recipes first.");
     return;
   }
 
-  this.router.navigate(['/calendar'], { state: { recipes: this.selectedRecipes } });
+  // Navigate to Calendar Page and Force Reload
+  this.router.navigateByUrl('/tabs/calendar', { state: { recipes: this.selectedRecipes } }).then(() => {
+    window.location.reload(); // ✅ Reloads calendar page to reflect changes
+  });
 }
+
 
   deleteRecipe(recipeId: number) {
     if (confirm('Are you sure you want to delete this recipe?')) {
@@ -231,7 +213,8 @@ export class RecipesPage implements OnInit {
         () => {
           console.log('Recipe deleted successfully');
           this.loadRecipes();
-          this.selectedRecipe = null;
+          this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipeId);
+          this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipeId);
         },
         (error) => {
           console.error('Error deleting recipe:', error);
@@ -241,5 +224,4 @@ export class RecipesPage implements OnInit {
     }
   }
 }
-
 

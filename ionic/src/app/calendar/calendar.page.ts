@@ -48,26 +48,26 @@ export class Tab2Page implements OnInit {
 
   // Lifecycle hook that runs once the component is initialized.
   ngOnInit() {
-    // Set the start of the current week (Sunday).
-    this.setCurrentWeekStart();
-    // By default, select the current week.
-    this.selectedPlan = this.currentWeekStart;
-    // Generate a list of past weeks for the calendar plans.
-    this.generatePlans();
-    // Load all available recipes from the backend.
-    this.loadRecipes();
+  this.setCurrentWeekStart();
+  this.selectedPlan = this.currentWeekStart;
+  this.generatePlans();
 
-    // Retrieve the current user from the router's state (passed from the login page).
-    const nav = this.router.getCurrentNavigation();
-    if (nav && nav.extras && nav.extras.state && nav.extras.state['user']) {
-      this.currentUser = nav.extras.state['user'];
-      console.log('Calendar page got user from navigation:', this.currentUser);
-      // Load the calendar data for the selected week.
-      this.loadCalendar();
-    } else {
-      console.warn('No user passed from login to Calendar. Calendar not loaded.');
+  const nav = this.router.getCurrentNavigation();
+  if (nav && nav.extras && nav.extras.state) {
+    if (nav.extras.state['recipes']) {
+      this.recipes = nav.extras.state['recipes']; // ✅ Load only selected recipes
+      console.log('Loaded selected recipes:', this.recipes);
     }
+    if (nav.extras.state['user']) {
+      this.currentUser = nav.extras.state['user'];
+      console.log('Calendar page got user:', this.currentUser);
+      this.loadCalendar();
+    }
+  } else {
+    console.warn('No selected recipes or user passed to Calendar.');
   }
+}
+
 
   // Sets currentWeekStart to the most recent Sunday.
   setCurrentWeekStart() {

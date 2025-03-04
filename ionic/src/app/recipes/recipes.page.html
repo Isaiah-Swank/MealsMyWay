@@ -6,28 +6,29 @@
 
 <ion-content [fullscreen]="true">
   <div class="book-container">
-    
-    <!-- Left Container: Shows recipe details when selected; otherwise, defaults to "My Recipes" -->
+
+    <!-- Left Container: Shows selected recipes stacked -->
     <div class="my-recipes-container">
-      <ng-container *ngIf="selectedRecipe; else defaultView">
-        <ion-card class="recipe-details">
+      <ng-container *ngIf="selectedRecipesList.length > 0; else defaultView">
+        <h1>Selected Recipes</h1>
+        <ion-card class="recipe-details" *ngFor="let recipe of selectedRecipesList">
           <ion-card-header>
-            <ion-card-title>{{ selectedRecipe.title }}</ion-card-title>
+            <ion-card-title>{{ recipe.title }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
+            <p><strong>Author:</strong> {{ recipe.author }}</p>
             <p><strong>Ingredients:</strong></p>
             <ul>
-              <li *ngFor="let ingredient of selectedRecipe.ingredients">{{ ingredient }}</li>
+              <li *ngFor="let ingredient of recipe.ingredients">{{ ingredient }}</li>
             </ul>
             <p><strong>Instructions:</strong></p>
-            <p>{{ selectedRecipe.instructions }}</p>
-            <p *ngIf="selectedRecipe.tag"><strong>Tag:</strong> {{ selectedRecipe.tag }}</p>
+            <p>{{ recipe.instructions }}</p>
+            <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
 
-            <!-- Edit & Delete Buttons -->
-            <ion-button (click)="editRecipe(selectedRecipe)">Edit</ion-button>
-            <ion-button  (click)="deleteRecipe(selectedRecipe.id)">Delete</ion-button>
-            <ion-button fill="clear" (click)="closeRecipe()" > Close
-            </ion-button>
+            <!-- Edit, Delete, and Close Buttons -->
+            <ion-button (click)="editRecipe(recipe)">Edit</ion-button>
+            <ion-button (click)="deleteRecipe(recipe.id)">Delete</ion-button>
+            <ion-button fill="clear" (click)="removeSelectedRecipe(recipe)">Close</ion-button>
           </ion-card-content>
         </ion-card>
       </ng-container>
@@ -42,14 +43,17 @@
     <div class="book-spine"></div>
 
     <!-- Right Container: List of All Recipes -->
-        <!-- Right Container: List of All Recipes -->
     <div class="recipes-container">
       <h1>Choose Recipes</h1>
       <ion-searchbar class="search-bar" placeholder="Search..." (ionInput)="filterRecipes($event)"></ion-searchbar>
 
       <ion-list class="recipe-list">
         <ion-item *ngFor="let recipe of filteredRecipes">
-          <ion-checkbox slot="start" (ionChange)="toggleRecipeSelection(recipe)"></ion-checkbox>
+          <ion-checkbox 
+            slot="start" 
+            [checked]="isRecipeSelected(recipe)"
+            (ionChange)="toggleRecipeSelection(recipe, $event)">
+          </ion-checkbox>
           <ion-label>{{ recipe.title }}</ion-label>
         </ion-item>
       </ion-list>
@@ -84,11 +88,11 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Ingredients</ion-label>
-            <ion-input [(ngModel)]="newRecipe.ingredients" name="ingredients" required></ion-input>
+            <ion-textarea [(ngModel)]="newRecipe.ingredients" name="ingredients" required></ion-textarea>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Instructions</ion-label>
-            <ion-input [(ngModel)]="newRecipe.instructions" name="instructions" required></ion-input>
+            <ion-textarea [(ngModel)]="newRecipe.instructions" name="instructions" required></ion-textarea>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Tag</ion-label>
@@ -119,11 +123,11 @@
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Ingredients</ion-label>
-            <ion-input [(ngModel)]="editRecipeData.ingredients" name="ingredients" required></ion-input>
+            <ion-textarea [(ngModel)]="editRecipeData.ingredients" name="ingredients" required></ion-textarea>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Instructions</ion-label>
-            <ion-input [(ngModel)]="editRecipeData.instructions" name="instructions" required></ion-input>
+            <ion-textarea [(ngModel)]="editRecipeData.instructions" name="instructions" required></ion-textarea>
           </ion-item>
           <ion-item>
             <ion-label position="stacked">Tag</ion-label>
@@ -135,3 +139,7 @@
     </ng-template>
   </ion-modal>
 </ion-content>
+
+
+
+
