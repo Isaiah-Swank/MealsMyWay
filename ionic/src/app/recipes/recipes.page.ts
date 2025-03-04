@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { Platform, ModalController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router'; // ✅ Import Router
 import { environment } from '../../environments/environment';
 
 interface RecipeResponse {
@@ -20,6 +21,8 @@ export class RecipesPage implements OnInit {
   isMobile: boolean = false;
   isFormOpen: boolean = false;
   isEditFormOpen: boolean = false;
+  selectedRecipes: any[] = [];
+  isSubmitting: boolean = false; // ✅ Prevent double submission
 
   // New Recipe Model
   newRecipe = {
@@ -44,7 +47,8 @@ export class RecipesPage implements OnInit {
     private recipeService: RecipeService,
     private platform: Platform,
     private http: HttpClient,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private router: Router // ✅ Inject Router
   ) {}
 
   ngOnInit() {
@@ -75,12 +79,18 @@ export class RecipesPage implements OnInit {
   }
 
   submitRecipe() {
+    if (this.isSubmitting) return; // ✅ Prevent duplicate submission
+    this.isSubmitting = true;
+
     const recipeData = { ...this.newRecipe };
 
     if (!recipeData.author || !recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
       alert('Please fill in all required fields.');
+      this.isSubmitting = false;
       return;
     }
+
+    console.log('Submitting recipe:', recipeData); // ✅ Debugging
 
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
@@ -91,10 +101,12 @@ export class RecipesPage implements OnInit {
         } else {
           alert('Failed to add the recipe');
         }
+        this.isSubmitting = false;
       },
       (error) => {
         console.error('Error occurred while submitting the recipe:', error);
         alert('An error occurred. Please try again later.');
+        this.isSubmitting = false;
       }
     );
   }
@@ -167,13 +179,11 @@ export class RecipesPage implements OnInit {
     }
   }
 
-  // Open the edit form and pre-fill it with selected recipe data
   editRecipe(recipe: any) {
     this.editRecipeData = { ...recipe };
     this.openEditForm();
   }
 
-  // Send update request to backend
   updateRecipe() {
     console.log('Updating recipe with data:', this.editRecipeData);
 
@@ -191,12 +201,30 @@ export class RecipesPage implements OnInit {
       );
   }
 
-closeRecipe() {
-  this.selectedRecipe = null; // Deselect the recipe
+  closeRecipe() {
+    this.selectedRecipe = null;
+  }
+
+  toggleRecipeSelection(recipe: any) {
+    const index = this.selectedRecipes.findIndex(r => r.id === recipe.id);
+    if (index > -1) {
+      this.selectedRecipes.splice(index, 1); // Remove if already selected
+    } else {
+      this.selectedRecipes.push(recipe); // Add if not selected
+    }
+  }
+
+  addToCalendar() {
+  console.log("Selected recipes before navigating:", this.selectedRecipes);
+
+  if (this.selectedRecipes.length === 0) {
+    alert("No recipes selected! Please select recipes first.");
+    return;
+  }
+
+  this.router.navigate(['/calendar'], { state: { recipes: this.selectedRecipes } });
 }
 
-
-  // Delete a recipe
   deleteRecipe(recipeId: number) {
     if (confirm('Are you sure you want to delete this recipe?')) {
       this.http.delete(`${environment.apiUrl}/recipes/${recipeId}`).subscribe(
