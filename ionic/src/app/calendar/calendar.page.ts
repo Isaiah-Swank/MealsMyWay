@@ -117,15 +117,22 @@ export class Tab2Page implements OnInit {
    * Calls the RecipeService to fetch available recipes and assigns them to the local recipes array.
    */
   loadRecipes() {
-    this.recipeService.getRecipes().subscribe(
-      (recipes) => {
-        this.recipes = recipes;
-      },
-      (error) => {
-        console.error('Error fetching recipes:', error);
-      }
-    );
+    const nav = this.router.getCurrentNavigation();
+    let selectedRecipes = [];
+
+    if (nav && nav.extras && nav.extras.state && nav.extras.state['recipes']) {
+      selectedRecipes = nav.extras.state['recipes'];
+      
+      localStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
+    } else {
+      selectedRecipes = JSON.parse(localStorage.getItem('selectedRecipes') || '[]');
+    }
+
+    this.recipes = selectedRecipes;
+    console.log("Updated recipes in Calendar:", this.recipes);
   }
+
+
 
   // ------------------------- Getters -------------------------
   /**
