@@ -66,12 +66,17 @@ ion-button.update-password-btn {
   --handle-background: #a8e6a3 !important;
 }
 
-/* New styling for shared plans dropdown */
 .shared-plans-detail {
   min-height: 150px;
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid #ccc; /* You may change this if you want a different border color */
   border-radius: 4px;
-  background-color: #f9f9f9;
+  background-color: #d2b48c !important; /* Light brown background */
+  color: #246d48 !important; /* Dark green font */
+}
+
+/* Force all child elements to inherit dark green text */
+.shared-plans-detail * {
+  color: #246d48 !important;
 }

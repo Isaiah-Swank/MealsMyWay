@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { UserService } from '../services/user.service';
 import { ProfileService } from '../services/profile.service';
 
@@ -11,7 +12,7 @@ export class Tab3Page implements OnInit {
   username: string = '';
   userEmail: string = '';
   privacy: boolean = true;
-  oldPassword: string = ''; // New field for old password
+  oldPassword: string = '';
   newPassword: string = '';
   sharedPlans: any[] = [];
 
@@ -54,7 +55,29 @@ export class Tab3Page implements OnInit {
       const currentUser = this.userService.getUser();
       if (currentUser && currentUser.id) {
         this.profileService.getSharedPlans(currentUser.id).subscribe((calendars: any[]) => {
-          this.sharedPlans = calendars.filter(calendar => calendar.user_ids.length > 1);
+          // Filter for calendars that include the current user and have more than one user in user_ids.
+          this.sharedPlans = calendars
+            .filter(calendar =>
+              calendar.user_ids &&
+              calendar.user_ids.length > 1 &&
+              calendar.user_ids.includes(currentUser.id)
+            )
+            .map(calendar => ({
+              ...calendar,
+              // Initially, sharedWith is the list of IDs (excluding current user's id)
+              sharedWith: calendar.user_ids.filter((id: number) => id !== currentUser.id)
+            }));
+
+          // For each calendar, convert the sharedWith array from user IDs to usernames
+          this.sharedPlans.forEach((calendar, index) => {
+            if (calendar.sharedWith.length > 0) {
+              forkJoin<string[]>(
+                calendar.sharedWith.map((userId: number) => this.userService.getUsernameById(userId))
+              ).subscribe((usernames: string[]) => {
+                this.sharedPlans[index].sharedWith = usernames;
+              });
+            }
+          });
         });
       }
     }

@@ -64,7 +64,19 @@
             No shared plans
           </ion-item>
           <ion-item *ngFor="let plan of sharedPlans">
-            {{ plan.name }}
+            <ion-label>
+              <h2>{{ plan.name }}</h2>
+              <p>
+                Week: {{ plan.start_date | date:'mediumDate' }}
+              </p>
+              <p>
+                Shared with: 
+                <span *ngIf="plan.sharedWith && plan.sharedWith.length > 0; else noUsers">
+                  {{ plan.sharedWith.join(', ') }}
+                </span>
+                <ng-template #noUsers>No additional users</ng-template>
+              </p>
+            </ion-label>
           </ion-item>
         </ion-list>
       </div>
