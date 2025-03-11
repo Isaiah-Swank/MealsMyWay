@@ -15,56 +15,38 @@
     <div class="pantry">
       <h2>PANTRY</h2>
       <ul>
-        <li>8oz Example</li>
-        <li>15oz Example</li>
-        <li>30oz Example</li>
-        <li>9oz Example</li>
-        <li>10oz Example</li>
+        <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
+          {{ item.name }} - {{ item.quantity }}oz
+          <span *ngIf="editMode" class="delete-icon" (click)="deletePantryItem(i)">✖</span>
+        </li>
+        <li class="new-item" *ngIf="!editMode" (click)="openAddItemPrompt()">New Item</li>
       </ul>
-      <ion-button class="edit-button-pantry" expand="block">Edit Pantry</ion-button>
+      
+      <ion-button (click)="toggleEditMode()" expand="block" class="edit-button-pantry">
+        {{ editMode ? 'All Done' : 'Edit Pantry' }}
+      </ion-button>
     </div>
-
+    
     <div class="freezer">
       <img src="assets/images/icicles.png" alt="Icicles" class="icicles">
       <h2>FREEZER</h2>
       <ul>
-        <li>
-          3 Portions Example
-          <span class="item-controls">
-            <span class="plus">+</span>
-            <span class="minus">-</span>
+        <!-- Loop over freezer items dynamically -->
+        <li *ngFor="let item of freezerItems; let i = index">
+          {{ item.name }} - {{ item.quantity }} Portion{{ item.quantity > 1 ? 's' : '' }}
+          <!-- Show plus/minus controls only when not editing -->
+          <span class="item-controls" *ngIf="!freezerEditMode">
+            <span class="plus" (click)="incrementFreezerItem(i)">+</span>
+            <span class="minus" (click)="decrementFreezerItem(i)">-</span>
           </span>
+          <!-- When in edit mode, show a delete icon -->
+          <span class="delete-icon" *ngIf="freezerEditMode" (click)="deleteFreezerItem(i)">✖</span>
         </li>
-        <li>
-          2 Portions Example
-          <span class="item-controls">
-            <span class="plus">+</span>
-            <span class="minus">-</span>
-          </span>
-        </li>
-        <li>
-          4 Portions Example
-          <span class="item-controls">
-            <span class="plus">+</span>
-            <span class="minus">-</span>
-          </span>
-        </li>
-        <li>
-          1 Portions Example
-          <span class="item-controls">
-            <span class="plus">+</span>
-            <span class="minus">-</span>
-          </span>
-        </li>
-        <li>
-          New Item
-          <span class="item-controls">
-            <span class="plus">+</span>
-            <span class="minus">-</span>
-          </span>
-        </li>
+        <li class="new-item" (click)="openAddFreezerItemPrompt()">New Item</li>
       </ul>
-      <ion-button class="edit-button-freezer" expand="block">Edit Freezer</ion-button>
+      <ion-button class="edit-button-freezer" expand="block" (click)="toggleFreezerEditMode()">
+        {{ freezerEditMode ? 'All Done' : 'Edit Freezer' }}
+      </ion-button>
     </div>
-  </div>
+  </div> <!-- Closing container div -->
 </ion-content>

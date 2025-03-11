@@ -1,8 +1,8 @@
 ion-content {
-    --background: #cbddd1;
+  --background: #cbddd1;
 }
 
-ion-title{
+ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
@@ -42,17 +42,72 @@ ion-title{
 }
 
 .pantry li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Ensures text is left-aligned & "X" is right-aligned */
   margin: 10px 0;
   padding: 10px;
   border-radius: 5px;
   font-size: 1.2rem;
   color: #246d48;
+  position: relative;
+  width: 100%;
+}
+
+/* "X" delete icon (Now properly aligned to the right) */
+.delete-icon {
+  color: red;
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 10px; /* Gives spacing between text & "X" */
+  transition: transform 0.2s ease;
+}
+
+.delete-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Style "New Item" */
+.new-item {
+  font-style: italic;
+  color: gray;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Edit Button Styling - Matches "Edit Freezer" Button */
+.edit-button-pantry,
+.edit-button-freezer {
+  margin-top: 20px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --background: #246d48; /* Matches freezer button color */
+  --color: #cbddd1;
+  --border-radius: 5px;
+  --border: none;
+}
+
+.edit-button-pantry:hover,
+.edit-button-freezer:hover {
+  --background: #1d5a38;
+}
+
+/* Hover effect for list items */
+.pantry ul li:hover,
+.freezer ul li:hover {
+  background-color: #cbddd1;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 /* Freezer Styles */
 .freezer {
   position: relative;
-  padding-top: 40px; /* Space for the icicle image */
+  padding-top: 40px;
 }
 
 .icicles {
@@ -78,45 +133,14 @@ ion-title{
 }
 
 .freezer li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin: 10px 0;
   padding: 10px;
   border-radius: 5px;
   font-size: 1.2rem;
   color: #246d48;
-}
-
-/* Edit Button Styles */
-/* Ionic buttons can be styled via CSS custom properties */
-.edit-button-pantry,
-.edit-button-freezer {
-  margin-top: 20px;
-  --padding-start: 20px;
-  --padding-end: 20px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  --background: #246d48;
-  --color: #cbddd1;
-  --border-radius: 5px;
-  --border: none;
-}
-
-.edit-button-pantry:hover,
-.edit-button-freezer:hover {
-  --background: #246d48;
-}
-
-.pantry ul li:hover,
-.freezer ul li:hover {
-  background-color: #cbddd1; /* light gray background on hover */
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-/* For the freezer list items, use flex to space out content */
-.freezer ul li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 /* Style the container for plus and minus controls */
