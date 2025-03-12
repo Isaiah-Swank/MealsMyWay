@@ -28,7 +28,7 @@ export class RecipesPage implements OnInit {
   newRecipe = {
     author: '',
     title: '',
-    ingredients: '',
+    ingredients: [],
     instructions: '',
     tag: ''
   };
@@ -95,7 +95,7 @@ export class RecipesPage implements OnInit {
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
         console.log('Backend Response:', response);
-        if (response.message === 'Recipe created successfully') {
+        if (response.message === 'Recipe created successfully.') {
           this.loadRecipes();
           this.closeForm();
         } else {
@@ -110,6 +110,7 @@ export class RecipesPage implements OnInit {
       }
     );
   }
+  
 
   loadRecipes() {
     this.recipeService.getRecipes().subscribe(
@@ -136,15 +137,36 @@ export class RecipesPage implements OnInit {
       if (!this.isRecipeSelected(recipe)) {
         this.selectedRecipes.push(recipe);
       }
-
+  
       if (!this.selectedRecipesList.some(r => r.id === recipe.id)) {
         this.selectedRecipesList.push(recipe);
+  
+        // Fetch API details if it has an api_id
+        if (recipe.api_id && !recipe.apiDetails) {
+          this.fetchRecipeDetails(recipe);
+        }
       }
     } else {
       this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipe.id);
       this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
     }
   }
+
+  fetchRecipeDetails(recipe: any) {
+    if (!recipe.api_id) return;
+  
+    this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
+      (response: any) => {
+        if (response.meals && response.meals.length > 0) {
+          recipe.apiDetails = response.meals[0]; // Attach API data to the recipe
+        }
+      },
+      (error) => {
+        console.error('Error fetching recipe details:', error);
+      }
+    );
+  }
+  
 
   removeSelectedRecipe(recipe: any) {
     this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
