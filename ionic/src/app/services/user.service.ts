@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -61,6 +62,16 @@ export class UserService {
    */
   fetchUserById(id: number): Observable<any[]> {
     return this.http.get<any[]>(`${environment.apiUrl}/user?id=${id}`);
+  }
+
+  /**
+   * Returns the username for the provided user ID.
+   * This method calls the GET /user endpoint and maps the result to return just the username.
+   */
+  getUsernameById(userId: number): Observable<string> {
+    return this.http.get<any[]>(`${environment.apiUrl}/user?id=${userId}`).pipe(
+      map(users => (users && users.length > 0 ? users[0].username : ''))
+    );
   }
 
   /**

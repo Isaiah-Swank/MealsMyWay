@@ -1,8 +1,8 @@
 ion-content {
-    --background: #cbddd1;
+  --background: #cbddd1;
 }
 
-ion-title{
+ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
@@ -47,4 +47,36 @@ ion-title{
   color: inherit;
   gap: 10px;
 }
-  
+
+/* Custom styles for the Update Password button */
+ion-button.update-password-btn {
+  --background: #246d48 !important;
+  --background-activated: #1f5f40 !important;
+  --background-hover: #1f5f40 !important;
+  --background-focused: #1f5f40 !important;
+  --color: #fff !important;
+}
+
+/* Override Ion Toggle shadow DOM styles for privacy toggle */
+:host ::ng-deep ion-toggle.privacy-toggle {
+  /* Off state */
+  --background: #246d48 !important;
+  /* On state */
+  --background-checked: #a8e6a3 !important;
+  --handle-background: #a8e6a3 !important;
+}
+
+.shared-plans-detail {
+  min-height: 150px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc; /* You may change this if you want a different border color */
+  border-radius: 4px;
+  background-color: #d2b48c !important; /* Light brown background */
+  color: #246d48 !important; /* Dark green font */
+}
+
+/* Force all child elements to inherit dark green text */
+.shared-plans-detail * {
+  color: #246d48 !important;
+}

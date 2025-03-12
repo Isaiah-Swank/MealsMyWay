@@ -5,23 +5,11 @@ const { Pool } = require('pg');
 const app = express();
 const argon2 = require('argon2');
 
-
-/**
- * Express Middleware Configuration
- * -------------------------------
- * - cors: Enables Cross-Origin Resource Sharing to allow requests from different domains.
- * - express.json: Built-in middleware to parse incoming JSON requests.
- */
+// Express Middleware Configuration
 app.use(cors());
 app.use(express.json());
 
-/**
- * PostgreSQL Database Connection Configuration
- * ----------------------------------------------
- * The database connection is established using the 'pg' library's Pool class.
- * Connection parameters (host, port, user, password, and database name) are read from environment variables.
- * SSL is enabled with 'rejectUnauthorized: false' for compatibility with managed environments.
- */
+// PostgreSQL Database Connection Configuration
 const db = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -33,12 +21,7 @@ const db = new Pool({
   },
 });
 
-/**
- * Test Database Connection
- * --------------------------
- * Attempts to connect to the PostgreSQL database.
- * Logs an error message if the connection fails; otherwise, logs a success message.
- */
+// Test Database Connection
 db.connect((err) => {
   if (err) {
     console.error('Database connection error:', err.stack);
@@ -47,21 +30,9 @@ db.connect((err) => {
   }
 });
 
-/**
- * User Authentication Routes
- * ---------------------------
- * Contains endpoints for user login and signup functionality.
- */
+// User Authentication Routes
 
-/**
- * POST /login
- * -----------
- * Authenticates a user based on username and password.
- * - Expects a JSON payload containing 'username' and 'password'.
- * - Returns HTTP 400 if required fields are missing.
- * - Queries the 'users' table to verify credentials.
- * - Returns HTTP 200 with user data on success, or HTTP 401 for invalid credentials.
- */
+// POST /login
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -98,16 +69,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-/**
- * POST /signup
- * ------------
- * Registers a new user.
- * - Expects a JSON payload with 'username', 'password', and optionally 'email'.
- * - Validates required fields and checks if the username already exists.
- * - Inserts a new user record into the 'users' table.
- * - Returns HTTP 201 on successful user creation, or appropriate error statuses.
- */
-// Signup Route with Password Hashing
+// POST /signup
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password) {
@@ -126,9 +88,9 @@ app.post('/signup', async (req, res) => {
     // Hash the password before storing
     const hashedPassword = await argon2.hash(password, {
       type: argon2.argon2id,
-      memoryCost: 2 ** 16, // 64MB memory usage (resistant to GPU attacks)
-      timeCost: 3,         // Iterations (adjust for performance/security)
-      parallelism: 2       // Parallel threads
+      memoryCost: 2 ** 16,
+      timeCost: 3,
+      parallelism: 2
     });
 
     // Insert the user with the hashed password
@@ -142,21 +104,9 @@ app.post('/signup', async (req, res) => {
   }
 });
 
+// User Data Routes
 
-/**
- * User Data Routes
- * ----------------
- * Endpoints for retrieving user information based on different criteria.
- */
-
-/**
- * GET /userbyusername
- * -------------------
- * Retrieves user details by a specific username.
- * - Expects a query parameter 'username'.
- * - Returns selected fields (id, username, email, privacy, shared_plans) if found.
- * - Returns HTTP 404 if the user is not found.
- */
+// GET /userbyusername
 app.get('/userbyusername', async (req, res) => {
   const { username } = req.query;
   if (!username) {
@@ -178,14 +128,7 @@ app.get('/userbyusername', async (req, res) => {
   }
 });
 
-/**
- * GET /users
- * ----------
- * Searches for users with a username that partially matches the provided query.
- * - Expects a query parameter 'username'.
- * - Uses case-insensitive pattern matching (ILIKE) to find similar usernames.
- * - Returns basic user details (id, username, email) or HTTP 404 if no users match.
- */
+// GET /users
 app.get('/users', async (req, res) => {
   const { username } = req.query;
   if (!username) {
@@ -207,13 +150,7 @@ app.get('/users', async (req, res) => {
   }
 });
 
-/**
- * GET /user
- * ---------
- * Retrieves user information based on a unique user ID.
- * - Expects a query parameter 'id'.
- * - Returns selected user fields or HTTP 404 if the user does not exist.
- */
+// GET /user
 app.get('/user', async (req, res) => {
   const { id } = req.query;
   if (!id) {
@@ -235,20 +172,72 @@ app.get('/user', async (req, res) => {
   }
 });
 
-/**
- * Recipes Routes
- * --------------
- * Endpoints for managing recipes.
- * Includes routes for retrieving, creating, updating, and deleting recipes.
- */
+// PUT /user/privacy
+app.put('/user/privacy', async (req, res) => {
+  const { userId, privacy } = req.body;
+  if (typeof userId === 'undefined' || typeof privacy !== 'boolean') {
+    return res.status(400).send({ message: 'userId and privacy (boolean) are required.' });
+  }
+  try {
+    const query = 'UPDATE users SET privacy = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans';
+    const result = await db.query(query, [privacy, userId]);
+    if (result.rows.length > 0) {
+      console.log(`[PUT /user/privacy] 200 - Privacy updated for user ${userId}`);
+      return res.status(200).send({ message: 'Privacy updated successfully.', user: result.rows[0] });
+    } else {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error updating privacy:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
 
-/**
- * GET /recipes
- * ------------
- * Retrieves a list of recipes, optionally filtered by a tag.
- * - Optional query parameter 'tag' to filter recipes by category.
- * - Returns all recipes if no tag is provided.
- */
+// PUT /user/password
+app.put('/user/password', async (req, res) => {
+  const { userId, oldPassword, newPassword } = req.body;
+  if (!userId || !oldPassword || !newPassword) {
+    return res.status(400).send({ message: 'userId, oldPassword, and newPassword are required.' });
+  }
+  try {
+    // Fetch the user to retrieve the current password hash
+    const userQuery = 'SELECT * FROM users WHERE id = $1';
+    const userResult = await db.query(userQuery, [userId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+    const user = userResult.rows[0];
+    
+    // Verify the provided oldPassword against the stored hash
+    const isValid = await argon2.verify(user.password, oldPassword);
+    if (!isValid) {
+      return res.status(401).send({ message: 'Old password is incorrect.' });
+    }
+
+    // Hash the new password before storing
+    const hashedPassword = await argon2.hash(newPassword, {
+      type: argon2.argon2id,
+      memoryCost: 2 ** 16,
+      timeCost: 3,
+      parallelism: 2
+    });
+    const updateQuery = 'UPDATE users SET password = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans';
+    const result = await db.query(updateQuery, [hashedPassword, userId]);
+    if (result.rows.length > 0) {
+      console.log(`[PUT /user/password] 200 - Password updated for user ${userId}`);
+      return res.status(200).send({ message: 'Password updated successfully.', user: result.rows[0] });
+    } else {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error updating password:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+// Recipes Routes
+
+// GET /recipes
 app.get('/recipes', async (req, res) => {
   const { tag } = req.query;
   try {
@@ -266,14 +255,7 @@ app.get('/recipes', async (req, res) => {
   }
 });
 
-/**
- * POST /recipes
- * -------------
- * Creates a new recipe entry.
- * - Expects a JSON payload containing 'author', 'title', 'ingredients', and 'instructions'.
- * - Optional field 'tag' for categorizing the recipe.
- * - Returns HTTP 201 with the created recipe data on success.
- */
+// POST /recipes
 app.post('/recipes', async (req, res) => {
   const { author, title, ingredients, instructions, tag } = req.body;
   if (!author || !title || !ingredients || !instructions) {
@@ -294,14 +276,7 @@ app.post('/recipes', async (req, res) => {
   }
 });
 
-/**
- * PUT /recipes/:id
- * ----------------
- * Updates an existing recipe identified by its ID.
- * - URL parameter 'id' identifies the recipe to update.
- * - Expects a JSON payload with updated 'title', 'ingredients', 'instructions', and optionally 'tag'.
- * - Returns HTTP 200 with the updated recipe data on success, or HTTP 404 if the recipe is not found.
- */
+// PUT /recipes/:id
 app.put('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   const { title, ingredients, instructions, tag } = req.body;
@@ -329,13 +304,7 @@ app.put('/recipes/:id', async (req, res) => {
   }
 });
 
-/**
- * DELETE /recipes/:id
- * -------------------
- * Deletes a recipe identified by its ID.
- * - URL parameter 'id' is used to identify the recipe.
- * - Returns HTTP 200 on successful deletion, or HTTP 404 if the recipe is not found.
- */
+// DELETE /recipes/:id
 app.delete('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -353,23 +322,9 @@ app.delete('/recipes/:id', async (req, res) => {
   }
 });
 
-/**
- * Calendar Routes
- * ---------------
- * Endpoints to manage calendar data associated with users.
- * Allows saving, updating, and retrieving calendar entries.
- */
+// Calendar Routes
 
-/**
- * POST /calendar
- * ----------------
- * Saves or updates calendar data for a user.
- * - Expects a JSON payload containing 'user_ids' (an array), 'week', and 'start_date'.
- * - Checks if a calendar entry already exists for the given 'start_date' and the first user ID in 'user_ids':
- *   - If an entry exists, updates the 'week' field.
- *   - Otherwise, creates a new calendar entry.
- * - Returns HTTP 200 for updates and HTTP 201 for new entries.
- */
+// POST /calendar
 app.post('/calendar', async (req, res) => {
   const { user_ids, week, start_date } = req.body;
   
@@ -401,14 +356,7 @@ app.post('/calendar', async (req, res) => {
   }
 });
 
-/**
- * PUT /calendar
- * ---------------
- * Updates an existing calendar entry.
- * - Expects a JSON payload with 'user_ids', 'week', and 'start_date'.
- * - Updates the calendar entry matching the provided 'start_date'.
- * - Returns the updated calendar entry on success, or HTTP 404 if not found.
- */
+// PUT /calendar
 app.put('/calendar', async (req, res) => {
   const { user_ids, week, start_date } = req.body;
   if (!user_ids || !week || !start_date) {
@@ -436,14 +384,7 @@ app.put('/calendar', async (req, res) => {
   }
 });
 
-/**
- * GET /calendar
- * ---------------
- * Retrieves calendar entries.
- * - If 'start_date' is provided as a query parameter, returns calendar data for that specific week and user.
- * - If 'start_date' is not provided, returns all calendar entries for the given 'user_id', ordered by start_date descending.
- * - Expects a query parameter 'user_id' and returns HTTP 400 if missing.
- */
+// GET /calendar
 app.get('/calendar', async (req, res) => {
   const { start_date, user_id } = req.query;
   if (!user_id) {
@@ -469,24 +410,141 @@ app.get('/calendar', async (req, res) => {
   }
 });
 
-/**
- * Log Available Routes
- * --------------------
- * Iterates through the Express router stack and logs all available routes with their corresponding HTTP methods.
- * This is useful during development to verify that all API endpoints are registered correctly.
- */
+// Pantry Routes
+
+// GET /pantry
+app.get('/pantry', async (req, res) => {
+  const userId = parseInt(req.query.userId);
+  if (isNaN(userId)) {
+    return res.status(400).send({ message: 'Valid User ID is required' });
+  }
+
+  try {
+    const checkQuery = 'SELECT item_list FROM pantry_freezer WHERE user_id = $1 AND pf_flag = false';
+    const result = await db.query(checkQuery, [userId]);
+
+    if (result.rows.length > 0) {
+      console.log(`[PANTRY] SUCCESS - Pantry found for user ID=${userId}`);
+      return res.status(200).json(result.rows[0]);
+    } else {
+      console.log(`[PANTRY] INFO - No pantry found for user ID=${userId}. Creating a new one...`);
+      const emptyPantry = { pantry: [], freezer: [] };
+      const insertQuery = `
+        INSERT INTO pantry_freezer (user_id, pf_flag, item_list)
+        VALUES ($1, $2, $3) RETURNING *
+      `;
+      const insertResult = await db.query(insertQuery, [userId, false, JSON.stringify(emptyPantry)]);
+      console.log(`[PANTRY] SUCCESS - New empty pantry created for user ID=${userId}`);
+      return res.status(201).json(insertResult.rows[0]);
+    }
+  } catch (err) {
+    console.error(`[PANTRY] ERROR fetching pantry for user ID=${userId}:`, err);
+    return res.status(500).send({ message: 'Error retrieving pantry items.' });
+  }
+});
+
+// POST /pantry
+app.post('/pantry', async (req, res) => {
+  const { user_id, pf_flag, item_list } = req.body;
+
+  if (!Number.isInteger(user_id) || typeof pf_flag !== 'boolean' || !item_list) {
+    console.log('[POST /pantry] 400 - Missing or invalid required fields');
+    return res.status(400).send({ message: 'Missing or invalid required fields: user_id, pf_flag, item_list.' });
+  }
+
+  try {
+    const checkQuery = 'SELECT * FROM pantry_freezer WHERE user_id = $1 AND pf_flag = $2';
+    const existingPantry = await db.query(checkQuery, [user_id, pf_flag]);
+
+    if (existingPantry.rows.length > 0) {
+      const updateQuery = `
+        UPDATE pantry_freezer
+        SET item_list = $1
+        WHERE user_id = $2 AND pf_flag = $3
+        RETURNING *
+      `;
+      const result = await db.query(updateQuery, [JSON.stringify(item_list), user_id, pf_flag]);
+      console.log(`[POST /pantry] 200 - Pantry updated for user ID=${user_id}`);
+      return res.status(200).send({ message: 'Pantry updated successfully.', pantry: result.rows[0] });
+    } else {
+      const insertQuery = `
+        INSERT INTO pantry_freezer (user_id, pf_flag, item_list)
+        VALUES ($1, $2, $3) RETURNING *
+      `;
+      const result = await db.query(insertQuery, [user_id, pf_flag, JSON.stringify(item_list)]);
+      console.log(`[PANTRY] 201 - New pantry created for user ID=${user_id}`);
+      return res.status(201).send({ message: 'Pantry created successfully.', pantry: result.rows[0] });
+    }
+  } catch (error) {
+    console.error('[POST /pantry] 500 - Server error:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+// PUT /pantry
+app.put('/pantry', async (req, res) => {
+  const { user_id, pf_flag, item_list } = req.body;
+
+  if (!Number.isInteger(user_id) || typeof pf_flag !== 'boolean' || !item_list) {
+    console.log('[PUT /pantry] 400 - Missing or invalid required fields');
+    return res.status(400).send({ message: 'Missing or invalid required fields: user_id, pf_flag, item_list.' });
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE pantry_freezer
+      SET item_list = $1
+      WHERE user_id = $2 AND pf_flag = $3
+      RETURNING *
+    `;
+    const result = await db.query(updateQuery, [JSON.stringify(item_list), user_id, pf_flag]);
+
+    if (result.rows.length > 0) {
+      console.log(`[PUT /pantry] 200 - Pantry updated for user ID=${user_id}`);
+      return res.status(200).send({ message: 'Pantry updated successfully.', pantry: result.rows[0] });
+    } else {
+      console.log(`[PUT /pantry] 404 - Pantry not found for user ID=${user_id}`);
+      return res.status(404).send({ message: 'Pantry not found.' });
+    }
+  } catch (error) {
+    console.error('[PUT /pantry] 500 - Server error:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+// DELETE /pantry
+app.delete('/pantry', async (req, res) => {
+  const userId = parseInt(req.query.userId);
+
+  if (isNaN(userId)) {
+    console.log('[PANTRY] 400 - Invalid user ID');
+    return res.status(400).send({ message: 'Valid User ID is required.' });
+  }
+
+  try {
+    const deleteQuery = 'DELETE FROM pantry_freezer WHERE user_id = $1 RETURNING *';
+    const result = await db.query(deleteQuery, [userId]);
+
+    if (result.rows.length > 0) {
+      console.log(`[PANTRY] 200 - Pantry deleted for user ${userId}`);
+      return res.status(200).json({ message: 'Pantry deleted successfully.', pantry: result.rows[0] });
+    } else {
+      console.log(`[PANTRY] 404 - No pantry found for user ${userId}`);
+      return res.status(404).send({ message: 'No pantry found for this user.' });
+    }
+  } catch (error) {
+    console.error(`[PANTRY] 500 - Server error while deleting pantry for user ${userId}:`, error.stack);
+    return res.status(500).send({ message: 'Error deleting pantry.', error: error.stack });
+  }
+});
+
+// Log Available Routes
 app._router.stack.forEach((layer) => {
   if (layer.route && layer.route.path) {
     console.log(`Route available: ${layer.route.stack[0].method.toUpperCase()} ${layer.route.path}`);
   }
 });
 
-/**
- * Start the Server
- * ----------------
- * Configures the application to listen on the port specified by the environment variable PORT or defaults to 3000.
- * Logs the server URL once the server starts successfully.
- */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
