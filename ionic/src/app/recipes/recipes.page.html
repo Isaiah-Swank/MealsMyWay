@@ -6,7 +6,6 @@
 
 <ion-content [fullscreen]="true">
   <div class="book-container">
-
     <!-- Left Container: Shows selected recipes stacked -->
     <div class="my-recipes-container">
       <ng-container *ngIf="selectedRecipesList.length > 0; else defaultView">
@@ -16,15 +15,40 @@
             <ion-card-title>{{ recipe.title }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <p><strong>Author:</strong> {{ recipe.author }}</p>
-            <p><strong>Ingredients:</strong></p>
-            <ul>
-              <li *ngFor="let ingredient of recipe.ingredients">{{ ingredient }}</li>
-            </ul>
-            <p><strong>Instructions:</strong></p>
-            <p>{{ recipe.instructions }}</p>
-            <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
-
+            <ng-container *ngIf="recipe.api_id; else customRecipe">
+              <!-- Fetch and Display API Recipe -->
+              <ng-container *ngIf="recipe.apiDetails; else loadingApiRecipe">
+                <p><strong>Category:</strong> {{ recipe.apiDetails.strCategory }}</p>
+                <p><strong>Area:</strong> {{ recipe.apiDetails.strArea }}</p>
+                <p><strong>Ingredients:</strong></p>
+                <ul>
+                  <ng-container *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]">
+                    <li *ngIf="recipe.apiDetails['strIngredient' + i]">
+                      {{ recipe.apiDetails['strIngredient' + i] }} - {{ recipe.apiDetails['strMeasure' + i] }}
+                    </li>
+                  </ng-container>
+                </ul>
+                <p><strong>Instructions:</strong></p>
+                <p>{{ recipe.apiDetails.strInstructions }}</p>
+                <p *ngIf="recipe.apiDetails.strTags"><strong>Tags:</strong> {{ recipe.apiDetails.strTags }}</p>
+              </ng-container>
+              <ng-template #loadingApiRecipe>
+                <p>Loading recipe details...</p>
+              </ng-template>
+            </ng-container>
+            
+            <ng-template #customRecipe>
+              <!-- Display Custom Recipe -->
+              <p><strong>Author:</strong> {{ recipe.author }}</p>
+              <p><strong>Ingredients:</strong></p>
+              <ul>
+                <li *ngFor="let ingredient of recipe.ingredients.split(', ')">{{ ingredient }}</li>
+              </ul>
+              <p><strong>Instructions:</strong></p>
+              <p>{{ recipe.instructions }}</p>
+              <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
+            </ng-template>
+            
             <!-- Edit, Delete, and Close Buttons -->
             <ion-button (click)="editRecipe(recipe)">Edit</ion-button>
             <ion-button (click)="deleteRecipe(recipe.id)">Delete</ion-button>
@@ -32,21 +56,19 @@
           </ion-card-content>
         </ion-card>
       </ng-container>
-
       <ng-template #defaultView>
         <h1>Recipe Creation and Information</h1>
         <ion-button expand="full" (click)="openCreateRecipeForm()">Create Recipe</ion-button>
       </ng-template>
     </div>
-
+    
     <!-- Spine -->
     <div class="book-spine"></div>
-
+    
     <!-- Right Container: List of All Recipes -->
     <div class="recipes-container">
       <h1>Choose Recipes</h1>
       <ion-searchbar class="search-bar" placeholder="Search..." (ionInput)="filterRecipes($event)"></ion-searchbar>
-
       <ion-list class="recipe-list">
         <ion-item *ngFor="let recipe of filteredRecipes">
           <ion-checkbox 
@@ -57,8 +79,6 @@
           <ion-label>{{ recipe.title }}</ion-label>
         </ion-item>
       </ion-list>
-
-      <!-- Button to add selected recipes to the calendar -->
       <ion-button expand="full" (click)="addToCalendar()" [disabled]="selectedRecipes.length === 0">
         Add Selected to Calendar
       </ion-button>
@@ -66,77 +86,76 @@
   </div>
 
   <!-- Create Recipe Modal -->
-  <ion-modal cssClass="light-green-modal" [isOpen]="isFormOpen" (didDismiss)="closeForm()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Create Recipe</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeForm()">Cancel</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
-        <form (ngSubmit)="submitRecipe()">
-          <ion-item>
-            <ion-label position="stacked">Author</ion-label>
-            <ion-input [(ngModel)]="newRecipe.author" name="author" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Title</ion-label>
-            <ion-input [(ngModel)]="newRecipe.title" name="title" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Ingredients</ion-label>
-            <ion-textarea [(ngModel)]="newRecipe.ingredients" name="ingredients" required></ion-textarea>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Instructions</ion-label>
-            <ion-textarea [(ngModel)]="newRecipe.instructions" name="instructions" required></ion-textarea>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Tag</ion-label>
-            <ion-input [(ngModel)]="newRecipe.tag" name="tag"></ion-input>
-          </ion-item>
-          <ion-button expand="full" type="submit">Submit Recipe</ion-button>
-        </form>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+  <ion-modal [isOpen]="isFormOpen" (didDismiss)="closeForm()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Create Recipe</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeForm()">Cancel</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <form (ngSubmit)="submitRecipe()">
+        <ion-item>
+          <ion-label position="stacked">Author</ion-label>
+          <ion-input [(ngModel)]="newRecipe.author" name="author" required></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Title</ion-label>
+          <ion-input [(ngModel)]="newRecipe.title" name="title" required></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Ingredients</ion-label>
+          <ion-textarea [(ngModel)]="newRecipe.ingredients" name="ingredients" required></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Instructions</ion-label>
+          <ion-textarea [(ngModel)]="newRecipe.instructions" name="instructions" required></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Tag</ion-label>
+          <ion-input [(ngModel)]="newRecipe.tag" name="tag"></ion-input>
+        </ion-item>
+        <ion-button expand="full" type="submit">Submit Recipe</ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
-  <!-- Edit Recipe Modal -->
-  <ion-modal cssClass="light-green-modal" [isOpen]="isEditFormOpen" (didDismiss)="closeEditForm()">
-    <ng-template>
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>Edit Recipe</ion-title>
-          <ion-buttons slot="end">
-            <ion-button (click)="closeEditForm()">Cancel</ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      <ion-content>
-        <form (ngSubmit)="updateRecipe()">
-          <ion-item>
-            <ion-label position="stacked">Title</ion-label>
-            <ion-input [(ngModel)]="editRecipeData.title" name="title" required></ion-input>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Ingredients</ion-label>
-            <ion-textarea [(ngModel)]="editRecipeData.ingredients" name="ingredients" required></ion-textarea>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Instructions</ion-label>
-            <ion-textarea [(ngModel)]="editRecipeData.instructions" name="instructions" required></ion-textarea>
-          </ion-item>
-          <ion-item>
-            <ion-label position="stacked">Tag</ion-label>
-            <ion-input [(ngModel)]="editRecipeData.tag" name="tag"></ion-input>
-          </ion-item>
-          <ion-button expand="full" type="submit">Update Recipe</ion-button>
-        </form>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+<!-- Edit Recipe Modal -->
+<ion-modal cssClass="light-green-modal" [isOpen]="isEditFormOpen" (didDismiss)="closeEditForm()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Edit Recipe</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeEditForm()">Cancel</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <form (ngSubmit)="updateRecipe()">
+        <ion-item>
+          <ion-label position="stacked">Title</ion-label>
+          <ion-input [(ngModel)]="editRecipeData.title" name="title" required></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Ingredients</ion-label>
+          <ion-textarea [(ngModel)]="editRecipeData.ingredients" name="ingredients" required></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Instructions</ion-label>
+          <ion-textarea [(ngModel)]="editRecipeData.instructions" name="instructions" required></ion-textarea>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Tag</ion-label>
+          <ion-input [(ngModel)]="editRecipeData.tag" name="tag"></ion-input>
+        </ion-item>
+        <ion-button expand="full" type="submit">Update Recipe</ion-button>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 </ion-content>
-
