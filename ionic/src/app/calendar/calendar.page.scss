@@ -73,6 +73,14 @@ ion-button {
   margin-top: 10px;
 }
 
+/* New style for individual event items with a red delete button */
+.event-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
 .calendar .events div:hover {
   background-color: #cbddd1;
   transition: background-color 0.3s ease;
@@ -94,7 +102,7 @@ ion-button {
 .generate-prep-list {
   display: flex;
   flex-direction: column;
-  gap: 0px;  // Reduced vertical spacing
+  gap: 0px;
 }
 
 .save-calendar {
@@ -103,7 +111,6 @@ ion-button {
   justify-content: center;
 }
 
-/* Shared button styling within the container */
 .button-container ion-button {
   padding: 10px 15px;
   font-size: 16px;

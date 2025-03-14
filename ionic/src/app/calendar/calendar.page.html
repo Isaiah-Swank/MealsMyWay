@@ -60,56 +60,64 @@
       <div class="day sunday">
         <h3>Sunday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['sunday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['sunday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <!-- Red X only appears if the event is the selected one -->
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'sunday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day monday">
         <h3>Monday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['monday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['monday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'monday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day tuesday">
         <h3>Tuesday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['tuesday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['tuesday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'tuesday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day wednesday">
         <h3>Wednesday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['wednesday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['wednesday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'wednesday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day thursday">
         <h3>Thursday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['thursday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['thursday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'thursday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day friday">
         <h3>Friday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['friday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['friday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'friday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
       <div class="day saturday">
         <h3>Saturday</h3>
         <div class="events">
-          <div *ngFor="let event of currentWeekEvents['saturday']" (click)="onRecipeClick(event)">
-            {{ event.title }}
+          <div *ngFor="let event of currentWeekEvents['saturday']; let i = index" class="event-item">
+            <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+            <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" (click)="confirmRemoveEvent(event, 'saturday', i, $event)">✖</ion-button>
           </div>
         </div>
       </div>
@@ -151,7 +159,8 @@
               <p *ngIf="hoveredRecipe.instructions">
                 <strong>Instructions:</strong> {{ hoveredRecipe.instructions }}
               </p>
-              <ion-button (click)="hoveredRecipe = null">Close</ion-button>
+              <!-- Changed Close button to call the new method -->
+              <ion-button (click)="closeRecipeDetails()">Close</ion-button>
             </ng-container>
             <ng-template #defaultDetails>
               <div *ngIf="recipes && recipes.length > 0; else noRecipes">
