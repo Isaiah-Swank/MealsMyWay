@@ -70,7 +70,7 @@ export class Tab2Page implements OnInit {
       console.log('Calendar page got user from navigation:', this.currentUser);
     } else {
       // ...or fall back to local storage
-      const storedUser = localStorage.getItem('currentUser');
+      const storedUser = sessionStorage.getItem('currentUser');
       if (storedUser) {
         this.currentUser = JSON.parse(storedUser);
         console.log('Calendar page loaded user from local storage:', this.currentUser);
@@ -121,16 +121,18 @@ export class Tab2Page implements OnInit {
     let selectedRecipes = [];
 
     if (nav && nav.extras && nav.extras.state && nav.extras.state['recipes']) {
-      selectedRecipes = nav.extras.state['recipes'];
-      
-      localStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
+        selectedRecipes = nav.extras.state['recipes'];
+        
+        // Store in sessionStorage instead of localStorage
+        sessionStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
     } else {
-      selectedRecipes = JSON.parse(localStorage.getItem('selectedRecipes') || '[]');
+        selectedRecipes = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
     }
 
     this.recipes = selectedRecipes;
     console.log("Updated recipes in Calendar:", this.recipes);
-  }
+}
+
 
 
 
