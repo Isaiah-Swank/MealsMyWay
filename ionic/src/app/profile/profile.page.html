@@ -82,11 +82,9 @@
       </div>
       
       <!-- Sign Out -->
-      <div class="settings-item">
-        <a routerLink="/login" class="profile-nav-link">
-          <img src="assets/images/sign-out.png" alt="Sign Out" class="user-settings">
-          <p>Sign Out</p>
-        </a>
+      <div class="settings-item" (click)="logout()">
+        <img src="assets/images/sign-out.png" alt="Sign Out" class="user-settings">
+        <p>Sign Out</p>
       </div>
     </div>
   </div>

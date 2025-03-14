@@ -44,7 +44,7 @@ export class LoginPage {
 
             if (response.user) {
               // Save user to local storage for persistence across refreshes
-              localStorage.setItem('currentUser', JSON.stringify(response.user));
+              sessionStorage.setItem('currentUser', JSON.stringify(response.user));
               // Also update the UserService's user object
               this.userService.setUser(response.user);
 

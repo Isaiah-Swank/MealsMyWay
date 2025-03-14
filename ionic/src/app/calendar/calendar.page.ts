@@ -86,12 +86,12 @@ export class Tab2Page implements OnInit {
       this.currentUser = nav.extras.state['user'];
       console.log('Calendar page got user from navigation:', this.currentUser);
     } else {
-      const storedUser = localStorage.getItem('currentUser');
+      const storedUser = sessionStorage.getItem('currentUser');
       if (storedUser) {
         this.currentUser = JSON.parse(storedUser);
-        console.log('Calendar page loaded user from local storage:', this.currentUser);
+        console.log('Calendar page loaded user from session storage:', this.currentUser);
       } else {
-        console.warn('No user found from login or local storage. Calendar not loaded.');
+        console.warn('No user found from login or session storage. Calendar not loaded.');
       }
     }
 
@@ -133,16 +133,16 @@ export class Tab2Page implements OnInit {
   /**
    * loadRecipes
    * ----------------------
-   * Loads available recipes from navigation state or local storage.
+   * Loads available recipes from navigation state or session storage.
    */
   loadRecipes() {
     const nav = this.router.getCurrentNavigation();
     let selectedRecipes = [];
     if (nav && nav.extras && nav.extras.state && nav.extras.state['recipes']) {
       selectedRecipes = nav.extras.state['recipes'];
-      localStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
+      sessionStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
     } else {
-      selectedRecipes = JSON.parse(localStorage.getItem('selectedRecipes') || '[]');
+      selectedRecipes = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
     }
     this.recipes = selectedRecipes;
     console.log("Updated recipes in Calendar:", this.recipes);

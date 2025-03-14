@@ -217,7 +217,7 @@ export class RecipesPage implements OnInit {
       return;
     }
 
-    localStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipes));
+    sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipes));
     this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipes } });
   }
 
