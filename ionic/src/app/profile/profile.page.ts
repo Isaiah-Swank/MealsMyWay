@@ -92,6 +92,18 @@ export class Tab3Page implements OnInit {
     }
   }
 
+  logout() {
+    // Clear session storage
+    sessionStorage.clear();
+  
+    // Reset user ID in the UserService (or localStorage if needed)
+    this.userService.setUser({ id: 0, username: '', email: '', privacy: true });
+  
+    // Navigate to the login page
+    window.location.href = '/login'; // Full reload to ensure session is cleared
+  }
+  
+
   updatePassword() {
     const currentUser = this.userService.getUser();
     if (currentUser && currentUser.id) {

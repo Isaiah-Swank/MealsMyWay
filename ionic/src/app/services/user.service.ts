@@ -29,7 +29,7 @@ export class UserService {
           this.user = users[0];
           console.log('[UserService] Fetched user by username:', this.user);
           // Persist the fetched user in local storage for persistence.
-          localStorage.setItem('currentUser', JSON.stringify(this.user));
+          sessionStorage.setItem('currentUser', JSON.stringify(this.user));
         } else {
           console.error('[UserService] No user found for username:', username);
         }
@@ -81,7 +81,7 @@ export class UserService {
    */
   setUser(user: any) {
     this.user = user;
-    localStorage.setItem('currentUser', JSON.stringify(user));
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
   }
 
   /**
@@ -91,7 +91,7 @@ export class UserService {
    */
   getUser(): any {
     if (!this.user) {
-      const storedUser = localStorage.getItem('currentUser');
+      const storedUser = sessionStorage.getItem('currentUser');
       if (storedUser) {
         this.user = JSON.parse(storedUser);
       }
