@@ -131,15 +131,27 @@
     <div class="meal-section-container">
       <div class="recipe-details">
         <h3>
-          <ng-container *ngIf="showShoppingList; else recipeHeader">
+          <ng-container *ngIf="showPrepList">
+            Prep List
+          </ng-container>
+          <ng-container *ngIf="showShoppingList">
             Shopping List
+          </ng-container>
+          <ng-container *ngIf="!showShoppingList && !showPrepList">
+            Recipe List
           </ng-container>
           <ng-template #recipeHeader>
             {{ hoveredRecipe ? 'Recipe Details' : 'Recipe List' }}
           </ng-template>
         </h3>
         <div class="details-container">
-          <ng-container *ngIf="showShoppingList; else recipeDetailsContent">
+          <ng-container *ngIf="showPrepList">
+            <div class="details-container">
+              <div [innerHTML]="prepListDisplay"></div>
+              <ion-button (click)="showPrepList = false">Close</ion-button>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="showShoppingList">
             <ul>
               <li *ngFor="let ingredient of groceryListDisplay">
                 {{ ingredient }}
@@ -221,8 +233,8 @@
         <ion-button (click)="saveCalendar()">Save Calendar</ion-button>
       </div>
       <div class="generate-prep-list">
-        <ion-button>Generate Prep List</ion-button>
-        <ion-button>View Prep List</ion-button>
+        <ion-button (click)="generatePrepList()">Generate Prep List</ion-button>
+        <ion-button expand="full" (click)="viewPrepList()">View Prep List</ion-button>
       </div>
     </div>
   </div>
