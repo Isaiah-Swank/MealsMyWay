@@ -53,6 +53,7 @@ export class UserService {
    * This function is called by setUsername().
    */
   fetchUserByUsername(username: string): Observable<any[]> {
+    console.log(environment.apiUrl);
     return this.http.get<any[]>(`${environment.apiUrl}/userbyusername?username=${username}`);
   }
 
@@ -61,6 +62,7 @@ export class UserService {
    * This is available for use if you need to fetch by ID.
    */
   fetchUserById(id: number): Observable<any[]> {
+    console.log(environment.apiUrl);
     return this.http.get<any[]>(`${environment.apiUrl}/user?id=${id}`);
   }
 
@@ -69,6 +71,7 @@ export class UserService {
    * This method calls the GET /user endpoint and maps the result to return just the username.
    */
   getUsernameById(userId: number): Observable<string> {
+    console.log(environment.apiUrl);
     return this.http.get<any[]>(`${environment.apiUrl}/user?id=${userId}`).pipe(
       map(users => (users && users.length > 0 ? users[0].username : ''))
     );

@@ -7,6 +7,7 @@ import { CalendarService } from '../services/calendar.service';
 import { UserService } from '../services/user.service';
 import { PantryService } from '../services/pantry.service';
 import { environment } from '../../environments/environment';
+import { marked } from 'marked';
 
 /**
  * Tab2Page Component
@@ -53,6 +54,10 @@ export class Tab2Page implements OnInit {
   searchQuery: string = '';      // Input string for searching users to share the calendar with
   searchResults: any[] = [];     // Array of users found during search
   showShareCalendar: boolean = false; // Toggles display of the calendar sharing interface
+
+  prepListDisplay: string = ''; // Stores HTML version of prep list
+  showPrepList: boolean = false; // Toggles prep list visibility
+
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
@@ -113,6 +118,83 @@ export class Tab2Page implements OnInit {
     sunday.setDate(today.getDate() - dayOfWeek);
     this.currentWeekStart = sunday;
   }
+
+  /**
+ * generatePrepList
+ * ---------------------------
+ * Collects recipe instructions from all meals in the currently selected calendar week
+ * and formats them into an API call to DeepSeek.
+ */
+  generatePrepList() {
+    const weekKey = this.selectedPlan.toDateString();
+    const weekEvents = this.events[weekKey] || {};
+    
+    let prepInstructions: string[] = [];
+  
+    // Collect instructions from all meals
+    for (const day in weekEvents) {
+      if (weekEvents.hasOwnProperty(day) && day !== 'grocery') {
+        for (const meal of weekEvents[day]) {
+          if (meal.instructions) {
+            prepInstructions.push(`Recipe: ${meal.title}\nInstructions: ${meal.instructions}`);
+          }
+        }
+      }
+    }
+  
+    if (prepInstructions.length === 0) {
+      alert("No recipes with instructions found for the selected week.");
+      return;
+    }
+  
+    // Format API request
+    const requestBody = {
+      prompt: `Generate a combined prep list for the following recipes. 
+      Combine overlapping ingredients (e.g., chicken, onions) into a single step. 
+      Format the output as a numbered list with clear, concise instructions. 
+      Group ingredients by type (e.g., proteins, vegetables, dry ingredients) 
+      and specify quantities for each recipe:\n\n${prepInstructions.join('\n\n')}`,
+      max_tokens: 8192,
+      temperature: 0.7
+    };
+
+    console.log("Sending request to backend:", requestBody);
+  
+    // Call your backend instead of DeepSeek directly
+    this.http.post(`${environment.apiUrl}/api/deepseek`, requestBody).subscribe(
+      (response: any) => {
+        const prepListMarkdown = response.choices[0].message.content;
+        console.log("DeepSeek response:", prepListMarkdown);
+
+        // Store in sessionStorage
+        sessionStorage.setItem('prepList', prepListMarkdown);
+
+        alert("Prep list generated successfully! Check console.");
+      },
+      (error) => {
+        console.error("Error:", error);
+        alert("Failed to generate prep list.");
+      }
+    );
+}
+
+async viewPrepList() {
+  const prepListMarkdown = sessionStorage.getItem('prepList');
+
+  if (!prepListMarkdown) {
+      alert('No prep list has been generated yet. Please generate one first.');
+      return;
+  }
+
+  console.log("Loaded Prep List from sessionStorage:", prepListMarkdown);
+
+  // Convert Markdown to HTML asynchronously
+  this.prepListDisplay = await marked(prepListMarkdown);
+  this.showPrepList = true;
+}
+
+  
+
 
   /**
    * generatePlans

@@ -5,6 +5,7 @@ const { Pool } = require('pg');
 const app = express();
 const argon2 = require('argon2');
 
+
 // Express Middleware Configuration
 app.use(cors());
 app.use(express.json());
@@ -68,6 +69,53 @@ app.post('/login', async (req, res) => {
     return res.status(500).send({ message: 'Server error.' });
   }
 });
+
+// DeepSeek API Proxy Route
+app.post('/api/deepseek', async (req, res) => {
+  try {
+    console.log("Made it to back end");
+    const requestBody = req.body;
+    console.log("Request Body:", requestBody);
+
+    // Format the request body to include the `model` and `messages` fields
+    const deepSeekRequestBody = {
+      model: "deepseek-chat", // Replace with the correct model name
+      messages: [
+        {
+          role: "user",
+          content: requestBody.prompt, // Use the prompt from the frontend
+        },
+      ],
+      max_tokens: requestBody.max_tokens,
+      temperature: requestBody.temperature,
+    };
+
+    const deepSeekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify(deepSeekRequestBody),
+    });
+
+    console.log("DeepSeek Response Status:", deepSeekResponse.status);
+    console.log("DeepSeek Response Headers:", deepSeekResponse.headers);
+
+    if (!deepSeekResponse.ok) {
+      const errorMessage = await deepSeekResponse.text();
+      console.error('DeepSeek API Error:', errorMessage);
+      return res.status(deepSeekResponse.status).send({ error: errorMessage });
+    }
+
+    const responseData = await deepSeekResponse.json();
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error('Error calling DeepSeek API:', error);
+    res.status(500).send({ error: 'Server error while calling DeepSeek API.' });
+  }
+});
+
 
 // POST /signup
 app.post('/signup', async (req, res) => {
