@@ -49,14 +49,18 @@ export class Tab2Page implements OnInit {
   showShoppingList: boolean = false; // Flag to toggle shopping list view
   groceryListDisplay: string[] = [];   // Display version of the grocery list
 
+  // Prep list properties
+  prepListDisplay: string = ''; // Stores HTML version of prep list
+  showPrepList: boolean = false; // Toggles prep list visibility
+
+  // Dirty flag to track calendar changes for prep list regeneration
+  calendarChanged: boolean = false; // Set to true whenever the calendar is modified
+
   // User and sharing management
   currentUser: any = null;       // Currently logged in user
   searchQuery: string = '';      // Input string for searching users to share the calendar with
   searchResults: any[] = [];     // Array of users found during search
   showShareCalendar: boolean = false; // Toggles display of the calendar sharing interface
-
-  prepListDisplay: string = ''; // Stores HTML version of prep list
-  showPrepList: boolean = false; // Toggles prep list visibility
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
@@ -123,16 +127,26 @@ export class Tab2Page implements OnInit {
    * ---------------------------
    * Collects recipe instructions from all meals in the currently selected calendar week
    * and formats them into an API call to DeepSeek.
+   * 
+   * Now modified to only generate a new prep list if the calendar has changed.
+   * Also, the generated prep list is saved in the calendar under the 'prep' key.
    */
   generatePrepList() {
     const weekKey = this.selectedPlan.toDateString();
+
+    // Only generate a new prep list if the calendar has changed
+    if (!this.calendarChanged) {
+      alert("No changes to the calendar detected. Prep list is up to date.");
+      return;
+    }
+
     const weekEvents = this.events[weekKey] || {};
     
     let prepInstructions: string[] = [];
   
-    // Collect instructions from all meals
+    // Collect instructions from all meals (skip 'grocery' and 'prep' keys)
     for (const day in weekEvents) {
-      if (weekEvents.hasOwnProperty(day) && day !== 'grocery') {
+      if (weekEvents.hasOwnProperty(day) && day !== 'grocery' && day !== 'prep') {
         for (const meal of weekEvents[day]) {
           if (meal.instructions) {
             prepInstructions.push(`Recipe: ${meal.title}\nIngredients: ${meal.ingredients}\nInstructions: ${meal.instructions}`);
@@ -168,6 +182,18 @@ export class Tab2Page implements OnInit {
         // Store in sessionStorage
         sessionStorage.setItem('prepList', prepListMarkdown);
 
+        // Save the prep list in the calendar events under a new "prep" key
+        if (!this.events[weekKey]) {
+          this.events[weekKey] = {
+            sunday: [], monday: [], tuesday: [], wednesday: [],
+            thursday: [], friday: [], saturday: [], grocery: [], prep: []
+          };
+        }
+        this.events[weekKey]['prep'] = prepListMarkdown;
+
+        // Reset the dirty flag as the prep list is now up-to-date
+        this.calendarChanged = false;
+
         alert("Prep list generated successfully! Check console.");
       },
       (error) => {
@@ -178,16 +204,31 @@ export class Tab2Page implements OnInit {
   }
 
   async viewPrepList() {
-    const prepListMarkdown = sessionStorage.getItem('prepList');
-
-    if (!prepListMarkdown) {
-        alert('No prep list has been generated yet. Please generate one first.');
-        return;
+    // Try to load the prep list from sessionStorage; default to a blank string if not found.
+    let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
+    const weekKey = this.selectedPlan.toDateString();
+  
+    // If sessionStorage doesn't have a valid prep list, try loading it from the calendar events.
+    if (!prepListMarkdown && this.events[weekKey] && this.events[weekKey]['prep']) {
+      const prepFromEvent = this.events[weekKey]['prep'];
+      // Check if the retrieved value is an array. If it is, default to a blank string.
+      if (Array.isArray(prepFromEvent)) {
+        prepListMarkdown = "";
+      } else {
+        prepListMarkdown = prepFromEvent as string;
+      }
+      // Update sessionStorage for consistency.
+      sessionStorage.setItem('prepList', prepListMarkdown);
     }
-
-    console.log("Loaded Prep List from sessionStorage:", prepListMarkdown);
-
-    // Convert Markdown to HTML asynchronously
+  
+    // If no prep list exists (i.e., prepListMarkdown is still blank), alert the user.
+    if (prepListMarkdown === "") {
+      alert('No prep list has been generated yet. Please generate one first.');
+      return;
+    }
+  
+    console.log("Loaded Prep List:", prepListMarkdown);
+    // Convert Markdown to HTML asynchronously.
     this.prepListDisplay = await marked(prepListMarkdown);
     this.showPrepList = true;
   }
@@ -236,13 +277,8 @@ export class Tab2Page implements OnInit {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
-        sunday: [],
-        monday: [],
-        tuesday: [],
-        wednesday: [],
-        thursday: [],
-        friday: [],
-        saturday: []
+        sunday: [], monday: [], tuesday: [], wednesday: [],
+        thursday: [], friday: [], saturday: []
       };
     }
     return this.events[weekKey];
@@ -298,23 +334,21 @@ export class Tab2Page implements OnInit {
    * pushMeal
    * ---------------------------
    * Clones the selected meal and adds it to the calendar events for the selected day.
+   * Also sets a flag to indicate that the calendar has changed.
    */
   pushMeal() {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
-        sunday: [],
-        monday: [],
-        tuesday: [],
-        wednesday: [],
-        thursday: [],
-        friday: [],
-        saturday: []
+        sunday: [], monday: [], tuesday: [], wednesday: [],
+        thursday: [], friday: [], saturday: []
       };
     }
     const mealClone = JSON.parse(JSON.stringify(this.selectedMeal));
     mealClone.processedForGrocery = false;
     this.events[weekKey][this.selectedDay].push(mealClone);
+    // Mark the calendar as changed so a new prep list can be generated
+    this.calendarChanged = true;
     this.selectedMeal = null;
     this.selectedDay = '';
   }
@@ -404,7 +438,7 @@ export class Tab2Page implements OnInit {
    * ---------------------------
    * Displays a confirmation alert to remove a recipe from the calendar.
    * If confirmed, removes the recipe from the appropriate day's event list,
-   * clears the selected event, and saves the updated calendar.
+   * clears the selected event, marks the calendar as changed, and saves the updated calendar.
    *
    * @param event - The recipe event to remove.
    * @param day - The day of the week from which the recipe will be removed.
@@ -423,6 +457,8 @@ export class Tab2Page implements OnInit {
           handler: () => {
             const weekKey = this.selectedPlan.toDateString();
             this.events[weekKey][day].splice(index, 1);
+            // Mark the calendar as changed due to removal
+            this.calendarChanged = true;
             // Clear the selected event after removal.
             this.selectedEvent = null;
             this.saveCalendar();
@@ -797,7 +833,7 @@ export class Tab2Page implements OnInit {
   /**
    * saveCalendar
    * ---------------------------
-   * Persists the current calendar (including scheduled meals and grocery list)
+   * Persists the current calendar (including scheduled meals, grocery list, and now prep list)
    * to the backend server.
    */
   saveCalendar() {
@@ -819,7 +855,8 @@ export class Tab2Page implements OnInit {
         thursday: weekData['thursday'] || [],
         friday: weekData['friday'] || [],
         saturday: weekData['saturday'] || [],
-        grocery: weekData['grocery'] || []
+        grocery: weekData['grocery'] || [],
+        prep: weekData['prep'] || []  // Save the prep list with the calendar
       },
       start_date: startDateString
     };
@@ -855,7 +892,8 @@ export class Tab2Page implements OnInit {
             thursday: calendarData.week.thursday || [],
             friday: calendarData.week.friday || [],
             saturday: calendarData.week.saturday || [],
-            grocery: calendarData.week.grocery || []
+            grocery: calendarData.week.grocery || [],
+            prep: calendarData.week.prep || []  // Load any saved prep list
           };
           console.log('Loaded Calendar for week:', weekKey);
           console.log('User IDs in this calendar:', calendarData.user_ids);
@@ -871,7 +909,8 @@ export class Tab2Page implements OnInit {
             thursday: [],
             friday: [],
             saturday: [],
-            grocery: []
+            grocery: [],
+            prep: []  // Initialize empty prep list if none exists
           };
           console.log('No calendar data found for week:', weekKey);
         }
@@ -935,13 +974,7 @@ export class Tab2Page implements OnInit {
   addUserToCalendar(user: any) {
     const weekKey = this.selectedPlan.toDateString();
     const calendarData = this.events[weekKey] || {
-      sunday: [],
-      monday: [],
-      tuesday: [],
-      wednesday: [],
-      thursday: [],
-      friday: [],
-      saturday: [],
+      sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [],
       user_ids: [this.currentUser.id]
     };
 
