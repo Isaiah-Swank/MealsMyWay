@@ -58,7 +58,6 @@ export class Tab2Page implements OnInit {
   prepListDisplay: string = ''; // Stores HTML version of prep list
   showPrepList: boolean = false; // Toggles prep list visibility
 
-
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
     private recipeService: RecipeService,
@@ -120,11 +119,11 @@ export class Tab2Page implements OnInit {
   }
 
   /**
- * generatePrepList
- * ---------------------------
- * Collects recipe instructions from all meals in the currently selected calendar week
- * and formats them into an API call to DeepSeek.
- */
+   * generatePrepList
+   * ---------------------------
+   * Collects recipe instructions from all meals in the currently selected calendar week
+   * and formats them into an API call to DeepSeek.
+   */
   generatePrepList() {
     const weekKey = this.selectedPlan.toDateString();
     const weekEvents = this.events[weekKey] || {};
@@ -136,7 +135,7 @@ export class Tab2Page implements OnInit {
       if (weekEvents.hasOwnProperty(day) && day !== 'grocery') {
         for (const meal of weekEvents[day]) {
           if (meal.instructions) {
-            prepInstructions.push(`Recipe: ${meal.title}\nInstructions: ${meal.instructions}`);
+            prepInstructions.push(`Recipe: ${meal.title}\nIngredients: ${meal.ingredients}\nInstructions: ${meal.instructions}`);
           }
         }
       }
@@ -176,25 +175,22 @@ export class Tab2Page implements OnInit {
         alert("Failed to generate prep list.");
       }
     );
-}
-
-async viewPrepList() {
-  const prepListMarkdown = sessionStorage.getItem('prepList');
-
-  if (!prepListMarkdown) {
-      alert('No prep list has been generated yet. Please generate one first.');
-      return;
   }
 
-  console.log("Loaded Prep List from sessionStorage:", prepListMarkdown);
+  async viewPrepList() {
+    const prepListMarkdown = sessionStorage.getItem('prepList');
 
-  // Convert Markdown to HTML asynchronously
-  this.prepListDisplay = await marked(prepListMarkdown);
-  this.showPrepList = true;
-}
+    if (!prepListMarkdown) {
+        alert('No prep list has been generated yet. Please generate one first.');
+        return;
+    }
 
-  
+    console.log("Loaded Prep List from sessionStorage:", prepListMarkdown);
 
+    // Convert Markdown to HTML asynchronously
+    this.prepListDisplay = await marked(prepListMarkdown);
+    this.showPrepList = true;
+  }
 
   /**
    * generatePlans
@@ -274,10 +270,12 @@ async viewPrepList() {
         (response: any) => {
           const mealData = response.meals[0];
           const ingredients: string[] = [];
+          // Extract both measurement and ingredient values
           for (let i = 1; i <= 20; i++) {
             const ingredient = mealData[`strIngredient${i}`];
-            if (ingredient) {
-              ingredients.push(ingredient);
+            const measure = mealData[`strMeasure${i}`];
+            if (ingredient && ingredient.trim()) {
+              ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
             } else {
               break;
             }
@@ -334,10 +332,12 @@ async viewPrepList() {
           (response: any) => {
             const mealData = response.meals[0];
             const ingredients: string[] = [];
+            // Combine measurement with ingredient name
             for (let i = 1; i <= 20; i++) {
               const ingredient = mealData[`strIngredient${i}`];
-              if (ingredient) {
-                ingredients.push(ingredient);
+              const measure = mealData[`strMeasure${i}`];
+              if (ingredient && ingredient.trim()) {
+                ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
               } else {
                 break;
               }
@@ -470,10 +470,12 @@ async viewPrepList() {
           (response: any) => {
             const mealData = response.meals[0];
             const ingredients: string[] = [];
+            // Combine measurement and ingredient name when fetching details
             for (let i = 1; i <= 20; i++) {
               const ingredient = mealData[`strIngredient${i}`];
-              if (ingredient) {
-                ingredients.push(ingredient.trim());
+              const measure = mealData[`strMeasure${i}`];
+              if (ingredient && ingredient.trim()) {
+                ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
               } else {
                 break;
               }

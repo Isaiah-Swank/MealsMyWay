@@ -152,13 +152,36 @@ export class RecipesPage implements OnInit {
     }
   }
 
+  /**
+   * fetchRecipeDetails
+   * ---------------------------
+   * Fetches extended details from the API for a given recipe.
+   * It extracts both the ingredient names with their measurements and the instructions,
+   * then updates the recipe object so that it sends complete data to the calendar page.
+   */
   fetchRecipeDetails(recipe: any) {
     if (!recipe.api_id) return;
   
     this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
       (response: any) => {
         if (response.meals && response.meals.length > 0) {
-          recipe.apiDetails = response.meals[0]; // Attach API data to the recipe
+          const mealData = response.meals[0];
+          // Attach full API details for potential later use
+          recipe.apiDetails = mealData;
+          // Build the ingredients array with measurements
+          const ingredients: string[] = [];
+          for (let i = 1; i <= 20; i++) {
+            const ingredient = mealData[`strIngredient${i}`];
+            const measure = mealData[`strMeasure${i}`];
+            if (ingredient && ingredient.trim()) {
+              ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
+            } else {
+              break;
+            }
+          }
+          recipe.ingredients = ingredients;
+          // Also set the instructions
+          recipe.instructions = mealData.strInstructions;
         }
       },
       (error) => {
@@ -221,8 +244,6 @@ export class RecipesPage implements OnInit {
     this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipes } });
   }
 
-
-
   deleteRecipe(recipeId: number) {
     if (confirm('Are you sure you want to delete this recipe?')) {
       this.http.delete(`${environment.apiUrl}/recipes/${recipeId}`).subscribe(
@@ -240,5 +261,3 @@ export class RecipesPage implements OnInit {
     }
   }
 }
-
-
