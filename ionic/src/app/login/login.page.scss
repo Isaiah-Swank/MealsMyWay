@@ -43,13 +43,13 @@ ion-title{
   
       ion-button {
         width: 100%;
-        background-color: #cbddd1;
+        background-color: #246d48;
         color: white;
         font-size: 16px;
         border-radius: 5px;
   
         &:hover {
-          --background: #246d48;
+          --background: #cbddd1;
         }
   
         &[disabled] {
@@ -70,11 +70,11 @@ ion-title{
       ion-button {
         font-size: 16px;
         color: #ffffff;
-        --background: #cbddd1;
+        --background: #246d48;
         border-radius: 5px;
   
         &:hover {
-          --background: #246d48;
+          --background: #cbddd1;
         }
       }
     }

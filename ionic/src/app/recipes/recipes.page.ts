@@ -20,20 +20,21 @@ export class RecipesPage implements OnInit {
   selectedRecipesList: any[] = []; 
   selectedRecipes: any[] = []; 
   isMobile: boolean = false;
-  isFormOpen: boolean = false;
+  // Removed isFormOpen flag since we are not using a modal for recipe creation
   isEditFormOpen: boolean = false;
   isSubmitting: boolean = false;
 
   // New Recipe Model
+  // Changed 'ingredients' from an array to a string to match the inline form input (comma-separated values)
   newRecipe = {
     author: '',
     title: '',
-    ingredients: [],
+    ingredients: '',
     instructions: '',
     tag: ''
   };
 
-  // Edit Recipe Model
+  // Edit Recipe Model remains unchanged
   editRecipeData = {
     id: null,
     author: '',
@@ -56,34 +57,26 @@ export class RecipesPage implements OnInit {
     this.checkDeviceType();
   }
 
+  // Check the device type to adjust UI for mobile screens
   checkDeviceType() {
     this.platform.ready().then(() => {
       this.isMobile = this.platform.width() <= 767;
     });
   }
 
-  openCreateRecipeForm() {
-    this.isFormOpen = true;
-  }
-
-  closeForm() {
-    this.isFormOpen = false;
-  }
-
-  openEditForm() {
-    this.isEditFormOpen = true;
-  }
-
-  closeEditForm() {
-    this.isEditFormOpen = false;
-  }
-
+  /**
+   * submitRecipe
+   * ------------
+   * Validates the new recipe form and sends the data to the backend.
+   * If any required field is missing, an alert is shown.
+   */
   submitRecipe() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
 
     const recipeData = { ...this.newRecipe };
 
+    // Validate required fields
     if (!recipeData.author || !recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
       alert('Please fill in all required fields.');
       this.isSubmitting = false;
@@ -97,7 +90,8 @@ export class RecipesPage implements OnInit {
         console.log('Backend Response:', response);
         if (response.message === 'Recipe created successfully.') {
           this.loadRecipes();
-          this.closeForm();
+          // Clear the form after a successful submission
+          this.newRecipe = { author: '', title: '', ingredients: '', instructions: '', tag: '' };
         } else {
           alert('Failed to add the recipe');
         }
@@ -110,12 +104,17 @@ export class RecipesPage implements OnInit {
       }
     );
   }
-  
 
+  /**
+   * loadRecipes
+   * -----------
+   * Loads recipes from the backend via the recipe service.
+   */
   loadRecipes() {
     this.recipeService.getRecipes().subscribe(
       (recipes) => {
         this.recipeService.setRecipes(recipes);
+        // Ensure every recipe has a tag field defined (empty string if not provided)
         this.recipes = recipes.map(recipe => ({
           ...recipe,
           tag: recipe.tag || ''
@@ -128,10 +127,21 @@ export class RecipesPage implements OnInit {
     );
   }
 
+  /**
+   * isRecipeSelected
+   * ----------------
+   * Checks if a given recipe is in the selected recipes list.
+   */
   isRecipeSelected(recipe: any): boolean {
     return this.selectedRecipes.some(r => r.id === recipe.id);
   }
 
+  /**
+   * toggleRecipeSelection
+   * ---------------------
+   * Adds or removes a recipe from the selected recipes list based on the checkbox state.
+   * Also fetches additional API details if the recipe has an api_id.
+   */
   toggleRecipeSelection(recipe: any, event: any) {
     if (event.detail.checked) {
       if (!this.isRecipeSelected(recipe)) {
@@ -141,7 +151,7 @@ export class RecipesPage implements OnInit {
       if (!this.selectedRecipesList.some(r => r.id === recipe.id)) {
         this.selectedRecipesList.push(recipe);
   
-        // Fetch API details if it has an api_id
+        // Fetch API details if available
         if (recipe.api_id && !recipe.apiDetails) {
           this.fetchRecipeDetails(recipe);
         }
@@ -154,10 +164,9 @@ export class RecipesPage implements OnInit {
 
   /**
    * fetchRecipeDetails
-   * ---------------------------
-   * Fetches extended details from the API for a given recipe.
-   * It extracts both the ingredient names with their measurements and the instructions,
-   * then updates the recipe object so that it sends complete data to the calendar page.
+   * ------------------
+   * Fetches extended recipe details from an external API (TheMealDB)
+   * and attaches them to the recipe object.
    */
   fetchRecipeDetails(recipe: any) {
     if (!recipe.api_id) return;
@@ -180,7 +189,7 @@ export class RecipesPage implements OnInit {
             }
           }
           recipe.ingredients = ingredients;
-          // Also set the instructions
+          // Set the instructions from the API
           recipe.instructions = mealData.strInstructions;
         }
       },
@@ -189,15 +198,23 @@ export class RecipesPage implements OnInit {
       }
     );
   }
-  
 
+  /**
+   * removeSelectedRecipe
+   * --------------------
+   * Removes a recipe from the selected recipes list.
+   */
   removeSelectedRecipe(recipe: any) {
     this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
-    
-    // Also uncheck the checkbox when removing manually
+    // Also uncheck the recipe by removing it from the selected recipes array
     this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipe.id);
   }
 
+  /**
+   * filterRecipes
+   * -------------
+   * Filters the list of recipes based on the search term entered in the search bar.
+   */
   filterRecipes(event: any) {
     const searchTerm = event.target.value.toLowerCase();
     if (searchTerm) {
@@ -210,11 +227,21 @@ export class RecipesPage implements OnInit {
     }
   }
 
+  /**
+   * editRecipe
+   * ----------
+   * Opens the edit recipe modal by setting the edit model data.
+   */
   editRecipe(recipe: any) {
     this.editRecipeData = { ...recipe };
     this.openEditForm();
   }
 
+  /**
+   * updateRecipe
+   * ------------
+   * Submits the updated recipe data to the backend.
+   */
   updateRecipe() {
     console.log('Updating recipe with data:', this.editRecipeData);
 
@@ -232,6 +259,11 @@ export class RecipesPage implements OnInit {
       );
   }
 
+  /**
+   * addToCalendar
+   * -------------
+   * Stores selected recipes in session storage and navigates to the calendar view.
+   */
   addToCalendar() {
     console.log("Checked recipes before navigating:", this.selectedRecipes);
 
@@ -244,6 +276,11 @@ export class RecipesPage implements OnInit {
     this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipes } });
   }
 
+  /**
+   * deleteRecipe
+   * ------------
+   * Deletes a recipe after user confirmation.
+   */
   deleteRecipe(recipeId: number) {
     if (confirm('Are you sure you want to delete this recipe?')) {
       this.http.delete(`${environment.apiUrl}/recipes/${recipeId}`).subscribe(
@@ -259,5 +296,18 @@ export class RecipesPage implements OnInit {
         }
       );
     }
+  }
+
+  /**
+   * openEditForm and closeEditForm
+   * ------------------------------
+   * Methods to manage the edit recipe modal visibility.
+   */
+  openEditForm() {
+    this.isEditFormOpen = true;
+  }
+
+  closeEditForm() {
+    this.isEditFormOpen = false;
   }
 }

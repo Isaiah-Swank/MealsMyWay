@@ -1,3 +1,4 @@
+/* Container for the overall "book" layout */
 .book-container {
   display: flex;
   justify-content: center;
@@ -8,12 +9,14 @@
   z-index: 1;
 }
 
-ion-title{
+/* Styling for the page title */
+ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
 }
 
+/* Containers for recipe creation/selection and recipe list */
 .my-recipes-container,
 .recipes-container {
   flex: 1;
@@ -26,21 +29,25 @@ ion-title{
   z-index: 2;
 }
 
+/* Header text color for these containers */
 .my-recipes-container,
 .recipes-container h1 {
   color: #246d48;
 }
 
+/* Left container: Rounded corners on the left side */
 .my-recipes-container {
   border-radius: 15px 0 0 15px;
   margin-right: -30px;
 }
 
+/* Right container: Rounded corners on the right side */
 .recipes-container {
   border-radius: 0 15px 15px 0;
   margin-left: -30px;
 }
 
+/* Visual "spine" between the containers */
 .book-spine {
   width: 100px;
   background-color: #1F5014;
@@ -49,7 +56,7 @@ ion-title{
   position: relative;
 }
 
-/* Ionic button overrides to match the standard CSS styling */
+/* Override default Ionic button styles to match color scheme */
 ion-button {
   --background: #246d48;
   --color: #fff;
@@ -60,6 +67,7 @@ ion-button:hover {
   --background: #1F5014;
 }
 
+/* Style for the search bar */
 .search-bar {
   width: 100%;
   padding: 10px;
@@ -69,6 +77,7 @@ ion-button:hover {
   align-self: center;
 }
 
+/* Recipe list styling */
 .recipe-list {
   padding: 0;
   margin: 0;
@@ -77,6 +86,7 @@ ion-button:hover {
   background-color: #fdf5d1;
 }
 
+/* Individual list item styling */
 ion-item {
   display: flex;
   align-items: center;
@@ -98,10 +108,12 @@ ion-item:hover {
   background-color: #cbddd1;
 }
 
+/* Recipe details card remains block display */
 .recipe-details {
   display: block;
 }
 
+/* Override modal background for the edit recipe modal */
 ::ng-deep .light-green-modal .modal-wrapper {
   --background: #cbddd1 !important; /* Light green background */
 }

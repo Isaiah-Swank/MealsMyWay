@@ -663,9 +663,9 @@ export class Tab2Page implements OnInit {
     const weekEvents = this.currentWeekEvents;
     let newAggregated: { [ingredient: string]: { quantity: number, unit: string } } = {};
 
-    // Aggregate ingredients from each meal (skip the grocery key if present)
+    // Aggregate ingredients from each meal (skip the grocery and prep keys if present)
     for (const day in weekEvents) {
-      if (day === 'grocery') continue;
+      if (day === 'grocery' || day === 'prep') continue;
       if (weekEvents.hasOwnProperty(day)) {
         for (const meal of weekEvents[day]) {
           if (!meal.processedForGrocery) {
