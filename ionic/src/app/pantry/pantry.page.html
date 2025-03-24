@@ -48,5 +48,16 @@
         {{ freezerEditMode ? 'All Done' : 'Edit Freezer' }}
       </ion-button>
     </div>
+
+    <div class="spice">
+      <h2>SPICE RACK</h2>
+      <ul>
+        <li class="new-item" *ngIf="!editMode">New Item</li>
+      </ul>
+      <ion-button class="edit-button-spice" expand="block">
+        {{ spiceEditMode ? 'All Done' : 'Edit Spice Rack' }}
+      </ion-button>
+    </div>
+
   </div> <!-- Closing container div -->
 </ion-content>

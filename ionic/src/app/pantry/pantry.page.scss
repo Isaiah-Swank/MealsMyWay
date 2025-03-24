@@ -15,12 +15,16 @@ ion-title {
   align-items: flex-start;
   margin: 50px auto;
   max-width: 1200px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Prevents wrapping to the next row */
+  gap: 20px; /* Adds spacing between elements */
 }
 
 /* Pantry and Freezer containers */
 .pantry,
-.freezer {
+.freezer,
+.spice {
+  flex: 1; /* Makes all boxes the same width */
+  max-width: 30%; /* Adjust as needed to fit within the container */
   padding: 20px;
   border-radius: 10px;
   border: 10px solid #77ba8f;
@@ -79,7 +83,8 @@ ion-title {
 
 /* Edit Button Styling - Matches "Edit Freezer" Button */
 .edit-button-pantry,
-.edit-button-freezer {
+.edit-button-freezer,
+.edit-button-spice {
   margin-top: 20px;
   --padding-start: 20px;
   --padding-end: 20px;
@@ -92,13 +97,15 @@ ion-title {
 }
 
 .edit-button-pantry:hover,
-.edit-button-freezer:hover {
+.edit-button-freezer:hover,
+.edit-button-spice:hover {
   --background: #1d5a38;
 }
 
 /* Hover effect for list items */
 .pantry ul li:hover,
-.freezer ul li:hover {
+.freezer ul li:hover,
+.spice ul li:hover {
   background-color: #cbddd1;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -162,4 +169,35 @@ ion-title {
 /* Hover effect for the plus and minus controls */
 .freezer ul li .item-controls span:hover {
   background-color: #77ba8f;
+}
+
+/* Spice Styles */
+.spice h2 {
+  color: #246d48;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.spice ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.spice li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  color: #246d48;
+  position: relative;
+  width: 100%;
+}
+
+/* Style the container for plus and minus controls */
+.spice ul li .item-controls {
+  display: flex;
+  gap: 0.5rem;
 }

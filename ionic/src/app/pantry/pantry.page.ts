@@ -14,6 +14,7 @@ export class PantryPage implements OnInit {
   userId: number = -1;
   editMode: boolean = false;
   freezerEditMode: boolean = false;
+  spiceEditMode: boolean = false;
 
   constructor(
     private pantryService: PantryService,
