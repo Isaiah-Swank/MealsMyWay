@@ -138,15 +138,13 @@
             Shopping List
           </ng-container>
           <ng-container *ngIf="!showShoppingList && !showPrepList">
-            Recipe List
+            <ng-container *ngIf="hoveredRecipe">Recipe Details</ng-container>
+            <ng-container *ngIf="!hoveredRecipe">Recipe List</ng-container>
           </ng-container>
-          <ng-template #recipeHeader>
-            {{ hoveredRecipe ? 'Recipe Details' : 'Recipe List' }}
-          </ng-template>
         </h3>
         <div class="details-container">
           <ng-container *ngIf="showPrepList">
-            <div class="details-container">
+            <div>
               <div [innerHTML]="prepListDisplay"></div>
               <ion-button (click)="showPrepList = false">Close</ion-button>
             </div>
@@ -159,8 +157,8 @@
             </ul>
             <ion-button (click)="showShoppingList = false">Close</ion-button>
           </ng-container>
-          <ng-template #recipeDetailsContent>
-            <ng-container *ngIf="hoveredRecipe; else defaultDetails">
+          <ng-container *ngIf="!showPrepList && !showShoppingList">
+            <div *ngIf="hoveredRecipe; else recipeList">
               <p><strong>Title:</strong> {{ hoveredRecipe.title }}</p>
               <p *ngIf="hoveredRecipe.ingredients && hoveredRecipe.ingredients.length">
                 <strong>Ingredients:</strong>
@@ -171,22 +169,21 @@
               <p *ngIf="hoveredRecipe.instructions">
                 <strong>Instructions:</strong> {{ hoveredRecipe.instructions }}
               </p>
-              <!-- Changed Close button to call the new method -->
               <ion-button (click)="closeRecipeDetails()">Close</ion-button>
-            </ng-container>
-            <ng-template #defaultDetails>
+            </div>
+            <ng-template #recipeList>
               <div *ngIf="recipes && recipes.length > 0; else noRecipes">
                 <ul class="all-recipes-list">
-                  <li *ngFor="let recipe of recipes">
+                  <li *ngFor="let recipe of recipes" (click)="onRecipeClick(recipe)">
                     {{ recipe.title }}
                   </li>
                 </ul>
               </div>
               <ng-template #noRecipes>
-                <p>No recipes found in the database.</p>
+                <p>No recipes are selected.</p>
               </ng-template>
             </ng-template>
-          </ng-template>
+          </ng-container>
         </div>
       </div>
 
