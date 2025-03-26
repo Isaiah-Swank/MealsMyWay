@@ -128,20 +128,22 @@ export class Tab2Page implements OnInit {
    * Collects recipe instructions from all meals in the currently selected calendar week
    * and formats them into an API call to DeepSeek.
    * 
-   * Now modified to only generate a new prep list if the calendar has changed.
-   * Also, the generated prep list is saved in the calendar under the 'prep' key.
+   * Now modified to only generate a new prep list if the calendar has changed or if no prep list exists.
+   * Also, the generated prep list is saved in the calendar under the 'prep' key and automatically saved.
    */
   generatePrepList() {
     const weekKey = this.selectedPlan.toDateString();
+    // Retrieve current week's events; ensure we have an object
+    const weekEvents = this.events[weekKey] || {};
+    // Check if a prep list already exists (non-empty)
+    const prepExists = weekEvents['prep'] && weekEvents['prep'].toString().trim() !== '';
 
-    // Only generate a new prep list if the calendar has changed
-    if (!this.calendarChanged) {
+    // Only block generation if a prep list exists and no changes have been made.
+    if (prepExists && !this.calendarChanged) {
       alert("No changes to the calendar detected. Prep list is up to date.");
       return;
     }
 
-    const weekEvents = this.events[weekKey] || {};
-    
     let prepInstructions: string[] = [];
   
     // Collect instructions from all meals (skip 'grocery' and 'prep' keys)
@@ -193,6 +195,9 @@ export class Tab2Page implements OnInit {
 
         // Reset the dirty flag as the prep list is now up-to-date
         this.calendarChanged = false;
+
+        // Automatically save the calendar with the new prep list
+        this.saveCalendar();
 
         alert("Prep list generated successfully! Check console.");
       },
@@ -277,8 +282,7 @@ export class Tab2Page implements OnInit {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
-        sunday: [], monday: [], tuesday: [], wednesday: [],
-        thursday: [], friday: [], saturday: []
+        sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: []
       };
     }
     return this.events[weekKey];
