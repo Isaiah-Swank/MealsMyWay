@@ -69,13 +69,13 @@ export class Tab2Page implements OnInit {
   // -------------------- Lifecycle Hook --------------------
   ngOnInit() {
     const storedPlan = sessionStorage.getItem('selectedPlan');
-      if (storedPlan) {
-        this.selectedPlan = new Date(storedPlan);
-        this.setCurrentWeekStart(); // Still needed to generate plans
-      } else {
-        this.setCurrentWeekStart();
-        this.selectedPlan = this.currentWeekStart;
-      }
+    if (storedPlan) {
+      this.selectedPlan = new Date(storedPlan);
+      this.setCurrentWeekStart(); // Still needed to generate plans
+    } else {
+      this.setCurrentWeekStart();
+      this.selectedPlan = this.currentWeekStart;
+    }
     this.generatePlans();
     this.loadRecipes();
 
@@ -98,20 +98,9 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  ionViewWillEnter() {
-    // Re-load recipes from sessionStorage every time the calendar view is entered
-    const storedRecipes = sessionStorage.getItem('selectedRecipes');
-    if (storedRecipes) {
-      this.recipes = JSON.parse(storedRecipes);
-      console.log('[CALENDAR] Recipes reloaded from sessionStorage:', this.recipes);
-    }
-  }
-
-  ionViewWillLeave() {
-    if (this.selectedPlan) {
-      sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
-    }
-  }
+  // -------------------- (Optional) View Lifecycle Methods --------------------
+  // If you prefer to reload recipes when the view enters or save the selected plan when leaving,
+  // you can add ionViewWillEnter and ionViewWillLeave. In this version we are not including these.
 
   // -------------------- Methods Required by the Template --------------------
 
