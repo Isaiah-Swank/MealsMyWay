@@ -24,7 +24,16 @@ export class PantryPage implements OnInit {
 
   ngOnInit() {
     this.loadUser();
+    this.pantryService.pantryUpdated$.subscribe(() => {
+      this.loadPantryItems();
+    });
   }
+  
+  ionViewWillEnter() {
+    console.log('[PANTRY] ionViewWillEnter triggered — refreshing pantry items');
+    this.loadPantryItems(); // 👈 Re-fetch the latest pantry and freezer items
+  }
+  
 
   /**
    * Loads the current user from the UserService and fetches pantry items.

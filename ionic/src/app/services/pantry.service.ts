@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { BehaviorSubject } from 'rxjs';
+
 
 export interface PantryPayload {
   user_id: number; 
@@ -17,6 +19,8 @@ export interface PantryPayload {
 })
 export class PantryService {
   private apiUrl = `${environment.apiUrl}/pantry`;
+  private pantryUpdatedSource = new BehaviorSubject<void>(undefined);
+  pantryUpdated$ = this.pantryUpdatedSource.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -27,6 +31,10 @@ export class PantryService {
   savePantry(payload: PantryPayload): Observable<{ message: string }> {
     console.log(`[PANTRY] Sending POST request to ${this.apiUrl} with payload:`, JSON.stringify(payload, null, 2));
     return this.http.post<{ message: string }>(this.apiUrl, payload);
+  }
+
+  triggerPantryReload() {
+    this.pantryUpdatedSource.next();
   }
 
   /**
