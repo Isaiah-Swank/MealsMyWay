@@ -84,8 +84,14 @@ export class Tab2Page implements OnInit {
    * - Loads the calendar for the current user if available.
    */
   ngOnInit() {
-    this.setCurrentWeekStart();
-    this.selectedPlan = this.currentWeekStart;
+    const storedPlan = sessionStorage.getItem('selectedPlan');
+      if (storedPlan) {
+        this.selectedPlan = new Date(storedPlan);
+        this.setCurrentWeekStart(); // Still needed to generate plans
+      } else {
+        this.setCurrentWeekStart();
+        this.selectedPlan = this.currentWeekStart;
+      }
     this.generatePlans();
     this.loadRecipes();
 
@@ -107,6 +113,22 @@ export class Tab2Page implements OnInit {
       this.loadCalendar();
     }
   }
+
+  ionViewWillEnter() {
+    // Re-load recipes from sessionStorage every time the calendar view is entered
+    const storedRecipes = sessionStorage.getItem('selectedRecipes');
+    if (storedRecipes) {
+      this.recipes = JSON.parse(storedRecipes);
+      console.log('[CALENDAR] Recipes reloaded from sessionStorage:', this.recipes);
+    }
+  }
+
+  ionViewWillLeave() {
+    if (this.selectedPlan) {
+      sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
+    }
+  }
+  
 
   // -------------------- Calendar Initialization Methods --------------------
   /**
@@ -758,6 +780,7 @@ export class Tab2Page implements OnInit {
     };
     try {
       await this.pantryService.updatePantry(pantryPayload).toPromise();
+      this.pantryService.triggerPantryReload();
       console.log('Pantry updated successfully after adjusting for new grocery list.');
     } catch (error) {
       console.error('Error updating pantry', error);
@@ -934,6 +957,7 @@ export class Tab2Page implements OnInit {
    * Loads the calendar for the new plan.
    */
   onPlanChange() {
+    sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
     this.loadCalendar();
   }
 
