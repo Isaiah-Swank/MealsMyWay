@@ -55,6 +55,7 @@ export class Tab2Page implements OnInit {
 
   // Dirty flag to track calendar changes for prep list regeneration
   calendarChanged: boolean = false; // Set to true whenever the calendar is modified
+  currentView: string = 'calendar'; 
 
   // User and sharing management
   currentUser: any = null;       // Currently logged in user
@@ -114,6 +115,10 @@ export class Tab2Page implements OnInit {
     }
   }
 
+switchView() {
+  console.log('Switching to:', this.currentView);
+}
+
   ionViewWillEnter() {
     // Re-load recipes from sessionStorage every time the calendar view is entered
     const storedRecipes = sessionStorage.getItem('selectedRecipes');
@@ -122,6 +127,7 @@ export class Tab2Page implements OnInit {
       console.log('[CALENDAR] Recipes reloaded from sessionStorage:', this.recipes);
     }
   }
+
 
   ionViewWillLeave() {
     if (this.selectedPlan) {

@@ -1,34 +1,27 @@
-/******************************************
- * Global page background and title
- ******************************************/
- ion-content {
+ion-content {
   --background: #cbddd1;
 }
 
 ion-title {
-  font-size: 32px;
+  font-size: 24px;
   justify-self: center;
+  text-align: center;
   color: #246d48;
 }
 
-/******************************************
- * Main container for the calendar layout
- ******************************************/
 .calendar-container {
   width: 90%;
   max-width: 1600px;
   margin: 20px auto;
 }
 
-/******************************************
- * Calendar header at top
- ******************************************/
 .calendar-header {
   display: flex;
   position: relative;
   justify-content: center;
   padding: 10px;
   margin-bottom: 20px;
+  gap: 20px;
 }
 
 .header-date {
@@ -46,9 +39,6 @@ ion-button {
   cursor: pointer;
 }
 
-/******************************************
- * Calendar grid: 7 columns for days
- ******************************************/
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -67,13 +57,13 @@ ion-button {
   margin: 0;
   font-size: 18px;
   color: #246d48;
+  text-align: center;
 }
 
 .events {
   margin-top: 10px;
 }
 
-/* New style for individual event items with a red delete button */
 .event-item {
   display: flex;
   justify-content: space-between;
@@ -86,9 +76,6 @@ ion-button {
   transition: background-color 0.3s ease;
 }
 
-/******************************************
- * Bottom button container and group styling
- ******************************************/
 .button-container {
   margin: 40px auto;
   display: flex;
@@ -112,6 +99,7 @@ ion-button {
 }
 
 .button-container ion-button {
+
   padding: 10px 15px;
   font-size: 16px;
   width: 250px;
@@ -122,9 +110,6 @@ ion-button {
   cursor: pointer;
 }
 
-/******************************************
- * Meal Section Container
- ******************************************/
 .meal-section-container {
   display: flex;
   flex-wrap: nowrap;
@@ -166,10 +151,99 @@ ion-button {
   color: #246d48;
 }
 
-/******************************************
- * Force smaller popover height for ion-select
- ******************************************/
 ::ng-deep .select-popover .popover-content {
   max-height: 300px;
   overflow-y: auto;
 }
+
+@media (max-width: 768px) {
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .calendar-header ion-item,
+  .calendar-header ion-button {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .calendar {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    justify-items: center;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .day {
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .meal-section-container {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    width: 100%;
+  }
+
+  .recipe-details,
+  .add-meal-form {
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .button-container {
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+    margin-top: 20px;
+    gap: 5px;
+
+  }
+
+  .button-container ion-button {
+    width: 100%;
+    height: 45px;
+    text-align: center;
+
+  }
+  .save-calendar
+  {
+    width: 101%;
+    height: 45px;
+    text-align: center;   
+  }
+
+  .event-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+  }
+
+  .header-date,
+  .add-meal-form,
+  .recipe-details {
+    text-align: center;
+    margin: 0 auto;
+  }
+
+  .generate-shopping-list,
+  .generate-prep-list,{
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    margin: 0 auto;
+
+  }
+}
+
