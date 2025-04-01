@@ -66,17 +66,18 @@ ion-button.update-password-btn {
   --handle-background: #a8e6a3 !important;
 }
 
-.shared-plans-detail {
+/* Shared Users Section Styles */
+.shared-users-detail {
   min-height: 150px;
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc; /* You may change this if you want a different border color */
+  border: 1px solid #ccc;
   border-radius: 4px;
   background-color: #d2b48c !important; /* Light brown background */
   color: #246d48 !important; /* Dark green font */
 }
 
 /* Force all child elements to inherit dark green text */
-.shared-plans-detail * {
+.shared-users-detail * {
   color: #246d48 !important;
 }

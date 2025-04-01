@@ -53,30 +53,24 @@
         </ion-item>
       </div>
       
-      <!-- Shared Plans Section -->
+      <!-- Shared Users Section (formerly Shared Plans) -->
       <div class="settings-item" (click)="toggleSharedPlans()">
-        <img src="assets/images/share.png" alt="Shared Plans" class="user-settings">
-        <p>Shared Plans</p>
+        <img src="assets/images/share.png" alt="Shared Users" class="user-settings">
+        <p>Shared Users</p>
       </div>
-      <div *ngIf="showSharedPlans" class="setting-detail shared-plans-detail">
+      <div *ngIf="showSharedPlans" class="setting-detail shared-users-detail">
+        <!-- List pending invites -->
         <ion-list>
-          <ion-item *ngIf="sharedPlans.length === 0">
-            No shared plans
+          <ion-item *ngIf="sharedInvites.length === 0">
+            No pending invites
           </ion-item>
-          <ion-item *ngFor="let plan of sharedPlans">
+          <ion-item *ngFor="let invite of sharedInvites">
             <ion-label>
-              <h2>{{ plan.name }}</h2>
-              <p>
-                Week: {{ plan.start_date | date:'mediumDate' }}
-              </p>
-              <p>
-                Shared with: 
-                <span *ngIf="plan.sharedWith && plan.sharedWith.length > 0; else noUsers">
-                  {{ plan.sharedWith.join(', ') }}
-                </span>
-                <ng-template #noUsers>No additional users</ng-template>
-              </p>
+              <h2>{{ invite.senderUsername }}</h2>
+              <p>Invited you to share calendars</p>
             </ion-label>
+            <ion-button (click)="acceptInvite(invite)">Accept</ion-button>
+            <ion-button (click)="declineInvite(invite)">Decline</ion-button>
           </ion-item>
         </ion-list>
       </div>

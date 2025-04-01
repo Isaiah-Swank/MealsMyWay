@@ -24,7 +24,7 @@ export interface CalendarPayload {
 
 /**
  * CalendarService
- * Provides methods to save, load, and update calendar data on the server.
+ * Provides methods to save, load, update calendar data, and send calendar invites.
  */
 @Injectable({
   providedIn: 'root'
@@ -63,8 +63,8 @@ export class CalendarService {
 
   /**
    * addUserToCalendar
-   * Helper method to add a new user to an existing calendar.
-   * If the user's ID is not present in the calendar, it is added and the calendar is updated.
+   * Legacy method: adds a user to the calendar's user_ids list.
+   * (No longer used for sharing invites.)
    * @param userId - The ID of the user to add.
    * @param calendar - The current calendar data.
    * @param startDate - The week start date as an ISO string.
@@ -82,5 +82,20 @@ export class CalendarService {
       start_date: startDate
     };
     return this.updateCalendar(payload);
+  }
+
+  /**
+   * sendCalendarInvite
+   * NEW METHOD:
+   * Instead of directly adding a user to the calendar, this method sends an invitation.
+   * The invite object should include:
+   *   - senderId: The user ID of the sender.
+   *   - recipientId: The user ID of the recipient.
+   *   - plan: (Optional) Details of the plan or additional info.
+   * This method calls the backend endpoint which updates the recipient's "invites" column.
+   * @param invite - The invite object.
+   */
+  sendCalendarInvite(invite: any): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/user/send-invite`, invite);
   }
 }
