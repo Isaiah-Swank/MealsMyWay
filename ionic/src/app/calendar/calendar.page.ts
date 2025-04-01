@@ -98,6 +98,11 @@ export class Tab2Page implements OnInit {
     }
   }
 
+  ionViewWillEnter() {
+    this.loadRecipes();
+  }
+  
+
   // -------------------- (Optional) View Lifecycle Methods --------------------
   // If you prefer to reload recipes when the view enters or save the selected plan when leaving,
   // you can add ionViewWillEnter and ionViewWillLeave. In this version we are not including these.
