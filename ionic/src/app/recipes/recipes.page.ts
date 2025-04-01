@@ -183,7 +183,7 @@ export class RecipesPage implements OnInit {
             const ingredient = mealData[`strIngredient${i}`];
             const measure = mealData[`strMeasure${i}`];
             if (ingredient && ingredient.trim()) {
-              ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
+              ingredients.push(`${ingredient.trim()} - ${measure ? measure.trim() : ''}`);
             } else {
               break;
             }

@@ -9,58 +9,51 @@ import { PantryService } from '../services/pantry.service';
 import { environment } from '../../environments/environment';
 import { marked } from 'marked';
 
-/**
- * Tab2Page Component
- * --------------------
- * This component manages the weekly meal prep calendar.
- * It allows users to:
- * - View and select a week (plan) for scheduling meals.
- * - Add meals to a specific day of the week.
- * - View recipe details and generate shopping lists.
- * - Remove a meal from the calendar using a confirmation dialog.
- * - Share the calendar with other users.
- */
 @Component({
   selector: 'app-tab2',
   templateUrl: 'calendar.page.html',
   styleUrls: ['calendar.page.scss']
 })
 export class Tab2Page implements OnInit {
-  // -------------------- Component Properties --------------------
-  // Calendar and plan management
-  currentWeekStart!: Date;       // Date representing the most recent Sunday
-  plans: Date[] = [];            // Array of available week plans (current + previous weeks)
-  selectedPlan!: Date;           // Currently selected week/plan
+  // -------------------- Calendar & Plan Management --------------------
+  currentWeekStart!: Date;       // Most recent Sunday
+  plans: Date[] = [];            // Current + previous weeks
+  selectedPlan!: Date;           // Currently selected week
 
-  // Recipe and meal management
-  recipes: any[] = [];           // Array of available recipes
-  selectedMeal: any = null;      // Recipe selected to add to the calendar
-  selectedDay: string = '';      // The day (e.g., "monday") to add the selected meal
+  // -------------------- Meal Management --------------------
+  recipes: any[] = [];           // Available recipes
+  selectedMeal: any = null;      // Recipe to add to calendar
+  selectedDay: string = '';      // Day to add the meal (e.g., "monday")
+  selectedCategory: string = ''; // NEW: Category (e.g., 'kidsLunch')
 
-  // Calendar events storage
-  events: { [week: string]: { [day: string]: any[] } } = {}; // Stores meals for each day by week
-  hoveredRecipe: any = null;     // Recipe whose details are currently shown
-  selectedEvent: any = null;     // Tracks which calendar event is selected (to display red X for removal)
+  // List of categories for meal selection and display
+  categoryList: string[] = ['kidsLunch', 'adultsLunch', 'familyDinner'];
 
-  // Shopping list properties
-  shoppingList: string[] = [];   // Formatted shopping list for display
-  shoppingLists: { [week: string]: string[] } = {}; // Saved shopping lists by week key
-  groceryListRaw: { [ingredient: string]: { quantity: number, unit: string } } = {}; // Aggregated raw grocery data
-  showShoppingList: boolean = false; // Flag to toggle shopping list view
-  groceryListDisplay: string[] = [];   // Display version of the grocery list
+  // -------------------- Calendar Events Storage --------------------
+  // Each week key contains days as objects with category arrays plus grocery & prep lists.
+  events: { [week: string]: any } = {};
+  hoveredRecipe: any = null;     // Recipe details currently shown
+  selectedEvent: any = null;     // Recipe selected (for removal, etc.)
 
-  // Prep list properties
-  prepListDisplay: string = ''; // Stores HTML version of prep list
-  showPrepList: boolean = false; // Toggles prep list visibility
+  // -------------------- Shopping List Properties --------------------
+  shoppingList: string[] = [];   // Final grocery list for display
+  shoppingLists: { [week: string]: string[] } = {};
+  groceryListRaw: { [ingredient: string]: { quantity: number, unit: string } } = {};
+  showShoppingList: boolean = false;
+  groceryListDisplay: string[] = [];
 
-  // Dirty flag to track calendar changes for prep list regeneration
-  calendarChanged: boolean = false; // Set to true whenever the calendar is modified
+  // -------------------- Prep List Properties --------------------
+  prepListDisplay: string = '';
+  showPrepList: boolean = false;
 
-  // User and sharing management
-  currentUser: any = null;       // Currently logged in user
-  searchQuery: string = '';      // Input string for searching users to share the calendar with
-  searchResults: any[] = [];     // Array of users found during search
-  showShareCalendar: boolean = false; // Toggles display of the calendar sharing interface
+  // Flag to mark changes in calendar for prep list regeneration
+  calendarChanged: boolean = false;
+
+  // -------------------- User & Sharing Management --------------------
+  currentUser: any = null;
+  searchQuery: string = '';
+  searchResults: any[] = [];
+  showShareCalendar: boolean = false;
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
@@ -74,27 +67,19 @@ export class Tab2Page implements OnInit {
   ) {}
 
   // -------------------- Lifecycle Hook --------------------
-  /**
-   * ngOnInit
-   * -------------
-   * Initializes the component:
-   * - Sets the current week start date.
-   * - Generates available week plans.
-   * - Loads recipes and user information.
-   * - Loads the calendar for the current user if available.
-   */
   ngOnInit() {
     const storedPlan = sessionStorage.getItem('selectedPlan');
-      if (storedPlan) {
-        this.selectedPlan = new Date(storedPlan);
-        this.setCurrentWeekStart(); // Still needed to generate plans
-      } else {
-        this.setCurrentWeekStart();
-        this.selectedPlan = this.currentWeekStart;
-      }
+    if (storedPlan) {
+      this.selectedPlan = new Date(storedPlan);
+      this.setCurrentWeekStart(); // Still needed to generate plans
+    } else {
+      this.setCurrentWeekStart();
+      this.selectedPlan = this.currentWeekStart;
+    }
     this.generatePlans();
     this.loadRecipes();
 
+    // Load current user from navigation state or session storage.
     const nav = this.router.getCurrentNavigation();
     if (nav && nav.extras && nav.extras.state && nav.extras.state['user']) {
       this.currentUser = nav.extras.state['user'];
@@ -108,34 +93,84 @@ export class Tab2Page implements OnInit {
         console.warn('No user found from login or session storage. Calendar not loaded.');
       }
     }
-
     if (this.currentUser) {
       this.loadCalendar();
     }
   }
 
-  ionViewWillEnter() {
-    // Re-load recipes from sessionStorage every time the calendar view is entered
-    const storedRecipes = sessionStorage.getItem('selectedRecipes');
-    if (storedRecipes) {
-      this.recipes = JSON.parse(storedRecipes);
-      console.log('[CALENDAR] Recipes reloaded from sessionStorage:', this.recipes);
-    }
+  // -------------------- (Optional) View Lifecycle Methods --------------------
+  // If you prefer to reload recipes when the view enters or save the selected plan when leaving,
+  // you can add ionViewWillEnter and ionViewWillLeave. In this version we are not including these.
+
+  // -------------------- Methods Required by the Template --------------------
+
+  // Called when a new plan is selected from the dropdown.
+  onPlanChange() {
+    sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
+    this.loadCalendar();
   }
 
-  ionViewWillLeave() {
-    if (this.selectedPlan) {
-      sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
-    }
+  // Toggles the calendar-sharing search interface.
+  toggleShareCalendar() {
+    this.showShareCalendar = !this.showShareCalendar;
   }
-  
 
-  // -------------------- Calendar Initialization Methods --------------------
-  /**
-   * setCurrentWeekStart
-   * ----------------------
-   * Determines the most recent Sunday (start of the week) and sets it as currentWeekStart.
-   */
+  // Searches for users based on the search query.
+  searchUsers() {
+    if (this.searchQuery.trim() === '') {
+      this.searchResults = [];
+      return;
+    }
+    this.userService.searchUsers(this.searchQuery).subscribe(
+      response => {
+        this.searchResults = response;
+      },
+      error => {
+        console.error('Error searching users:', error);
+        this.searchResults = [];
+      }
+    );
+  }
+
+  // Adds the specified user to the calendar's shared user list.
+  addUserToCalendar(user: any) {
+    const weekKey = this.selectedPlan.toDateString();
+    let calendarData: any = this.events[weekKey];
+    if (!calendarData) {
+      calendarData = {
+        sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: [],
+        prep: [],
+        user_ids: [this.currentUser.id]
+      };
+    } else {
+      if (!calendarData.user_ids) {
+        calendarData.user_ids = [this.currentUser.id];
+      }
+    }
+    if (!calendarData.user_ids.includes(user.id)) {
+      calendarData.user_ids.push(user.id);
+    }
+    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    this.calendarService.addUserToCalendar(user.id, calendarData, startDateString).subscribe(
+      response => {
+        console.log('User added to calendar successfully:', response);
+      },
+      error => {
+        console.error('Error adding user to calendar:', error);
+      }
+    );
+  }
+
+  // -------------------- Calendar Initialization --------------------
+
+  // Determines the most recent Sunday (start of the week).
   setCurrentWeekStart() {
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -144,128 +179,7 @@ export class Tab2Page implements OnInit {
     this.currentWeekStart = sunday;
   }
 
-  /**
-   * generatePrepList
-   * ---------------------------
-   * Collects recipe instructions from all meals in the currently selected calendar week
-   * and formats them into an API call to DeepSeek.
-   * 
-   * Now modified to only generate a new prep list if the calendar has changed or if no prep list exists.
-   * Also, the generated prep list is saved in the calendar under the 'prep' key and automatically saved.
-   */
-  generatePrepList() {
-    const weekKey = this.selectedPlan.toDateString();
-    // Retrieve current week's events; ensure we have an object
-    const weekEvents = this.events[weekKey] || {};
-    // Check if a prep list already exists (non-empty)
-    const prepExists = weekEvents['prep'] && weekEvents['prep'].toString().trim() !== '';
-
-    // Only block generation if a prep list exists and no changes have been made.
-    if (prepExists && !this.calendarChanged) {
-      alert("No changes to the calendar detected. Prep list is up to date.");
-      return;
-    }
-
-    let prepInstructions: string[] = [];
-  
-    // Collect instructions from all meals (skip 'grocery' and 'prep' keys)
-    for (const day in weekEvents) {
-      if (weekEvents.hasOwnProperty(day) && day !== 'grocery' && day !== 'prep') {
-        for (const meal of weekEvents[day]) {
-          if (meal.instructions) {
-            prepInstructions.push(`Recipe: ${meal.title}\nIngredients: ${meal.ingredients}\nInstructions: ${meal.instructions}`);
-          }
-        }
-      }
-    }
-  
-    if (prepInstructions.length === 0) {
-      alert("No recipes with instructions found for the selected week.");
-      return;
-    }
-  
-    // Format API request
-    const requestBody = {
-      prompt: `Generate a combined prep list for the following recipes. 
-      Combine overlapping ingredients (e.g., chicken, onions) into a single step. 
-      Format the output as a numbered list with clear, concise instructions. 
-      Group ingredients by type (e.g., proteins, vegetables, dry ingredients) 
-      and specify quantities for each recipe:\n\n${prepInstructions.join('\n\n')}`,
-      max_tokens: 8192,
-      temperature: 0.7
-    };
-
-    console.log("Sending request to backend:", requestBody);
-  
-    // Call your backend instead of DeepSeek directly
-    this.http.post(`${environment.apiUrl}/api/deepseek`, requestBody).subscribe(
-      (response: any) => {
-        const prepListMarkdown = response.choices[0].message.content;
-        console.log("DeepSeek response:", prepListMarkdown);
-
-        // Store in sessionStorage
-        sessionStorage.setItem('prepList', prepListMarkdown);
-
-        // Save the prep list in the calendar events under a new "prep" key
-        if (!this.events[weekKey]) {
-          this.events[weekKey] = {
-            sunday: [], monday: [], tuesday: [], wednesday: [],
-            thursday: [], friday: [], saturday: [], grocery: [], prep: []
-          };
-        }
-        this.events[weekKey]['prep'] = prepListMarkdown;
-
-        // Reset the dirty flag as the prep list is now up-to-date
-        this.calendarChanged = false;
-
-        // Automatically save the calendar with the new prep list
-        this.saveCalendar();
-
-        alert("Prep list generated successfully! Check console.");
-      },
-      (error) => {
-        console.error("Error:", error);
-        alert("Failed to generate prep list.");
-      }
-    );
-  }
-
-  async viewPrepList() {
-    // Try to load the prep list from sessionStorage; default to a blank string if not found.
-    let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
-    const weekKey = this.selectedPlan.toDateString();
-  
-    // If sessionStorage doesn't have a valid prep list, try loading it from the calendar events.
-    if (!prepListMarkdown && this.events[weekKey] && this.events[weekKey]['prep']) {
-      const prepFromEvent = this.events[weekKey]['prep'];
-      // Check if the retrieved value is an array. If it is, default to a blank string.
-      if (Array.isArray(prepFromEvent)) {
-        prepListMarkdown = "";
-      } else {
-        prepListMarkdown = prepFromEvent as string;
-      }
-      // Update sessionStorage for consistency.
-      sessionStorage.setItem('prepList', prepListMarkdown);
-    }
-  
-    // If no prep list exists (i.e., prepListMarkdown is still blank), alert the user.
-    if (prepListMarkdown === "") {
-      alert('No prep list has been generated yet. Please generate one first.');
-      return;
-    }
-  
-    console.log("Loaded Prep List:", prepListMarkdown);
-    // Convert Markdown to HTML asynchronously.
-    this.prepListDisplay = await marked(prepListMarkdown);
-    this.showPrepList = true;
-  }
-
-  /**
-   * generatePlans
-   * ----------------------
-   * Generates an array of week start dates:
-   * Includes the current week and the previous 19 weeks.
-   */
+  // Generates an array of week start dates (current + previous 19 weeks).
   generatePlans() {
     this.plans.push(this.currentWeekStart);
     const numberOfPreviousWeeks = 19;
@@ -276,11 +190,7 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  /**
-   * loadRecipes
-   * ----------------------
-   * Loads available recipes from navigation state or session storage.
-   */
+  // Loads recipes from navigation state or session storage.
   loadRecipes() {
     const nav = this.router.getCurrentNavigation();
     let selectedRecipes = [];
@@ -291,53 +201,48 @@ export class Tab2Page implements OnInit {
       selectedRecipes = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
     }
     this.recipes = selectedRecipes;
-    console.log("Updated recipes in Calendar:", this.recipes);
+    console.log('Updated recipes in Calendar:', this.recipes);
   }
 
-  /**
-   * Getter: currentWeekEvents
-   * ---------------------------
-   * Returns the calendar events for the currently selected week.
-   * Initializes the event object if it does not exist.
-   */
+  // Returns the calendar events for the selected week.
   get currentWeekEvents() {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
-        sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: []
+        sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: [],
+        prep: []
       };
     }
     return this.events[weekKey];
   }
 
   // -------------------- Meal & Recipe Management --------------------
-  /**
-   * addMeal
-   * ---------------------------
-   * Adds a selected meal to the calendar on the chosen day.
-   * If the selected meal lacks detailed ingredients or instructions,
-   * it fetches the details from the API before adding.
-   */
+
+  // Called when a user adds a meal. Ensures a meal, day, and category are selected.
   addMeal() {
-    if (!this.selectedMeal || !this.selectedDay) {
-      alert('Please select both a meal and a day.');
+    if (!this.selectedMeal || !this.selectedDay || !this.selectedCategory) {
+      alert('Please select a meal, day, and category.');
       return;
     }
-    if (
-      (!this.selectedMeal.ingredients || this.selectedMeal.ingredients.length === 0) &&
-      this.selectedMeal.api_id &&
-      !this.selectedMeal.instructions
-    ) {
+    // If API details are missing, fetch them first.
+    if ((!this.selectedMeal.ingredients || this.selectedMeal.ingredients.length === 0) &&
+         this.selectedMeal.api_id && !this.selectedMeal.instructions) {
       this.recipeService.getRecipeDetailsFromApi(this.selectedMeal.api_id).subscribe(
-        (response: any) => {
-          const mealData = response.meals[0];
+        response => {
+          const mealData = (response as any).meals[0];
           const ingredients: string[] = [];
-          // Extract both measurement and ingredient values
           for (let i = 1; i <= 20; i++) {
             const ingredient = mealData[`strIngredient${i}`];
             const measure = mealData[`strMeasure${i}`];
             if (ingredient && ingredient.trim()) {
-              ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
+              ingredients.push(`${ingredient.trim()} - ${measure ? measure.trim() : ''}`);
             } else {
               break;
             }
@@ -346,7 +251,7 @@ export class Tab2Page implements OnInit {
           this.selectedMeal.instructions = mealData.strInstructions;
           this.pushMeal();
         },
-        (error) => {
+        error => {
           console.error('Error fetching recipe details:', error);
           this.pushMeal();
         }
@@ -356,91 +261,42 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  /**
-   * pushMeal
-   * ---------------------------
-   * Clones the selected meal and adds it to the calendar events for the selected day.
-   * Also sets a flag to indicate that the calendar has changed.
-   */
+  // Clones the selected meal and adds it under the specified day and category.
   pushMeal() {
     const weekKey = this.selectedPlan.toDateString();
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
-        sunday: [], monday: [], tuesday: [], wednesday: [],
-        thursday: [], friday: [], saturday: []
+        sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: [],
+        prep: []
       };
     }
     const mealClone = JSON.parse(JSON.stringify(this.selectedMeal));
     mealClone.processedForGrocery = false;
-    this.events[weekKey][this.selectedDay].push(mealClone);
-    // Mark the calendar as changed so a new prep list can be generated
+    this.events[weekKey][this.selectedDay][this.selectedCategory].push(mealClone);
     this.calendarChanged = true;
+    // Clear selections after adding.
     this.selectedMeal = null;
     this.selectedDay = '';
+    this.selectedCategory = '';
   }
 
-  /**
-   * onRecipeHover
-   * ---------------------------
-   * When hovering over a recipe, fetches and displays its detailed information.
-   * If the recipe data is incomplete, it attempts to retrieve details from the API.
-   */
-  onRecipeHover(recipe: any) {
-    if (recipe) {
-      if (recipe.api_id && !recipe.instructions) {
-        this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
-          (response: any) => {
-            const mealData = response.meals[0];
-            const ingredients: string[] = [];
-            // Combine measurement with ingredient name
-            for (let i = 1; i <= 20; i++) {
-              const ingredient = mealData[`strIngredient${i}`];
-              const measure = mealData[`strMeasure${i}`];
-              if (ingredient && ingredient.trim()) {
-                ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
-              } else {
-                break;
-              }
-            }
-            recipe.ingredients = ingredients;
-            recipe.instructions = mealData.strInstructions;
-            this.hoveredRecipe = recipe;
-          },
-          (error) => {
-            console.error('Error fetching recipe details from API:', error);
-            this.hoveredRecipe = recipe;
-          }
-        );
-      } else {
-        if (typeof recipe.ingredients === 'string') {
-          recipe.ingredients = recipe.ingredients.split(',').map((ingredient: string) => ingredient.trim());
-        } else {
-          recipe.ingredients = recipe.ingredients || [];
-        }
-        recipe.instructions = recipe.instructions || '';
-        this.hoveredRecipe = recipe;
-      }
-    } else {
-      this.hoveredRecipe = null;
-    }
-  }
-
-  /**
-   * onRecipeClick
-   * ---------------------------
-   * Handles the click on a recipe in the calendar.
-   * Sets the hovered recipe details and marks the recipe as selected (to display the red X).
-   */
+  // When a recipe is clicked, set it as hovered for details display.
   onRecipeClick(recipe: any) {
     if (recipe) {
       if (typeof recipe.ingredients === 'string') {
-        recipe.ingredients = recipe.ingredients.split(',').map((ingredient: string) => ingredient.trim());
+        recipe.ingredients = recipe.ingredients.split(',').map((ing: string) => ing.trim());
       } else {
         recipe.ingredients = recipe.ingredients || [];
       }
       recipe.instructions = recipe.instructions || '';
       this.hoveredRecipe = recipe;
-      // Set the selected event so the red "X" appears only for this recipe.
       this.selectedEvent = recipe;
     } else {
       this.hoveredRecipe = null;
@@ -448,30 +304,13 @@ export class Tab2Page implements OnInit {
     }
   }
 
-  /**
-   * closeRecipeDetails
-   * ---------------------------
-   * Clears the displayed recipe details and resets the selected event.
-   * This method is called when the user presses the "Close" button in the recipe details section.
-   */
   closeRecipeDetails() {
     this.hoveredRecipe = null;
     this.selectedEvent = null;
   }
 
-  /**
-   * confirmRemoveEvent
-   * ---------------------------
-   * Displays a confirmation alert to remove a recipe from the calendar.
-   * If confirmed, removes the recipe from the appropriate day's event list,
-   * clears the selected event, marks the calendar as changed, and saves the updated calendar.
-   *
-   * @param event - The recipe event to remove.
-   * @param day - The day of the week from which the recipe will be removed.
-   * @param index - The index of the recipe in the day's event array.
-   * @param ev - The click event (used to stop propagation).
-   */
-  async confirmRemoveEvent(event: any, day: string, index: number, ev: Event) {
+  // Prompts for confirmation and removes a meal from the specified day and category.
+  async confirmRemoveEvent(event: any, day: string, category: string, index: number, ev: Event) {
     ev.stopPropagation();
     const alert = await this.alertController.create({
       header: 'Confirm Removal',
@@ -482,10 +321,8 @@ export class Tab2Page implements OnInit {
           text: 'Remove',
           handler: () => {
             const weekKey = this.selectedPlan.toDateString();
-            this.events[weekKey][day].splice(index, 1);
-            // Mark the calendar as changed due to removal
+            this.events[weekKey][day][category].splice(index, 1);
             this.calendarChanged = true;
-            // Clear the selected event after removal.
             this.selectedEvent = null;
             this.saveCalendar();
           }
@@ -495,16 +332,419 @@ export class Tab2Page implements OnInit {
     await alert.present();
   }
 
-  // -------------------- Ingredient and Unit Conversion --------------------
-  /**
-   * getIngredientsForMeal
-   * ---------------------------
-   * Retrieves and returns an array of ingredient strings for a given meal.
-   * If the meal's ingredients are missing, it fetches them from the API.
-   *
-   * @param meal - The meal object.
-   * @returns Promise resolving to an array of ingredient strings.
-   */
+  // -------------------- Prep List Generation --------------------
+
+  generatePrepList() {
+    const weekKey = this.selectedPlan.toDateString();
+    const weekEvents = this.events[weekKey] || {};
+    const prepExists = weekEvents['prep'] && weekEvents['prep'].toString().trim() !== '';
+
+    if (prepExists && !this.calendarChanged) {
+      alert("No changes to the calendar detected. Prep list is up to date.");
+      return;
+    }
+
+    let prepInstructions: string[] = [];
+    // Loop through each day (excluding grocery & prep) and each category.
+    for (const day in weekEvents) {
+      if (day === 'grocery' || day === 'prep') continue;
+      if (weekEvents.hasOwnProperty(day)) {
+        for (const category in weekEvents[day]) {
+          for (const meal of weekEvents[day][category]) {
+            if (meal.instructions) {
+              prepInstructions.push(`Recipe: ${meal.title}\nIngredients: ${meal.ingredients}\nInstructions: ${meal.instructions}`);
+            }
+          }
+        }
+      }
+    }
+
+    if (prepInstructions.length === 0) {
+      alert("No recipes with instructions found for the selected week.");
+      return;
+    }
+
+    const requestBody = {
+      prompt: `Generate a combined prep list for the following recipes. 
+Combine overlapping ingredients (e.g., chicken, onions) into a single step. 
+Format the output as a numbered list with clear, concise instructions. 
+Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and specify quantities for each recipe:\n\n${prepInstructions.join('\n\n')}`,
+      max_tokens: 8192,
+      temperature: 0.7
+    };
+
+    console.log("Sending request to backend:", requestBody);
+
+    this.http.post(`${environment.apiUrl}/api/deepseek`, requestBody).subscribe(
+      (response: any) => {
+        const prepListMarkdown = response.choices[0].message.content;
+        console.log("DeepSeek response:", prepListMarkdown);
+        sessionStorage.setItem('prepList', prepListMarkdown);
+        if (!this.events[weekKey]) {
+          this.events[weekKey] = {
+            sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            grocery: [],
+            prep: []
+          };
+        }
+        this.events[weekKey]['prep'] = prepListMarkdown;
+        this.calendarChanged = false;
+        this.saveCalendar();
+        alert("Prep list generated successfully! Check console.");
+      },
+      (error) => {
+        console.error("Error generating prep list:", error);
+        alert("Failed to generate prep list.");
+      }
+    );
+  }
+
+  async viewPrepList() {
+    let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
+    const weekKey = this.selectedPlan.toDateString();
+
+    if (!prepListMarkdown && this.events[weekKey] && this.events[weekKey]['prep']) {
+      const prepFromEvent = this.events[weekKey]['prep'];
+      prepListMarkdown = Array.isArray(prepFromEvent) ? "" : prepFromEvent as string;
+      sessionStorage.setItem('prepList', prepListMarkdown);
+    }
+
+    if (prepListMarkdown === "") {
+      alert('No prep list has been generated yet. Please generate one first.');
+      return;
+    }
+
+    console.log("Loaded Prep List:", prepListMarkdown);
+    this.prepListDisplay = await marked(prepListMarkdown);
+    this.showPrepList = true;
+  }
+
+  // -------------------- Grocery List Generation --------------------
+
+  async generateShoppingList() {
+    const alert = await this.alertController.create({
+      header: 'Confirm',
+      message: 'Are you sure you want to create your shopping list? Only new ingredients will remove items from the pantry.',
+      buttons: [
+        {
+          text: 'Wait a minute',
+          role: 'cancel',
+          handler: () => {
+            console.log('Shopping list creation cancelled.');
+          }
+        },
+        {
+          text: 'Create List',
+          handler: () => {
+            this.createShoppingList();
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async createShoppingList() {
+    const weekKey = this.selectedPlan.toDateString();
+    const weekEvents = this.currentWeekEvents;
+    let newAggregated: { [ingredient: string]: { quantity: number, unit: string } } = {};
+
+    // Aggregate ingredients from meals (excluding grocery & prep)
+    for (const day in weekEvents) {
+      if (day === 'grocery' || day === 'prep') continue;
+      if (weekEvents.hasOwnProperty(day)) {
+        for (const category in weekEvents[day]) {
+          for (const meal of weekEvents[day][category]) {
+            if (!meal.processedForGrocery) {
+              const ingredients = await this.getIngredientsForMeal(meal);
+              ingredients.forEach((ingredientStr) => {
+                const parsed = this.parseIngredient(ingredientStr);
+                if (parsed) {
+                  const key = parsed.name.toLowerCase();
+                  if (parsed.quantity === 0) {
+                    newAggregated[key] = { quantity: 0, unit: '' };
+                  } else {
+                    if (newAggregated[key] !== undefined) {
+                      newAggregated[key].quantity += parsed.quantity;
+                    } else {
+                      newAggregated[key] = { quantity: parsed.quantity, unit: parsed.unit };
+                    }
+                  }
+                } else {
+                  const key = ingredientStr.trim().toLowerCase();
+                  newAggregated[key] = { quantity: 0, unit: '' };
+                }
+              });
+              meal.processedForGrocery = true;
+            }
+          }
+        }
+      }
+    }
+
+    if (Object.keys(newAggregated).length === 0) {
+      alert("No new recipes have been added since the last grocery list generation.");
+      return;
+    }
+
+    let pantryData;
+    try {
+      pantryData = await this.pantryService.loadPantry(this.currentUser.id).toPromise();
+    } catch (error) {
+      console.error("Error loading pantry data", error);
+      pantryData = { item_list: { pantry: [], freezer: [] } };
+    }
+    const pantryItems: any[] = pantryData?.item_list?.pantry || [];
+
+    // Append new ingredients to existing groceryListRaw.
+    for (let key in newAggregated) {
+      const newReq = newAggregated[key].quantity;
+      if (newReq === 0) {
+        if (!this.groceryListRaw[key]) {
+          this.groceryListRaw[key] = { quantity: 0, unit: '' };
+        }
+      } else {
+        if (this.groceryListRaw[key] !== undefined) {
+          // Ingredient already exists: simply add the new quantity.
+          this.groceryListRaw[key].quantity += newReq;
+          newAggregated[key].quantity = 0;
+        } else {
+          // New ingredient: subtract from the pantry.
+          let remaining = newReq;
+          for (const item of pantryItems) {
+            if (item.name.toLowerCase() === key) {
+              if (item.quantity >= remaining) {
+                item.quantity -= remaining;
+                remaining = 0;
+                break;
+              } else {
+                remaining -= item.quantity;
+                item.quantity = 0;
+              }
+            }
+          }
+          if (remaining > 0) {
+            this.groceryListRaw[key] = { quantity: remaining, unit: newAggregated[key].unit };
+          }
+        }
+      }
+    }
+
+    const updatedPantryItems = pantryItems.filter(item => item.quantity > 0);
+    const pantryPayload = {
+      user_id: this.currentUser.id,
+      pf_flag: false,
+      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] }
+    };
+    try {
+      await this.pantryService.updatePantry(pantryPayload).toPromise();
+      this.pantryService.triggerPantryReload();
+      console.log('Pantry updated successfully after adjusting for new grocery list.');
+    } catch (error) {
+      console.error('Error updating pantry:', error);
+    }
+
+    // Format the final grocery list for display.
+    const formattedGroceryList = Object.entries(this.groceryListRaw).map(([name, details]) => {
+      const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+      if (details.quantity === 0) {
+        return `${formattedName}`;
+      } else {
+        return `${details.quantity} ${details.unit} ${formattedName}`;
+      }
+    });
+
+    this.shoppingLists[weekKey] = formattedGroceryList;
+    this.shoppingList = formattedGroceryList;
+    console.log('Updated Grocery List for', weekKey, ':', formattedGroceryList);
+    this.showShoppingList = true;
+
+    if (!this.events[weekKey]) {
+      this.events[weekKey] = {
+        sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: [],
+        prep: []
+      };
+    }
+    this.events[weekKey]['grocery'] = formattedGroceryList;
+
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User details not loaded. Cannot save calendar.');
+      return;
+    }
+    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const weekData = this.events[weekKey] || {
+      sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      grocery: [],
+      prep: []
+    };
+    const payload = {
+      user_ids: [this.currentUser.id],
+      week: {
+        sunday: weekData['sunday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: weekData['monday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: weekData['tuesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: weekData['wednesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: weekData['thursday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: weekData['friday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: weekData['saturday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: weekData['grocery'] || [],
+        prep: weekData['prep'] || []
+      },
+      start_date: startDateString
+    };
+
+    this.calendarService.saveCalendar(payload).subscribe(
+      response => console.log('Calendar saved successfully:', response),
+      error => console.error('Error saving calendar:', error)
+    );
+  }
+
+  // -------------------- View Grocery List --------------------
+
+  async viewShoppingList() {
+    const weekKey = this.selectedPlan.toDateString();
+    const loadedWeek = this.events[weekKey];
+    const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
+    if (!groceryList || groceryList.length === 0) {
+      alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
+    } else {
+      console.log('Grocery list for the week:', groceryList);
+      this.groceryListDisplay = groceryList;
+      this.showShoppingList = true;
+    }
+  }
+
+  // -------------------- Save & Load Calendar --------------------
+
+  saveCalendar() {
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User details not loaded. Cannot save calendar.');
+      return;
+    }
+    const weekKey = this.selectedPlan.toDateString();
+    const calendarData = this.events[weekKey] || {
+      sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      grocery: [],
+      prep: []
+    };
+    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const weekData = calendarData || {
+      sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      grocery: [],
+      prep: []
+    };
+    const payload = {
+      user_ids: [this.currentUser.id],
+      week: {
+        sunday: weekData['sunday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: weekData['monday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: weekData['tuesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: weekData['wednesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: weekData['thursday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: weekData['friday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: weekData['saturday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: weekData['grocery'] || [],
+        prep: weekData['prep'] || []
+      },
+      start_date: startDateString
+    };
+
+    this.calendarService.saveCalendar(payload).subscribe(
+      response => console.log('Calendar saved successfully:', response),
+      error => console.error('Error saving calendar:', error)
+    );
+  }
+
+  loadCalendar() {
+    if (!this.currentUser || !this.currentUser.id) {
+      console.error('User details not loaded. Cannot load calendar.');
+      return;
+    }
+    const weekParam = this.selectedPlan.toISOString().split('T')[0];
+    this.calendarService.loadCalendar(this.currentUser.id, weekParam).subscribe(
+      response => {
+        const weekKey = this.selectedPlan.toDateString();
+        if (response.length > 0) {
+          const calendarData = response[0];
+          this.events[weekKey] = {
+            sunday: calendarData.week.sunday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            monday: calendarData.week.monday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            tuesday: calendarData.week.tuesday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            wednesday: calendarData.week.wednesday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            thursday: calendarData.week.thursday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            friday: calendarData.week.friday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            saturday: calendarData.week.saturday || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            grocery: calendarData.week.grocery || [],
+            prep: calendarData.week.prep || []
+          };
+          console.log('Loaded Calendar for week:', weekKey);
+          if (this.events[weekKey]['grocery'] && this.events[weekKey]['grocery'].length > 0) {
+            this.shoppingList = this.events[weekKey]['grocery'];
+          }
+        } else {
+          this.events[weekKey] = {
+            sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+            grocery: [],
+            prep: []
+          };
+          console.log('No calendar data found for week:', weekKey);
+        }
+        console.log('Loaded Calendar!', this.events[weekKey]);
+      },
+      error => {
+        console.error('Error loading calendar:', error);
+      }
+    );
+  }
+
+  // -------------------- Helper Methods --------------------
+
+  // Converts a category key to a user-friendly name.
+  formatCategory(cat: string): string {
+    if (cat === 'kidsLunch') return 'Kids Lunch';
+    if (cat === 'adultsLunch') return 'Adults Lunch';
+    if (cat === 'familyDinner') return 'Family Dinner';
+    return cat;
+  }
+
+  // Returns an array of ingredients for a given meal.
   getIngredientsForMeal(meal: any): Promise<string[]> {
     return new Promise((resolve) => {
       if (meal.ingredients) {
@@ -532,12 +772,11 @@ export class Tab2Page implements OnInit {
           (response: any) => {
             const mealData = response.meals[0];
             const ingredients: string[] = [];
-            // Combine measurement and ingredient name when fetching details
             for (let i = 1; i <= 20; i++) {
               const ingredient = mealData[`strIngredient${i}`];
               const measure = mealData[`strMeasure${i}`];
               if (ingredient && ingredient.trim()) {
-                ingredients.push(`${measure ? measure.trim() + ' ' : ''}${ingredient.trim()}`);
+                ingredients.push(`${ingredient.trim()} - ${measure ? measure.trim() : ''}`);
               } else {
                 break;
               }
@@ -557,15 +796,33 @@ export class Tab2Page implements OnInit {
     });
   }
 
-  /**
-   * convertToOunces
-   * ---------------------------
-   * Converts a given quantity from various units to ounces.
-   *
-   * @param quantity - The numeric quantity.
-   * @param unit - The unit of measurement.
-   * @returns The quantity converted to ounces.
-   */
+  // Parses an ingredient string to extract quantity, unit, and name.
+  private parseIngredient(ingredientStr: string): { quantity: number, unit: string, name: string } | null {
+    if (!ingredientStr.match(/\d/)) {
+      return { quantity: 0, unit: '', name: ingredientStr.trim() };
+    }
+    const regexNew = /^(.+?)\s*[-:]\s*(\d+(?:\.\d+)?)(\w+)$/;
+    let match = ingredientStr.match(regexNew);
+    if (match) {
+      const name = match[1].trim();
+      const quantity = parseFloat(match[2]);
+      const unit = match[3];
+      const convertedQuantity = this.convertToOunces(quantity, unit);
+      return { quantity: convertedQuantity, unit: 'oz', name };
+    }
+    const regexOld = /^(\d+(?:\.\d+)?)\s*(\w+)\s+(.*)$/;
+    match = ingredientStr.match(regexOld);
+    if (match) {
+      const quantity = parseFloat(match[1]);
+      const unit = match[2];
+      const name = match[3].trim();
+      const convertedQuantity = this.convertToOunces(quantity, unit);
+      return { quantity: convertedQuantity, unit: 'oz', name };
+    }
+    return null;
+  }
+
+  // Converts a given quantity from various units to ounces.
   private convertToOunces(quantity: number, unit: string): number {
     const normalizedUnit = unit.toLowerCase();
     const conversionMap: { [unit: string]: number } = {
@@ -610,419 +867,5 @@ export class Tab2Page implements OnInit {
       return quantity * conversionMap[normalizedUnit];
     }
     return quantity;
-  }
-
-  /**
-   * parseIngredient
-   * ---------------------------
-   * Parses an ingredient string to extract the quantity, unit, and ingredient name.
-   * Supports formats like "32 oz Flour" or "Peanuts - 200g".
-   *
-   * @param ingredientStr - The raw ingredient string.
-   * @returns An object containing the quantity (in ounces), unit (always 'oz'), and name,
-   *          or null if parsing fails.
-   */
-  private parseIngredient(ingredientStr: string): { quantity: number, unit: string, name: string } | null {
-    if (!ingredientStr.match(/\d/)) {
-      return { quantity: 0, unit: '', name: ingredientStr.trim() };
-    }
-    const regexNew = /^(.+?)\s*[-:]\s*(\d+(?:\.\d+)?)(\w+)$/;
-    let match = ingredientStr.match(regexNew);
-    if (match) {
-      const name = match[1].trim();
-      const quantity = parseFloat(match[2]);
-      const unit = match[3];
-      const convertedQuantity = this.convertToOunces(quantity, unit);
-      return { quantity: convertedQuantity, unit: 'oz', name };
-    }
-    const regexOld = /^(\d+(?:\.\d+)?)\s*(\w+)\s+(.*)$/;
-    match = ingredientStr.match(regexOld);
-    if (match) {
-      const quantity = parseFloat(match[1]);
-      const unit = match[2];
-      const name = match[3].trim();
-      const convertedQuantity = this.convertToOunces(quantity, unit);
-      return { quantity: convertedQuantity, unit: 'oz', name };
-    }
-    return null;
-  }
-
-  // -------------------- Shopping List Generation --------------------
-  /**
-   * generateShoppingList
-   * ---------------------------
-   * Prompts the user to confirm generating a shopping list.
-   * On confirmation, calls createShoppingList to process and update the list.
-   */
-  async generateShoppingList() {
-    const alert = await this.alertController.create({
-      header: 'Confirm',
-      message: 'Are you sure you want to create your shopping list? The items in your pantry will be removed.',
-      buttons: [
-        {
-          text: 'Wait a minute',
-          role: 'cancel',
-          handler: () => {
-            console.log('Shopping list creation cancelled.');
-          }
-        },
-        {
-          text: 'Create List',
-          handler: () => {
-            this.createShoppingList();
-          }
-        }
-      ]
-    });
-    await alert.present();
-  }
-
-  /**
-   * createShoppingList
-   * ---------------------------
-   * Aggregates ingredients from the unprocessed meals in the calendar,
-   * adjusts quantities based on the current pantry items, and formats the final grocery list.
-   * Finally, it updates the pantry and saves the updated calendar.
-   */
-  async createShoppingList() {
-    const weekKey = this.selectedPlan.toDateString();
-    const weekEvents = this.currentWeekEvents;
-    let newAggregated: { [ingredient: string]: { quantity: number, unit: string } } = {};
-
-    // Aggregate ingredients from each meal (skip the grocery and prep keys if present)
-    for (const day in weekEvents) {
-      if (day === 'grocery' || day === 'prep') continue;
-      if (weekEvents.hasOwnProperty(day)) {
-        for (const meal of weekEvents[day]) {
-          if (!meal.processedForGrocery) {
-            const ingredients = await this.getIngredientsForMeal(meal);
-            ingredients.forEach((ingredientStr) => {
-              const parsed = this.parseIngredient(ingredientStr);
-              if (parsed) {
-                const key = parsed.name.toLowerCase();
-                if (parsed.quantity === 0) {
-                  newAggregated[key] = { quantity: 0, unit: '' };
-                } else {
-                  if (newAggregated[key] !== undefined) {
-                    newAggregated[key].quantity += parsed.quantity;
-                  } else {
-                    newAggregated[key] = { quantity: parsed.quantity, unit: parsed.unit };
-                  }
-                }
-              } else {
-                const key = ingredientStr.trim().toLowerCase();
-                newAggregated[key] = { quantity: 0, unit: '' };
-              }
-            });
-            meal.processedForGrocery = true;
-          }
-        }
-      }
-    }
-
-    if (Object.keys(newAggregated).length === 0) {
-      alert("No new recipes have been added since the last grocery list generation.");
-      return;
-    }
-
-    let pantryData;
-    try {
-      pantryData = await this.pantryService.loadPantry(this.currentUser.id).toPromise();
-    } catch (error) {
-      console.error("Error loading pantry data", error);
-      pantryData = { item_list: { pantry: [], freezer: [] } };
-    }
-    const pantryItems: any[] = pantryData?.item_list?.pantry || [];
-
-    // Adjust new aggregated ingredients based on current pantry items
-    for (let key in newAggregated) {
-      const newReq = newAggregated[key].quantity;
-      if (newReq === 0) {
-        this.groceryListRaw[key] = { quantity: 0, unit: '' };
-      } else {
-        if (this.groceryListRaw[key] !== undefined && this.groceryListRaw[key].quantity !== 0) {
-          this.groceryListRaw[key].quantity += newReq;
-          newAggregated[key].quantity = 0;
-        } else {
-          let remaining = newReq;
-          for (const item of pantryItems) {
-            if (item.name.toLowerCase() === key) {
-              if (item.quantity >= remaining) {
-                item.quantity -= remaining;
-                remaining = 0;
-                break;
-              } else {
-                remaining -= item.quantity;
-                item.quantity = 0;
-              }
-            }
-          }
-          if (remaining > 0) {
-            this.groceryListRaw[key] = { quantity: remaining, unit: newAggregated[key].unit };
-          }
-        }
-      }
-    }
-
-    for (let key in newAggregated) {
-      if (newAggregated[key].quantity === 0) {
-        delete newAggregated[key];
-      }
-    }
-
-    const updatedPantryItems = pantryItems.filter(item => item.quantity > 0);
-
-    // Update the pantry on the backend after adjusting quantities
-    const pantryPayload = {
-      user_id: this.currentUser.id,
-      pf_flag: false,
-      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] }
-    };
-    try {
-      await this.pantryService.updatePantry(pantryPayload).toPromise();
-      this.pantryService.triggerPantryReload();
-      console.log('Pantry updated successfully after adjusting for new grocery list.');
-    } catch (error) {
-      console.error('Error updating pantry', error);
-    }
-
-    // Format the final grocery list for display
-    const formattedGroceryList = Object.entries(this.groceryListRaw).map(([name, details]) => {
-      const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
-      if (details.quantity === 0) {
-        return `${formattedName}`;
-      } else {
-        return `${details.quantity} ${details.unit} ${formattedName}`;
-      }
-    });
-
-    this.shoppingLists[weekKey] = formattedGroceryList;
-    this.shoppingList = formattedGroceryList;
-    console.log('Updated Grocery List for', weekKey, ':', formattedGroceryList);
-    this.showShoppingList = true;
-
-    if (!this.events[weekKey]) {
-      this.events[weekKey] = { sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [] };
-    }
-    this.events[weekKey]['grocery'] = formattedGroceryList;
-
-    if (!this.currentUser || !this.currentUser.id) {
-      console.error('User details not loaded. Cannot save calendar.');
-      return;
-    }
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    const weekData = this.events[weekKey] || { sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [] };
-    const payload = {
-      user_ids: [this.currentUser.id],
-      week: {
-        sunday: weekData['sunday'] || [],
-        monday: weekData['monday'] || [],
-        tuesday: weekData['tuesday'] || [],
-        wednesday: weekData['wednesday'] || [],
-        thursday: weekData['thursday'] || [],
-        friday: weekData['friday'] || [],
-        saturday: weekData['saturday'] || [],
-        grocery: weekData['grocery'] || []
-      },
-      start_date: startDateString
-    };
-
-    this.calendarService.saveCalendar(payload).subscribe(
-      (response) => {
-        console.log('Calendar saved successfully:', response);
-      },
-      (error) => {
-        console.error('Error saving calendar:', error);
-      }
-    );
-  }
-
-  // -------------------- Shopping List and Calendar Saving --------------------
-  /**
-   * viewShoppingList
-   * ---------------------------
-   * Displays the shopping list for the current week.
-   * If no shopping list exists, alerts the user to generate one.
-   */
-  viewShoppingList() {
-    const weekKey = this.selectedPlan.toDateString();
-    const loadedWeek = this.events[weekKey];
-    const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
-    if (!groceryList || groceryList.length === 0) {
-      alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
-    } else {
-      console.log('Grocery list for the week:', groceryList);
-      this.groceryListDisplay = groceryList;
-      this.showShoppingList = true;
-    }
-  }
-
-  /**
-   * saveCalendar
-   * ---------------------------
-   * Persists the current calendar (including scheduled meals, grocery list, and now prep list)
-   * to the backend server.
-   */
-  saveCalendar() {
-    if (!this.currentUser || !this.currentUser.id) {
-      console.error('User details not loaded. Cannot save calendar.');
-      return;
-    }
-    const weekKey = this.selectedPlan.toDateString();
-    const calendarData = this.events[weekKey] || { sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [] };
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    const weekData = calendarData || { sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [] };
-    const payload = {
-      user_ids: [this.currentUser.id],
-      week: {
-        sunday: weekData['sunday'] || [],
-        monday: weekData['monday'] || [],
-        tuesday: weekData['tuesday'] || [],
-        wednesday: weekData['wednesday'] || [],
-        thursday: weekData['thursday'] || [],
-        friday: weekData['friday'] || [],
-        saturday: weekData['saturday'] || [],
-        grocery: weekData['grocery'] || [],
-        prep: weekData['prep'] || []  // Save the prep list with the calendar
-      },
-      start_date: startDateString
-    };
-
-    this.calendarService.saveCalendar(payload).subscribe(
-      response => console.log('Calendar saved successfully:', response),
-      error => console.error('Error saving calendar:', error)
-    );
-  }
-
-  /**
-   * loadCalendar
-   * ---------------------------
-   * Loads the calendar data for the selected week from the backend server.
-   * If no calendar is found, initializes an empty calendar for the week.
-   */
-  loadCalendar() {
-    if (!this.currentUser || !this.currentUser.id) {
-      console.error('User details not loaded. Cannot load calendar.');
-      return;
-    }
-    const weekParam = this.selectedPlan.toISOString().split('T')[0];
-    this.calendarService.loadCalendar(this.currentUser.id, weekParam).subscribe(
-      (response) => {
-        const weekKey = this.selectedPlan.toDateString();
-        if (response.length > 0) {
-          const calendarData = response[0];
-          this.events[weekKey] = {
-            sunday: calendarData.week.sunday || [],
-            monday: calendarData.week.monday || [],
-            tuesday: calendarData.week.tuesday || [],
-            wednesday: calendarData.week.wednesday || [],
-            thursday: calendarData.week.thursday || [],
-            friday: calendarData.week.friday || [],
-            saturday: calendarData.week.saturday || [],
-            grocery: calendarData.week.grocery || [],
-            prep: calendarData.week.prep || []  // Load any saved prep list
-          };
-          console.log('Loaded Calendar for week:', weekKey);
-          console.log('User IDs in this calendar:', calendarData.user_ids);
-          if (this.events[weekKey]['grocery'] && this.events[weekKey]['grocery'].length > 0) {
-            this.shoppingList = this.events[weekKey]['grocery'];
-          }
-        } else {
-          this.events[weekKey] = {
-            sunday: [],
-            monday: [],
-            tuesday: [],
-            wednesday: [],
-            thursday: [],
-            friday: [],
-            saturday: [],
-            grocery: [],
-            prep: []  // Initialize empty prep list if none exists
-          };
-          console.log('No calendar data found for week:', weekKey);
-        }
-        console.log('Loaded Calendar!', this.events[weekKey]);
-      },
-      (error) => {
-        console.error('Error loading calendar:', error);
-      }
-    );
-  }
-
-  // -------------------- Calendar Navigation & Sharing --------------------
-  /**
-   * onPlanChange
-   * ---------------------------
-   * Triggered when the user selects a different week plan.
-   * Loads the calendar for the new plan.
-   */
-  onPlanChange() {
-    sessionStorage.setItem('selectedPlan', this.selectedPlan.toISOString());
-    this.loadCalendar();
-  }
-
-  /**
-   * toggleShareCalendar
-   * ---------------------------
-   * Toggles the display of the calendar sharing search interface.
-   */
-  toggleShareCalendar() {
-    this.showShareCalendar = !this.showShareCalendar;
-  }
-
-  /**
-   * searchUsers
-   * ---------------------------
-   * Searches for users matching the search query.
-   * Updates the searchResults property with the results.
-   */
-  searchUsers() {
-    if (this.searchQuery.trim() === '') {
-      this.searchResults = [];
-      return;
-    }
-    this.userService.searchUsers(this.searchQuery).subscribe(
-      (response) => {
-        this.searchResults = response;
-      },
-      (error) => {
-        console.error('Error searching users:', error);
-        this.searchResults = [];
-      }
-    );
-  }
-
-  /**
-   * addUserToCalendar
-   * ---------------------------
-   * Adds the specified user to the current calendar's shared user list.
-   *
-   * @param user - The user object to add.
-   */
-  addUserToCalendar(user: any) {
-    const weekKey = this.selectedPlan.toDateString();
-    const calendarData = this.events[weekKey] || {
-      sunday: [], monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [],
-      user_ids: [this.currentUser.id]
-    };
-
-    if (!calendarData['user_ids']) {
-      calendarData['user_ids'] = [this.currentUser.id];
-    }
-
-    if (!calendarData['user_ids'].includes(user.id)) {
-      calendarData['user_ids'].push(user.id);
-    }
-
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
-
-    this.calendarService.addUserToCalendar(user.id, calendarData, startDateString).subscribe(
-      (response) => {
-        console.log('User added to calendar successfully:', response);
-      },
-      (error) => {
-        console.error('Error adding user to calendar:', error);
-      }
-    );
   }
 }
