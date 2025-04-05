@@ -11,6 +11,7 @@ export interface PantryPayload {
   item_list: {
     pantry: any[];
     freezer: any[];
+    spice: any[];
   };
 }
 
