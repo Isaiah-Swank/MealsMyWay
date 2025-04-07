@@ -125,19 +125,27 @@ ion-item:hover {
   .book-container {
     flex-direction: column;
     padding: 10px;
+    align-items: center;
   }
 
   .my-recipes-container,
   .recipes-container {
     width: 100%;
-    margin-bottom: 10px;
+    margin: 0; 
+    border-radius: 15px; 
+  }
+
+  .book-spine {
+    display: none;
   }
 
   ion-title {
     font-size: 20px;
+    text-align: center;
   }
 
   ion-button {
     width: 100%;
   }
 }
+
