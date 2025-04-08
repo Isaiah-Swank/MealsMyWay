@@ -519,7 +519,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       pantryData = await this.pantryService.loadPantry(this.currentUser.id).toPromise();
     } catch (error) {
       console.error("Error loading pantry data", error);
-      pantryData = { item_list: { pantry: [], freezer: [] } };
+      pantryData = { item_list: { pantry: [], freezer: [], spice: [] } };
     }
     const pantryItems: any[] = pantryData?.item_list?.pantry || [];
 
@@ -561,7 +561,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const pantryPayload = {
       user_id: this.currentUser.id,
       pf_flag: false,
-      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] }
+      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] , spice: pantryData?.item_list?.spice || [] }
     };
     try {
       await this.pantryService.updatePantry(pantryPayload).toPromise();
