@@ -11,6 +11,7 @@ import { AlertController } from '@ionic/angular';
 export class PantryPage implements OnInit {
   pantryItems: any[] = [];
   freezerItems: any[] = [];
+  spiceItems: any[] = [];
   userId: number = -1;
   editMode: boolean = false;
   freezerEditMode: boolean = false;
@@ -94,7 +95,7 @@ export class PantryPage implements OnInit {
     const payload: PantryPayload = {
       user_id: this.userId,
       pf_flag: false, // false indicates a pantry record
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems }
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
     };
 
     console.log(`[PANTRY] Payload sent to database:`, JSON.stringify(payload, null, 2));
@@ -147,7 +148,7 @@ export class PantryPage implements OnInit {
     const payload: PantryPayload = {
       user_id: this.userId,
       pf_flag: false, // still using false for the record
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems }
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
     };
 
     console.log(`[FREEZER] Payload sent to database:`, JSON.stringify(payload, null, 2));
@@ -189,12 +190,83 @@ export class PantryPage implements OnInit {
     const payload: PantryPayload = {
       user_id: this.userId,
       pf_flag: false,
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems }
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
     };
     console.log(`[FREEZER] Updating freezer with payload:`, JSON.stringify(payload, null, 2));
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[FREEZER] SUCCESS - Freezer updated for user ID=${this.userId}`);
   }
+
+  /**
+   * Opens a prompt to add a pantry item.
+   */
+  async openAddSpiceItemPrompt() {
+    const alert = await this.alertCtrl.create({
+      header: 'Add Spice Item',
+      inputs: [
+        { name: 'itemName', type: 'text', placeholder: 'Item Name' }
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Add Item',
+          handler: async (data) => {
+            if (data.itemName) {
+              await this.addSpiceItem(data.itemName, 100);
+            } else {
+              console.warn(`[SPICE] WARNING - Invalid item entry. Name required.`);
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  /**
+   * Adds a new item to the spice rack.
+   */
+  async addSpiceItem(name: string, quantity: number) {
+    console.log(`[SPICE] addSpiceItem called with Name="${name}"`);
+    if (this.userId === -1) {
+      console.error(`[SPICE] ERROR - User not loaded. Cannot add item.`);
+      return;
+    }
+
+    // Add the item locally
+    this.spiceItems.push({ name, quantity });
+    console.log(`[SPICE] Adding spice item: User ID=${this.userId}, Name="${name}", Quantity=${quantity}oz`);
+
+    const payload: PantryPayload = {
+      user_id: this.userId,
+      pf_flag: false, // false indicates a pantry record, but we dont have one for spice rack
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems}
+    };
+
+    console.log(`[SPICE] Payload sent to database:`, JSON.stringify(payload, null, 2));
+
+    await this.pantryService.updatePantry(payload).toPromise();
+    console.log(`[SPICE] SUCCESS - Spice rack updated for user ID=${this.userId}`);
+  }
+
+  /**
+   * Updates the spice data by sending an updated payload.
+   */
+  async updateSpice() {
+    if (this.userId === -1) {
+      console.error(`[SPICE] ERROR - User not loaded. Cannot update spice rack.`);
+      return;
+    }
+    const payload: PantryPayload = {
+      user_id: this.userId,
+      pf_flag: false,
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems}
+    };
+    console.log(`[SPICE] Updating spice rack with payload:`, JSON.stringify(payload, null, 2));
+    await this.pantryService.updatePantry(payload).toPromise();
+    console.log(`[SPICE] SUCCESS - Spice rack updated for user ID=${this.userId}`);
+  }
+
 
   /**
    * Deletes an item from the pantry.
@@ -221,7 +293,7 @@ export class PantryPage implements OnInit {
             const payload: PantryPayload = {
               user_id: this.userId,
               pf_flag: false,
-              item_list: { pantry: this.pantryItems, freezer: this.freezerItems }
+              item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
             };
 
             console.log(`[PANTRY] Payload sent after deletion:`, JSON.stringify(payload, null, 2));
@@ -275,6 +347,14 @@ export class PantryPage implements OnInit {
     console.log(`[FREEZER] Edit Mode: ${this.freezerEditMode ? 'ON' : 'OFF'}`);
   }
 
+  /**
+   * Toggles spice rack edit mode.
+   */
+  toggleSpiceEditMode() {
+    this.spiceEditMode = !this.spiceEditMode;
+    console.log(`[SPICE] Edit Mode: ${this.spiceEditMode ? 'ON' : 'OFF'}`);
+  }
+
   async deleteFreezerItem(index: number) {
     if (this.userId === -1) {
       console.error(`[FREEZER] ERROR - User not loaded. Cannot delete item.`);
@@ -293,6 +373,34 @@ export class PantryPage implements OnInit {
             console.log(`[FREEZER] Removing item: User ID=${this.userId}, Name="${itemToDelete.name}"`);
             await this.updateFreezer();
             console.log(`[FREEZER] SUCCESS - Item removed for user ID=${this.userId}`);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  /**
+   * Delete an item from the spice rack
+   */
+  async deleteSpiceItem(index: number) {
+    if (this.userId === -1) {
+      console.error(`[SPICE] ERROR - User not loaded. Cannot delete item.`);
+      return;
+    }
+    const itemToDelete = this.spiceItems[index];
+    const alert = await this.alertCtrl.create({
+      header: 'Confirm Deletion',
+      message: `Are you sure you want to remove "${itemToDelete.name}" from your spice rack?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          handler: async () => {
+            this.spiceItems.splice(index, 1);
+            console.log(`[SPICE] Removing item: User ID=${this.userId}, Name="${itemToDelete.name}"`);
+            await this.updateSpice();
+            console.log(`[SPICE] SUCCESS - Item removed for user ID=${this.userId}`);
           }
         }
       ]
