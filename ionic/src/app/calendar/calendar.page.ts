@@ -101,11 +101,6 @@ export class Tab2Page implements OnInit {
   ionViewWillEnter() {
     this.loadRecipes();
   }
-  
-
-  // -------------------- (Optional) View Lifecycle Methods --------------------
-  // If you prefer to reload recipes when the view enters or save the selected plan when leaving,
-  // you can add ionViewWillEnter and ionViewWillLeave. In this version we are not including these.
 
   // -------------------- Methods Required by the Template --------------------
 
@@ -137,38 +132,27 @@ export class Tab2Page implements OnInit {
     );
   }
 
-  // Adds the specified user to the calendar's shared user list.
-  addUserToCalendar(user: any) {
-    const weekKey = this.selectedPlan.toDateString();
-    let calendarData: any = this.events[weekKey];
-    if (!calendarData) {
-      calendarData = {
-        sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        grocery: [],
-        prep: [],
-        user_ids: [this.currentUser.id]
-      };
-    } else {
-      if (!calendarData.user_ids) {
-        calendarData.user_ids = [this.currentUser.id];
-      }
-    }
-    if (!calendarData.user_ids.includes(user.id)) {
-      calendarData.user_ids.push(user.id);
-    }
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    this.calendarService.addUserToCalendar(user.id, calendarData, startDateString).subscribe(
+  /**
+   * NEW METHOD: sendCalendarInvite
+   * Instead of directly adding a user to the calendar, this method sends an invite.
+   * The invite object includes the sender's ID, recipient's ID, and the selected plan.
+   */
+  sendCalendarInvite(user: any) {
+    // Build the invite object
+    const invite = {
+      senderId: this.currentUser.id,
+      recipientId: user.id,
+      plan: this.selectedPlan.toISOString() // Optionally include more details if needed
+    };
+    // Call the new endpoint via calendarService (make sure to implement this method in the service)
+    this.calendarService.sendCalendarInvite(invite).subscribe(
       response => {
-        console.log('User added to calendar successfully:', response);
+        console.log('Invite sent successfully:', response);
+        alert('Invite sent to ' + user.username);
       },
       error => {
-        console.error('Error adding user to calendar:', error);
+        console.error('Error sending invite:', error);
+        alert('Failed to send invite.');
       }
     );
   }

@@ -46,6 +46,7 @@ export class PantryPage implements OnInit {
       this.loadPantryItems();
     } else {
       console.warn(`[PANTRY] WARNING - No valid user found. Pantry cannot be loaded.`);
+      this.userId = -1;  // Reset to default when no valid user is found.
     }
   }
 
