@@ -200,11 +200,22 @@
         </h3>
         <div class="details-container">
           <ng-container *ngIf="showPrepList">
-            <div>
-              <div [innerHTML]="prepListDisplay"></div>
-              <ion-button (click)="showPrepList = false">Close</ion-button>
+            <div *ngIf="editMode; else viewMode">
+              <ion-textarea
+                [(ngModel)]="editedPrepMarkdown"
+                auto-grow="true"
+                placeholder="Edit your prep list markdown...">
+              </ion-textarea>
+              <ion-button color="success" (click)="saveEditedPrepList()">Save</ion-button>
+              <ion-button color="medium" (click)="editMode = false">Cancel</ion-button>
             </div>
+            <ng-template #viewMode>
+              <div [innerHTML]="prepListDisplay"></div>
+              <ion-button (click)="editMode = true">Edit</ion-button>
+              <ion-button (click)="showPrepList = false">Close</ion-button>
+            </ng-template>
           </ng-container>
+          
           <ng-container *ngIf="showShoppingList">
             <ul>
               <li *ngFor="let ingredient of groceryListDisplay">
