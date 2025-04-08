@@ -54,6 +54,9 @@ export class Tab2Page implements OnInit {
   searchQuery: string = '';
   searchResults: any[] = [];
   showShareCalendar: boolean = false;
+  editMode: boolean = false;
+  editedPrepMarkdown: string = '';
+
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
@@ -413,22 +416,35 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   async viewPrepList() {
     let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
     const weekKey = this.selectedPlan.toDateString();
-
+  
     if (!prepListMarkdown && this.events[weekKey] && this.events[weekKey]['prep']) {
       const prepFromEvent = this.events[weekKey]['prep'];
       prepListMarkdown = Array.isArray(prepFromEvent) ? "" : prepFromEvent as string;
       sessionStorage.setItem('prepList', prepListMarkdown);
     }
-
+  
     if (prepListMarkdown === "") {
       alert('No prep list has been generated yet. Please generate one first.');
       return;
     }
-
+  
     console.log("Loaded Prep List:", prepListMarkdown);
     this.prepListDisplay = await marked(prepListMarkdown);
+    this.editedPrepMarkdown = prepListMarkdown;
     this.showPrepList = true;
   }
+
+  async saveEditedPrepList() {
+    const weekKey = this.selectedPlan.toDateString();
+    this.events[weekKey]['prep'] = this.editedPrepMarkdown;
+    this.prepListDisplay = await marked(this.editedPrepMarkdown);    
+    sessionStorage.setItem('prepList', this.editedPrepMarkdown); 
+    this.saveCalendar(); 
+    this.editMode = false;  
+  }
+  
+  
+  
 
   // -------------------- Grocery List Generation --------------------
 
@@ -503,7 +519,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       pantryData = await this.pantryService.loadPantry(this.currentUser.id).toPromise();
     } catch (error) {
       console.error("Error loading pantry data", error);
-      pantryData = { item_list: { pantry: [], freezer: [] } };
+      pantryData = { item_list: { pantry: [], freezer: [], spice: [] } };
     }
     const pantryItems: any[] = pantryData?.item_list?.pantry || [];
 
@@ -545,7 +561,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const pantryPayload = {
       user_id: this.currentUser.id,
       pf_flag: false,
-      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] }
+      item_list: { pantry: updatedPantryItems, freezer: pantryData?.item_list?.freezer || [] , spice: pantryData?.item_list?.spice || [] }
     };
     try {
       await this.pantryService.updatePantry(pantryPayload).toPromise();
