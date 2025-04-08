@@ -73,24 +73,33 @@ export class RecipesPage implements OnInit {
   submitRecipe() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
-
+  
     const recipeData = { ...this.newRecipe };
-
+  
     // Validate required fields
     if (!recipeData.author || !recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
       alert('Please fill in all required fields.');
       this.isSubmitting = false;
       return;
     }
-
+  
+    // Transform ingredients: remove blank lines, remove commas, join with commas
+    const cleanedIngredients = recipeData.ingredients
+      .split('\n')                             // split by newline
+      .map(line => line.trim())                // trim each line
+      .filter(line => line.length > 0)         // remove empty lines
+      .map(line => line.replace(/,/g, ''))     // remove existing commas
+      .join(', ');                             // join into a single string with commas
+  
+    recipeData.ingredients = cleanedIngredients;
+  
     console.log('Submitting recipe:', recipeData);
-
+  
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
         console.log('Backend Response:', response);
         if (response.message === 'Recipe created successfully.') {
           this.loadRecipes();
-          // Clear the form after a successful submission
           this.newRecipe = { author: '', title: '', ingredients: '', instructions: '', tag: '' };
         } else {
           alert('Failed to add the recipe');
@@ -104,6 +113,7 @@ export class RecipesPage implements OnInit {
       }
     );
   }
+  
 
   /**
    * loadRecipes
@@ -233,9 +243,21 @@ export class RecipesPage implements OnInit {
    * Opens the edit recipe modal by setting the edit model data.
    */
   editRecipe(recipe: any) {
+    // Copy the whole recipe as-is
     this.editRecipeData = { ...recipe };
+  
+    // But transform just the ingredients field for better readability
+    this.editRecipeData.ingredients = recipe.ingredients
+      ? recipe.ingredients
+          .split(',')
+          .map((item: string) => item.trim())
+          .filter((item: string) => item.length > 0)
+          .join('\n\n')  // Replace commas with newlines
+      : '';
+  
     this.openEditForm();
   }
+  
 
   /**
    * updateRecipe
@@ -243,13 +265,35 @@ export class RecipesPage implements OnInit {
    * Submits the updated recipe data to the backend.
    */
   updateRecipe() {
+    const cleanedIngredients = this.editRecipeData.ingredients
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((line: string) => line.replace(/,/g, ''))
+      .join(', ');
+  
+    this.editRecipeData.ingredients = cleanedIngredients;
+  
     console.log('Updating recipe with data:', this.editRecipeData);
-
+  
     this.http.put(`${environment.apiUrl}/recipes/${this.editRecipeData.id}`, this.editRecipeData)
       .subscribe(
         (response) => {
           console.log('Recipe updated:', response);
+  
+          // Update the full recipe list
           this.loadRecipes();
+  
+          // ✅ Update the selected recipes with new data
+          this.selectedRecipes = this.selectedRecipes.map(r =>
+            r.id === this.editRecipeData.id ? { ...r, ...this.editRecipeData } : r
+          );
+  
+          this.selectedRecipesList = this.selectedRecipesList.map(r =>
+            r.id === this.editRecipeData.id ? { ...r, ...this.editRecipeData } : r
+          );
+  
+          // ✅ Optionally close the form
           this.closeEditForm();
         },
         (error) => {
@@ -258,6 +302,8 @@ export class RecipesPage implements OnInit {
         }
       );
   }
+  
+  
 
   /**
    * addToCalendar
