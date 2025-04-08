@@ -117,3 +117,35 @@ ion-item:hover {
 ::ng-deep .light-green-modal .modal-wrapper {
   --background: #cbddd1 !important; /* Light green background */
 }
+
+/* ============================
+  Responsive Layout for Mobile
+============================ */
+@media (max-width: 768px) {
+  .book-container {
+    flex-direction: column;
+    padding: 10px;
+    align-items: center;
+  }
+
+  .my-recipes-container,
+  .recipes-container {
+    width: 100%;
+    margin: 0; 
+    border-radius: 15px; 
+  }
+
+  .book-spine {
+    display: none;
+  }
+
+  ion-title {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  ion-button {
+    width: 100%;
+  }
+}
+
