@@ -52,9 +52,15 @@
     <div class="spice">
       <h2>SPICE RACK</h2>
       <ul>
-        <li class="new-item" *ngIf="!editMode">New Item</li>
+        <!-- Loop over freezer items dynamically -->
+        <li *ngFor="let item of spiceItems; let i = index">
+          {{ item.name }}
+          <!-- When in edit mode, show a delete icon -->
+          <span class="delete-icon" *ngIf="spiceEditMode" (click)="deleteSpiceItem(i)">✖</span>
+        </li>
+        <li class="new-item" (click)="openAddSpiceItemPrompt()">New Item</li>
       </ul>
-      <ion-button class="edit-button-spice" expand="block">
+      <ion-button class="edit-button-spice" expand="block" (click)="toggleSpiceEditMode()">
         {{ spiceEditMode ? 'All Done' : 'Edit Spice Rack' }}
       </ion-button>
     </div>
