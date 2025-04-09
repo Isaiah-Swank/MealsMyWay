@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
+import { UserService } from '../services/user.service';
 import { Platform, ModalController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -45,6 +46,7 @@ export class RecipesPage implements OnInit {
   };
 
   constructor(
+    private userService: UserService,
     private recipeService: RecipeService,
     private platform: Platform,
     private http: HttpClient,
@@ -53,6 +55,11 @@ export class RecipesPage implements OnInit {
   ) {}
 
   ngOnInit() {
+    const user = this.userService.getUser();
+    console.log(user);
+    if (user && user.username) {
+      this.newRecipe.author = user.username;
+    }
     this.loadRecipes();
     this.checkDeviceType();
   }
