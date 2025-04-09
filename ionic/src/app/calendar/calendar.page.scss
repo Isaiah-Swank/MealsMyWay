@@ -117,7 +117,7 @@ ion-button {
   margin: 20px auto;
   width: 90%;
   max-width: 1200px;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 .recipe-details {
@@ -126,10 +126,15 @@ ion-button {
   padding: 15px;
   border: 15px solid #246d48;
   border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  min-height: 325px; // 👈 Matches Add Meal height to start
 }
+
 
 .add-meal-form {
   flex: 1;
+  height: 325px; // stays fixed!
   background-color: #fff;
   padding: 15px;
   border: 15px solid #246d48;
@@ -137,6 +142,7 @@ ion-button {
   display: flex;
   flex-direction: column;
 }
+
 
 .add-meal-form .form-items {
   flex: 1;
@@ -238,7 +244,7 @@ ion-button {
   }
 
   .generate-shopping-list,
-  .generate-prep-list,{
+  .generate-prep-list{
     width: 100%;
     max-width: 400px;
     text-align: center;
