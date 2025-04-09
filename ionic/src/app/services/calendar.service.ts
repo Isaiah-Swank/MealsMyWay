@@ -86,7 +86,6 @@ export class CalendarService {
 
   /**
    * sendCalendarInvite
-   * NEW METHOD:
    * Instead of directly adding a user to the calendar, this method sends an invitation.
    * The invite object should include:
    *   - senderId: The user ID of the sender.

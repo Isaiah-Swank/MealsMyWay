@@ -29,7 +29,6 @@
         Week of: {{ selectedPlan | date:'longDate' }}
       </h2>
 
-      <!-- The share button now toggles the search bar for sending invites -->
       <ion-button (click)="toggleShareCalendar()">Share Calendar</ion-button>
     </div>
 
@@ -37,7 +36,6 @@
          SHARE CALENDAR SEARCH BAR
          ---------------------------------------------------
          Allows users to search for other users to share the calendar with.
-         Instead of directly adding the user, clicking the button sends an invite.
          =================================================== -->
     <div *ngIf="showShareCalendar">
       <ion-item>
@@ -47,8 +45,7 @@
         <ul>
           <li *ngFor="let user of searchResults">
             {{ user.username }}
-            <!-- Changed click event to call sendCalendarInvite -->
-            <ion-button (click)="sendCalendarInvite(user)">Invite to Share</ion-button>
+            <ion-button (click)="addUserToCalendar(user)">Add to Calendar</ion-button>
           </li>
         </ul>
       </div>
