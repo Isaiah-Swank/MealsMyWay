@@ -5,7 +5,6 @@ const { Pool } = require('pg');
 const app = express();
 const argon2 = require('argon2');
 
-
 // Express Middleware Configuration
 app.use(cors());
 app.use(express.json());
@@ -116,7 +115,6 @@ app.post('/api/deepseek', async (req, res) => {
   }
 });
 
-
 // POST /signup
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
@@ -206,7 +204,7 @@ app.get('/user', async (req, res) => {
   }
 
   try {
-    const query = 'SELECT id, username, email, privacy, shared_plans FROM users WHERE id = $1';
+    const query = 'SELECT id, username, email, privacy, shared_plans, invites FROM users WHERE id = $1';
     const result = await db.query(query, [id]);
 
     if (result.rows.length > 0) {
@@ -227,7 +225,7 @@ app.put('/user/privacy', async (req, res) => {
     return res.status(400).send({ message: 'userId and privacy (boolean) are required.' });
   }
   try {
-    const query = 'UPDATE users SET privacy = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans';
+    const query = 'UPDATE users SET privacy = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans, invites';
     const result = await db.query(query, [privacy, userId]);
     if (result.rows.length > 0) {
       console.log(`[PUT /user/privacy] 200 - Privacy updated for user ${userId}`);
@@ -269,7 +267,7 @@ app.put('/user/password', async (req, res) => {
       timeCost: 3,
       parallelism: 2
     });
-    const updateQuery = 'UPDATE users SET password = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans';
+    const updateQuery = 'UPDATE users SET password = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans, invites';
     const result = await db.query(updateQuery, [hashedPassword, userId]);
     if (result.rows.length > 0) {
       console.log(`[PUT /user/password] 200 - Password updated for user ${userId}`);
@@ -563,7 +561,6 @@ app.put('/pantry', async (req, res) => {
 // DELETE /pantry
 app.delete('/pantry', async (req, res) => {
   const userId = parseInt(req.query.userId);
-
   if (isNaN(userId)) {
     console.log('[PANTRY] 400 - Invalid user ID');
     return res.status(400).send({ message: 'Valid User ID is required.' });
@@ -583,6 +580,149 @@ app.delete('/pantry', async (req, res) => {
   } catch (error) {
     console.error(`[PANTRY] 500 - Server error while deleting pantry for user ${userId}:`, error.stack);
     return res.status(500).send({ message: 'Error deleting pantry.', error: error.stack });
+  }
+});
+
+// -------------------- New Route: Send Calendar Invite --------------------
+// Instead of directly adding a user, this route updates the recipient's "invites" column
+// in the users table by appending the senderId.
+app.post('/user/send-invite', async (req, res) => {
+  const { senderId, recipientId, plan } = req.body;
+  if (!senderId || !recipientId) {
+    return res.status(400).send({ message: 'senderId and recipientId are required.' });
+  }
+  try {
+    // Update the recipient's invites column. Cast the array literal to integer[]
+    const updateQuery = `
+      UPDATE users 
+      SET invites = CASE 
+        WHEN invites IS NULL THEN ARRAY[$1]::integer[] 
+        ELSE array_append(invites, $1) 
+      END
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const result = await db.query(updateQuery, [senderId, recipientId]);
+    if (result.rows.length > 0) {
+      console.log('Invite sent:', result.rows[0]);
+      return res.status(200).send({ message: 'Invite sent successfully.', user: result.rows[0] });
+    } else {
+      return res.status(404).send({ message: 'Recipient not found.' });
+    }
+  } catch (error) {
+    console.error('Error sending invite:', error.stack);
+    return res.status(500).send({ message: 'Server error while sending invite.' });
+  }
+});
+
+// Retrieves the invites array from the user's record.
+app.get('/user/pending-invites', async (req, res) => {
+  const userId = parseInt(req.query.userId);
+  if (!userId) {
+    return res.status(400).send({ message: 'userId is required.' });
+  }
+  try {
+    const query = 'SELECT invites FROM users WHERE id = $1';
+    const result = await db.query(query, [userId]);
+    if (result.rows.length > 0) {
+      // Return the invites array; if null, return an empty array.
+      const invites = result.rows[0].invites || [];
+      return res.status(200).json(invites);
+    } else {
+      return res.status(404).send({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error fetching pending invites:', error.stack);
+    return res.status(500).send({ message: 'Server error fetching pending invites.' });
+  }
+});
+
+// -------------------- New Route: Update Sender's Calendars with Shared Users --------------------
+// This endpoint updates every calendar that the sender owns by merging the sender's shared_plans list into user_ids.
+app.put('/calendar/update-shared', async (req, res) => {
+  const { senderId } = req.body;
+  if (!senderId) {
+    return res.status(400).send({ message: 'senderId is required.' });
+  }
+  try {
+    // Retrieve the sender's shared_plans list.
+    const userResult = await db.query('SELECT shared_plans FROM users WHERE id = $1', [senderId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).send({ message: 'Sender not found.' });
+    }
+    const sharedUsers = userResult.rows[0].shared_plans || [];
+    // Update every calendar that the sender owns by merging the sharedUsers into user_ids.
+    const updateQuery = `
+      UPDATE calendar
+      SET user_ids = (
+        SELECT array_agg(DISTINCT uid)
+        FROM unnest(user_ids || $1::int[]) AS uid
+      )
+      WHERE $2 = ANY(user_ids)
+      RETURNING *;
+    `;
+    const calResult = await db.query(updateQuery, [sharedUsers, senderId]);
+    return res.status(200).send({ message: 'Calendars updated with shared users.', calendars: calResult.rows });
+  } catch (error) {
+    console.error('Error updating calendars with shared users:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+// PUT /user/accept-invite
+// Accepts a calendar invite by removing the senderId from the recipient's invites column
+// and (optionally) performing further processing (e.g., updating shared calendars).
+app.put('/user/accept-invite', async (req, res) => {
+  const { senderId, recipientId } = req.body;
+  if (!senderId || !recipientId) {
+    return res.status(400).send({ message: 'senderId and recipientId are required.' });
+  }
+  try {
+    // Remove the senderId from the recipient's invites column using array_remove.
+    const updateQuery = `
+      UPDATE users
+      SET invites = array_remove(invites, $1)
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const result = await db.query(updateQuery, [senderId, recipientId]);
+    if (result.rows.length > 0) {
+      console.log('Invite accepted:', result.rows[0]);
+      return res.status(200).send({ message: 'Invite accepted successfully.', user: result.rows[0] });
+    } else {
+      return res.status(404).send({ message: 'Recipient not found.' });
+    }
+  } catch (error) {
+    console.error('Error accepting invite:', error.stack);
+    return res.status(500).send({ message: 'Server error while accepting invite.' });
+  }
+});
+
+// PUT /user/decline-invite
+// Declines a calendar invite by removing the senderId from the recipient's invites column.
+app.put('/user/decline-invite', async (req, res) => {
+  const { senderId, recipientId } = req.body;
+  if (!senderId || !recipientId) {
+    return res.status(400).send({ message: 'senderId and recipientId are required.' });
+  }
+  try {
+    // Remove the senderId from the recipient's invites column.
+    const updateQuery = `
+      UPDATE users
+      SET invites = array_remove(invites, $1)
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const result = await db.query(updateQuery, [senderId, recipientId]);
+    if (result.rows.length > 0) {
+      console.log('Invite declined:', result.rows[0]);
+      return res.status(200).send({ message: 'Invite declined successfully.', user: result.rows[0] });
+    } else {
+      return res.status(404).send({ message: 'Recipient not found.' });
+    }
+  } catch (error) {
+    console.error('Error declining invite:', error.stack);
+    return res.status(500).send({ message: 'Server error while declining invite.' });
   }
 });
 
