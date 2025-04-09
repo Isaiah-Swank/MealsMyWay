@@ -16,16 +16,29 @@
       <h2>PANTRY</h2>
       <ul>
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
-          {{ item.name }} - {{ item.quantity }}oz
-          <span *ngIf="editMode" class="delete-icon" (click)="deletePantryItem(i)">✖</span>
+          <div class="item-info">{{ item.name }} - {{ item.quantity }}oz</div>
+        
+          <div class="item-controls" *ngIf="editMode">
+            <ion-button fill="clear" size="small" (click)="decrementPantryItem(i)" class="icon-button">
+              <ion-icon name="remove-circle" slot="icon-only"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" (click)="incrementPantryItem(i)" class="icon-button">
+              <ion-icon name="add-circle" slot="icon-only"></ion-icon>
+            </ion-button>
+            <ion-icon name="close-circle" class="delete-icon" (click)="deletePantryItem(i)"></ion-icon>
+          </div>
         </li>
+        
+    
+        <!-- Add new item button (only when not editing) -->
         <li class="new-item" *ngIf="!editMode" (click)="openAddItemPrompt()">New Item</li>
       </ul>
-      
+    
       <ion-button (click)="toggleEditMode()" expand="block" class="edit-button-pantry">
         {{ editMode ? 'All Done' : 'Edit Pantry' }}
       </ion-button>
     </div>
+    
     
     <div class="freezer">
       <img src="assets/images/icicles.png" alt="Icicles" class="icicles">

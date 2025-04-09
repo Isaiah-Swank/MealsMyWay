@@ -103,6 +103,41 @@ export class PantryPage implements OnInit {
     console.log(`[PANTRY] SUCCESS - Pantry updated for user ID=${this.userId}`);
   }
 
+  async incrementPantryItem(index: number) {
+    if (index < 0 || index >= this.pantryItems.length) return;
+    this.pantryItems[index].quantity++;
+    console.log(`[PANTRY] Incremented "${this.pantryItems[index].name}" to ${this.pantryItems[index].quantity} oz`);
+    await this.updatePantry();
+  }
+  
+  async decrementPantryItem(index: number) {
+    if (index < 0 || index >= this.pantryItems.length) return;
+    if (this.pantryItems[index].quantity > 0) {
+      this.pantryItems[index].quantity--;
+      console.log(`[PANTRY] Decremented "${this.pantryItems[index].name}" to ${this.pantryItems[index].quantity} oz`);
+      await this.updatePantry();
+    }
+  }
+
+  async updatePantry() {
+    if (this.userId === -1) {
+      console.error(`[PANTRY] ERROR - User not loaded. Cannot update pantry.`);
+      return;
+    }
+  
+    const payload: PantryPayload = {
+      user_id: this.userId,
+      pf_flag: false,
+      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
+    };
+  
+    console.log(`[PANTRY] Updating pantry with payload:`, JSON.stringify(payload, null, 2));
+    await this.pantryService.updatePantry(payload).toPromise();
+    console.log(`[PANTRY] SUCCESS - Pantry updated for user ID=${this.userId}`);
+  }
+  
+  
+
   /**
    * Opens a prompt to add a freezer item.
    */
