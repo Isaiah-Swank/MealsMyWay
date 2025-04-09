@@ -17,6 +17,12 @@
     <div class="pantry">
       <h2>PANTRY</h2>
       <ul>
+        <!--
+          We want:
+            If unit>0 & measurement is not empty => "unit + measurement - name" (e.g. "14oz - Flour")
+            If unit>0 & measurement is empty      => "unit name" (e.g. "2 Onions")
+            If unit<=0, just show name (e.g. "Flour" if user typed no numeric unit)
+        -->
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
 
           <!-- 1) If we have a positive numeric unit -->
@@ -36,16 +42,8 @@
             {{ item.name }}
           </ng-template>
 
-          <!-- Edit-mode controls -->
-          <div class="item-controls" *ngIf="editMode">
-            <ion-button fill="clear" size="small" (click)="decrementPantryItem(i)" class="icon-button">
-              <ion-icon name="remove-circle" slot="icon-only"></ion-icon>
-            </ion-button>
-            <ion-button fill="clear" size="small" (click)="incrementPantryItem(i)" class="icon-button">
-              <ion-icon name="add-circle" slot="icon-only"></ion-icon>
-            </ion-button>
-            <ion-icon name="close-circle" class="delete-icon" (click)="deletePantryItem(i)"></ion-icon>
-          </div>
+          <!-- Edit-mode delete icon -->
+          <span *ngIf="editMode" class="delete-icon" (click)="deletePantryItem(i)">✖</span>
         </li>
 
         <!-- "New Item" prompt if not editing -->
@@ -56,12 +54,13 @@
         {{ editMode ? 'All Done' : 'Edit Pantry' }}
       </ion-button>
     </div>
-
+    
     <!-- FREEZER SECTION -->
     <div class="freezer">
       <img src="assets/images/icicles.png" alt="Icicles" class="icicles">
       <h2>FREEZER</h2>
       <ul>
+        <!-- Freezer items remain the same. -->
         <li *ngFor="let item of freezerItems; let i = index">
           {{ item.name }} - {{ item.quantity }} Portion{{ item.quantity > 1 ? 's' : '' }}
           <span class="item-controls" *ngIf="!freezerEditMode">
