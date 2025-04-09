@@ -12,19 +12,9 @@
          Contains the plan selection dropdown, week header, and share calendar button.
          =================================================== -->
     <div class="calendar-header">
-      <ion-item>
-        <ion-select
-          placeholder="Previous Plans"
-          [(ngModel)]="selectedPlan"
-          (ionChange)="onPlanChange()"
-          selectedText="Previous Plans"
-          interface="popover">
-          <ion-select-option *ngFor="let plan of plans" [value]="plan">
-            {{ plan | date:'longDate' }}
-          </ion-select-option>
-        </ion-select>
-      </ion-item>
-
+      <ion-button class="date-button" (click)="openDatePopover($event)">
+        Select Week
+      </ion-button>
       <h2 class="header-date">
         Week of: {{ selectedPlan | date:'longDate' }}
       </h2>

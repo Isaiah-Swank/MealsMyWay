@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { AlertController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -8,6 +8,9 @@ import { UserService } from '../services/user.service';
 import { PantryService } from '../services/pantry.service';
 import { environment } from '../../environments/environment';
 import { marked } from 'marked';
+import { PopoverController } from '@ionic/angular';
+import { DatePopoverComponent } from '../date-popover/date-popover.component';
+
 
 @Component({
   selector: 'app-tab2',
@@ -16,6 +19,7 @@ import { marked } from 'marked';
 })
 export class Tab2Page implements OnInit {
   // -------------------- Calendar & Plan Management --------------------
+  @ViewChild('datePickerPopover') datePickerPopover!: TemplateRef<any>;
   currentWeekStart!: Date;       // Most recent Sunday
   plans: Date[] = [];            // Current + previous weeks
   selectedPlan!: Date;           // Currently selected week
@@ -57,9 +61,11 @@ export class Tab2Page implements OnInit {
   showShareCalendar: boolean = false;
   editMode: boolean = false;
   editedPrepMarkdown: string = '';
+  showDatePicker = false;
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
+    private popoverController: PopoverController,
     private recipeService: RecipeService,
     private alertController: AlertController,
     private router: Router,
@@ -229,6 +235,41 @@ export class Tab2Page implements OnInit {
     }
     return this.events[weekKey];
   }
+
+  onDateSelected(event: any) {
+    const selectedDate = new Date(event.detail.value);
+    const day = selectedDate.getDay();
+    const sunday = new Date(selectedDate);
+    sunday.setDate(selectedDate.getDate() - day);
+  
+    this.selectedPlan = sunday;
+    sessionStorage.setItem('selectedPlan', sunday.toISOString());
+    this.loadCalendar();
+  }  
+
+  async openDatePopover(ev: any) {
+    const popover = await this.popoverController.create({
+      component: DatePopoverComponent,
+      event: ev,
+      translucent: true,
+      showBackdrop: true,
+      componentProps: {
+        selectedDate: this.selectedPlan?.toISOString(),
+      },
+    });
+  
+    popover.onDidDismiss().then((data) => {
+      const selectedDate = data?.data?.value;
+      if (selectedDate) {
+        this.onDateSelected({ detail: { value: selectedDate } });
+      }
+    });
+  
+    await popover.present();
+  }  
+  
+  
+  
 
   // -------------------- Meal & Recipe Management --------------------
 
