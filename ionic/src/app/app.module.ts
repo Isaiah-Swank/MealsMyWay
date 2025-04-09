@@ -8,8 +8,14 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+// ✅ Import your popover component here
+import { DatePopoverComponent } from './date-popover/date-popover.component';
+
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [
+    AppComponent,
+    DatePopoverComponent,
+  ],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
