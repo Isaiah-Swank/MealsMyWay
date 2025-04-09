@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PantryService, PantryPayload } from '../services/pantry.service';
+import { PantryService, PantryPayload, PantryItem } from '../services/pantry.service';
 import { UserService } from '../services/user.service';
 import { AlertController } from '@ionic/angular';
 
@@ -9,9 +9,11 @@ import { AlertController } from '@ionic/angular';
   styleUrls: ['./pantry.page.scss']
 })
 export class PantryPage implements OnInit {
-  pantryItems: any[] = [];
+  // Pantry items store name, measurement (text), and unit (number).
+  pantryItems: PantryItem[] = [];
   freezerItems: any[] = [];
   spiceItems: any[] = [];
+
   userId: number = -1;
   editMode: boolean = false;
   freezerEditMode: boolean = false;
@@ -32,12 +34,11 @@ export class PantryPage implements OnInit {
   
   ionViewWillEnter() {
     console.log('[PANTRY] ionViewWillEnter triggered — refreshing pantry items');
-    this.loadPantryItems(); // 👈 Re-fetch the latest pantry and freezer items
+    this.loadPantryItems();
   }
-  
 
   /**
-   * Loads the current user from the UserService and fetches pantry items.
+   * Retrieve the current user and, if valid, load pantry data.
    */
   loadUser() {
     const user = this.userService.getUser();
@@ -47,28 +48,49 @@ export class PantryPage implements OnInit {
       this.loadPantryItems();
     } else {
       console.warn(`[PANTRY] WARNING - No valid user found. Pantry cannot be loaded.`);
+      this.userId = -1;
     }
   }
 
   /**
    * Opens a prompt to add a pantry item.
+   * Users will fill out:
+   *  - Name  (e.g. "Flour")
+   *  - Measurement (text, e.g. "oz")
+   *  - Unit (number, e.g. 14)
    */
   async openAddItemPrompt() {
     const alert = await this.alertCtrl.create({
       header: 'Add Pantry Item',
       inputs: [
-        { name: 'itemName', type: 'text', placeholder: 'Item Name' },
-        { name: 'quantity', type: 'number', placeholder: 'Quantity (oz)' }
+        {
+          name: 'itemName',
+          type: 'text',
+          placeholder: 'Ingredient Name (required)'
+        },
+        {
+          name: 'measurement',
+          type: 'text',
+          placeholder: 'Measurement label (e.g., "oz", or leave blank)'
+        },
+        {
+          name: 'unit',
+          type: 'number',
+          placeholder: 'Unit count (e.g., 14)'
+        }
       ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
         {
           text: 'Add Item',
           handler: async (data) => {
-            if (data.itemName && data.quantity) {
-              await this.addPantryItem(data.itemName, parseInt(data.quantity));
+            if (data.itemName) {
+              // Parse the numeric unit if provided
+              const unitVal = data.unit ? parseInt(data.unit, 10) : 0;
+              // measurement remains a string (can be blank, e.g. "")
+              await this.addPantryItem(data.itemName, data.measurement, unitVal);
             } else {
-              console.warn(`[PANTRY] WARNING - Invalid item entry. Name and quantity required.`);
+              console.warn(`[PANTRY] WARNING - Item name is required.`);
             }
           }
         }
@@ -78,26 +100,40 @@ export class PantryPage implements OnInit {
   }
 
   /**
-   * Adds a new item to the pantry.
+   * Creates and stores a new pantry item.
+   *  - name: e.g. "Flour", "Onions"
+   *  - measurement: e.g. "oz", or ""
+   *  - unit: e.g. 14 or 2
    */
-  async addPantryItem(name: string, quantity: number) {
-    console.log(`[PANTRY] addPantryItem called with Name="${name}", Quantity=${quantity}`);
+  async addPantryItem(name: string, measurement: string, unit: number) {
+    console.log(`[PANTRY] addPantryItem called with Name="${name}", Measurement="${measurement}", Unit=${unit}`);
     if (this.userId === -1) {
       console.error(`[PANTRY] ERROR - User not loaded. Cannot add item.`);
       return;
     }
 
-    // Add the item locally
-    this.pantryItems.push({ name, quantity });
-    console.log(`[PANTRY] Adding pantry item: User ID=${this.userId}, Name="${name}", Quantity=${quantity}oz`);
+    const newItem: PantryItem = { name };
+    if (measurement && measurement.trim() !== '') {
+      newItem.measurement = measurement.trim();
+    }
+    if (unit && unit > 0) {
+      newItem.unit = unit;
+    }
+
+    this.pantryItems.push(newItem);
+    console.log(`[PANTRY] Adding pantry item:`, newItem);
 
     const payload: PantryPayload = {
       user_id: this.userId,
-      pf_flag: false, // false indicates a pantry record
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
+      pf_flag: false,
+      item_list: {
+        pantry: this.pantryItems,
+        freezer: this.freezerItems,
+        spice: this.spiceItems
+      }
     };
 
-    console.log(`[PANTRY] Payload sent to database:`, JSON.stringify(payload, null, 2));
+    console.log(`[PANTRY] Payload to database:`, JSON.stringify(payload, null, 2));
 
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[PANTRY] SUCCESS - Pantry updated for user ID=${this.userId}`);
@@ -140,6 +176,7 @@ export class PantryPage implements OnInit {
 
   /**
    * Opens a prompt to add a freezer item.
+   * (Unchanged functionality)
    */
   async openAddFreezerItemPrompt() {
     const alert = await this.alertCtrl.create({
@@ -156,7 +193,7 @@ export class PantryPage implements OnInit {
             if (data.itemName && data.quantity) {
               await this.addFreezerItem(data.itemName, parseInt(data.quantity));
             } else {
-              console.warn(`[FREEZER] WARNING - Invalid item entry. Name and portions required.`);
+              console.warn(`[FREEZER] WARNING - Invalid entry. Name & portions required.`);
             }
           }
         }
@@ -167,6 +204,7 @@ export class PantryPage implements OnInit {
 
   /**
    * Adds a new item to the freezer.
+   * (Unchanged)
    */
   async addFreezerItem(name: string, quantity: number) {
     console.log(`[FREEZER] addFreezerItem called with Name="${name}", Portions=${quantity}`);
@@ -175,46 +213,52 @@ export class PantryPage implements OnInit {
       return;
     }
 
-    // Add the item locally
     this.freezerItems.push({ name, quantity });
-    console.log(`[FREEZER] Adding item: User ID=${this.userId}, Name="${name}", Portions=${quantity}`);
+    console.log(`[FREEZER] Added item: Name="${name}", Portions=${quantity}`);
 
     const payload: PantryPayload = {
       user_id: this.userId,
-      pf_flag: false, // still using false for the record
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
+      pf_flag: false,
+      item_list: {
+        pantry: this.pantryItems,
+        freezer: this.freezerItems,
+        spice: this.spiceItems
+      }
     };
 
-    console.log(`[FREEZER] Payload sent to database:`, JSON.stringify(payload, null, 2));
+    console.log(`[FREEZER] Payload:`, JSON.stringify(payload, null, 2));
 
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[FREEZER] SUCCESS - Freezer updated for user ID=${this.userId}`);
   }
 
   /**
-   * Increments the portion count for a freezer item.
+   * Increment portion count for a freezer item.
+   * (Unchanged)
    */
   async incrementFreezerItem(index: number) {
     if (index < 0 || index >= this.freezerItems.length) return;
     this.freezerItems[index].quantity++;
-    console.log(`[FREEZER] Incremented item "${this.freezerItems[index].name}" to ${this.freezerItems[index].quantity} Portion(s)`);
+    console.log(`[FREEZER] Incremented to ${this.freezerItems[index].quantity}`);
     await this.updateFreezer();
   }
 
   /**
-   * Decrements the portion count for a freezer item (if above 0).
+   * Decrement portion count for a freezer item (if above 0).
+   * (Unchanged)
    */
   async decrementFreezerItem(index: number) {
     if (index < 0 || index >= this.freezerItems.length) return;
     if (this.freezerItems[index].quantity > 0) {
       this.freezerItems[index].quantity--;
-      console.log(`[FREEZER] Decremented item "${this.freezerItems[index].name}" to ${this.freezerItems[index].quantity} Portion(s)`);
+      console.log(`[FREEZER] Decremented to ${this.freezerItems[index].quantity}`);
       await this.updateFreezer();
     }
   }
 
   /**
-   * Updates the freezer data by sending an updated payload.
+   * Update the freezer data by sending an updated payload.
+   * (Unchanged)
    */
   async updateFreezer() {
     if (this.userId === -1) {
@@ -224,7 +268,11 @@ export class PantryPage implements OnInit {
     const payload: PantryPayload = {
       user_id: this.userId,
       pf_flag: false,
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
+      item_list: {
+        pantry: this.pantryItems,
+        freezer: this.freezerItems,
+        spice: this.spiceItems
+      }
     };
     console.log(`[FREEZER] Updating freezer with payload:`, JSON.stringify(payload, null, 2));
     await this.pantryService.updatePantry(payload).toPromise();
@@ -232,7 +280,8 @@ export class PantryPage implements OnInit {
   }
 
   /**
-   * Opens a prompt to add a pantry item.
+   * Opens a prompt to add a spice item.
+   * (Unchanged)
    */
   async openAddSpiceItemPrompt() {
     const alert = await this.alertCtrl.create({
@@ -248,7 +297,7 @@ export class PantryPage implements OnInit {
             if (data.itemName) {
               await this.addSpiceItem(data.itemName, 100);
             } else {
-              console.warn(`[SPICE] WARNING - Invalid item entry. Name required.`);
+              console.warn(`[SPICE] WARNING - Invalid entry. Name required.`);
             }
           }
         }
@@ -259,6 +308,7 @@ export class PantryPage implements OnInit {
 
   /**
    * Adds a new item to the spice rack.
+   * (Unchanged)
    */
   async addSpiceItem(name: string, quantity: number) {
     console.log(`[SPICE] addSpiceItem called with Name="${name}"`);
@@ -267,24 +317,28 @@ export class PantryPage implements OnInit {
       return;
     }
 
-    // Add the item locally
     this.spiceItems.push({ name, quantity });
-    console.log(`[SPICE] Adding spice item: User ID=${this.userId}, Name="${name}", Quantity=${quantity}oz`);
+    console.log(`[SPICE] Added spice: Name="${name}", Quantity=${quantity}oz`);
 
     const payload: PantryPayload = {
       user_id: this.userId,
-      pf_flag: false, // false indicates a pantry record, but we dont have one for spice rack
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems}
+      pf_flag: false,
+      item_list: {
+        pantry: this.pantryItems,
+        freezer: this.freezerItems,
+        spice: this.spiceItems
+      }
     };
 
-    console.log(`[SPICE] Payload sent to database:`, JSON.stringify(payload, null, 2));
+    console.log(`[SPICE] Payload:`, JSON.stringify(payload, null, 2));
 
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[SPICE] SUCCESS - Spice rack updated for user ID=${this.userId}`);
   }
 
   /**
-   * Updates the spice data by sending an updated payload.
+   * Update the spice data by sending an updated payload.
+   * (Unchanged)
    */
   async updateSpice() {
     if (this.userId === -1) {
@@ -294,16 +348,20 @@ export class PantryPage implements OnInit {
     const payload: PantryPayload = {
       user_id: this.userId,
       pf_flag: false,
-      item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems}
+      item_list: {
+        pantry: this.pantryItems,
+        freezer: this.freezerItems,
+        spice: this.spiceItems
+      }
     };
     console.log(`[SPICE] Updating spice rack with payload:`, JSON.stringify(payload, null, 2));
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[SPICE] SUCCESS - Spice rack updated for user ID=${this.userId}`);
   }
 
-
   /**
    * Deletes an item from the pantry.
+   * (Unchanged, references item by index)
    */
   async deletePantryItem(index: number) {
     if (this.userId === -1) {
@@ -322,15 +380,19 @@ export class PantryPage implements OnInit {
           text: 'Delete',
           handler: async () => {
             this.pantryItems.splice(index, 1);
-            console.log(`[PANTRY] Removing item: User ID=${this.userId}, Name="${itemToDelete.name}"`);
+            console.log(`[PANTRY] Removing item: "${itemToDelete.name}"`);
 
             const payload: PantryPayload = {
               user_id: this.userId,
               pf_flag: false,
-              item_list: { pantry: this.pantryItems, freezer: this.freezerItems, spice: this.spiceItems }
+              item_list: {
+                pantry: this.pantryItems,
+                freezer: this.freezerItems,
+                spice: this.spiceItems
+              }
             };
 
-            console.log(`[PANTRY] Payload sent after deletion:`, JSON.stringify(payload, null, 2));
+            console.log(`[PANTRY] Payload after deletion:`, JSON.stringify(payload, null, 2));
 
             await this.pantryService.updatePantry(payload).toPromise();
             console.log(`[PANTRY] SUCCESS - Item removed for user ID=${this.userId}`);
@@ -343,7 +405,7 @@ export class PantryPage implements OnInit {
   }
 
   /**
-   * Loads pantry items (both pantry and freezer) for the current user.
+   * Loads pantry (pantryItems, freezerItems, spiceItems) for the user.
    */
   async loadPantryItems() {
     if (this.userId === -1) {
@@ -354,10 +416,16 @@ export class PantryPage implements OnInit {
     console.log(`[PANTRY] Fetching pantry for user ID=${this.userId}...`);
     this.pantryService.loadPantry(this.userId).subscribe(
       (data) => {
-        this.pantryItems = data.item_list?.pantry || [];
+        this.pantryItems  = data.item_list?.pantry  || [];
         this.freezerItems = data.item_list?.freezer || [];
-        console.log(`[PANTRY] SUCCESS - Pantry loaded for user ID=${this.userId}.`);
-        console.log(`[PANTRY] Current state:`, JSON.stringify({ pantry: this.pantryItems, freezer: this.freezerItems }, null, 2));
+        this.spiceItems   = data.item_list?.spice   || [];
+
+        console.log(`[PANTRY] SUCCESS - Pantry loaded for user ID=${this.userId}`);
+        console.log(`[PANTRY] Current state:`, JSON.stringify({
+          pantry: this.pantryItems,
+          freezer: this.freezerItems,
+          spice: this.spiceItems
+        }, null, 2));
       },
       (error) => {
         console.error(`[PANTRY] ERROR - Failed to load pantry for user ID=${this.userId}:`, error);
@@ -389,6 +457,9 @@ export class PantryPage implements OnInit {
     console.log(`[SPICE] Edit Mode: ${this.spiceEditMode ? 'ON' : 'OFF'}`);
   }
 
+  /**
+   * Delete an item from the freezer (unchanged).
+   */
   async deleteFreezerItem(index: number) {
     if (this.userId === -1) {
       console.error(`[FREEZER] ERROR - User not loaded. Cannot delete item.`);
@@ -404,7 +475,7 @@ export class PantryPage implements OnInit {
           text: 'Delete',
           handler: async () => {
             this.freezerItems.splice(index, 1);
-            console.log(`[FREEZER] Removing item: User ID=${this.userId}, Name="${itemToDelete.name}"`);
+            console.log(`[FREEZER] Removing item: "${itemToDelete.name}"`);
             await this.updateFreezer();
             console.log(`[FREEZER] SUCCESS - Item removed for user ID=${this.userId}`);
           }
@@ -415,7 +486,7 @@ export class PantryPage implements OnInit {
   }
 
   /**
-   * Delete an item from the spice rack
+   * Delete an item from the spice rack (unchanged).
    */
   async deleteSpiceItem(index: number) {
     if (this.userId === -1) {
@@ -432,7 +503,7 @@ export class PantryPage implements OnInit {
           text: 'Delete',
           handler: async () => {
             this.spiceItems.splice(index, 1);
-            console.log(`[SPICE] Removing item: User ID=${this.userId}, Name="${itemToDelete.name}"`);
+            console.log(`[SPICE] Removing item: "${itemToDelete.name}"`);
             await this.updateSpice();
             console.log(`[SPICE] SUCCESS - Item removed for user ID=${this.userId}`);
           }
@@ -441,5 +512,4 @@ export class PantryPage implements OnInit {
     });
     await alert.present();
   }
-  
 }
