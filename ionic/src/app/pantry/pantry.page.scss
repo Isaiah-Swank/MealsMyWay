@@ -139,6 +139,52 @@ ion-content {
   z-index: 1;
 }
 
+.pantry-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.item-info {
+  flex: 1;
+  text-align: left;
+  display: flex;
+  align-items: center;
+}
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-button {
+  --color: #246d48;
+  --padding-start: 4px;
+  --padding-end: 4px;
+  font-size: 1.3rem;
+  height: 32px;
+  width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-icon {
+  font-size: 1.6rem;
+  color: #cc0000;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.delete-icon:hover {
+  transform: scale(1.2);
+}
+
+
 /* ===============================
    Mobile View Adjustments
 =============================== */
@@ -219,6 +265,52 @@ ion-content {
     font-size: 20px;
     margin-top: 5px;
   }
+
+  .pantry-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .item-info {
+    flex: 1;
+    text-align: left;
+    display: flex;
+    align-items: center;
+  }
+  
+  .item-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .icon-button {
+    --color: #246d48;
+    --padding-start: 4px;
+    --padding-end: 4px;
+    font-size: 1.3rem;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .delete-icon {
+    font-size: 1.6rem;
+    color: #cc0000;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: flex;
+    align-items: center;
+  }
+  
+  .delete-icon:hover {
+    transform: scale(1.2);
+  }
+  
 }
 
 /* Style the container for plus and minus controls */
