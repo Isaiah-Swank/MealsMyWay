@@ -24,27 +24,32 @@
             If unit<=0, just show name (e.g. "Flour" if user typed no numeric unit)
         -->
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
-
-          <!-- 1) If we have a positive numeric unit -->
-          <ng-container *ngIf="item.unit && item.unit > 0; else noUnitBlock">
-            <!-- If measurement (like 'oz') is provided -->
-            <ng-container *ngIf="item.measurement && item.measurement.trim() !== ''">
-              {{ item.unit }}{{ item.measurement }} - {{ item.name }}
+          <div class="item-info">
+            <ng-container *ngIf="item.unit && item.unit > 0; else noUnitBlock">
+              <ng-container *ngIf="item.measurement && item.measurement.trim() !== ''">
+                {{ item.unit }}{{ item.measurement }} - {{ item.name }}
+              </ng-container>
+              <ng-container *ngIf="!item.measurement || item.measurement.trim() === ''">
+                {{ item.unit }} {{ item.name }}
+              </ng-container>
             </ng-container>
-            <!-- Otherwise, measurement is blank, so "unit name" (like "2 Onions") -->
-            <ng-container *ngIf="!item.measurement || item.measurement.trim() === ''">
-              {{ item.unit }} {{ item.name }}
-            </ng-container>
-          </ng-container>
-
-          <!-- 2) Fallback if item.unit is zero or undefined -->
-          <ng-template #noUnitBlock>
-            {{ item.name }}
-          </ng-template>
-
-          <!-- Edit-mode delete icon -->
-          <span *ngIf="editMode" class="delete-icon" (click)="deletePantryItem(i)">✖</span>
+            <ng-template #noUnitBlock>
+              {{ item.name }}
+            </ng-template>
+          </div>
+        
+          <!-- Edit controls only show in editMode -->
+          <div class="item-controls" *ngIf="editMode">
+            <ion-button fill="clear" size="small" class="icon-button" (click)="decrementPantryItem(i)">
+              <ion-icon slot="icon-only" name="remove-circle"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" class="icon-button" (click)="incrementPantryItem(i)">
+              <ion-icon slot="icon-only" name="add-circle"></ion-icon>
+            </ion-button>
+            <ion-icon name="close-circle" class="delete-icon" (click)="deletePantryItem(i)"></ion-icon>
+          </div>
         </li>
+        
 
         <!-- "New Item" prompt if not editing -->
         <li class="new-item" *ngIf="!editMode" (click)="openAddItemPrompt()">New Item</li>
