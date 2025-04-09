@@ -220,3 +220,55 @@ ion-content {
     margin-top: 5px;
   }
 }
+
+/* Style the container for plus and minus controls */
+.freezer ul li .item-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Style the plus and minus controls */
+.freezer ul li .item-controls span {
+  background-color: #f6f6e9;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover effect for the plus and minus controls */
+.freezer ul li .item-controls span:hover {
+  background-color: #77ba8f;
+}
+
+/* Spice Styles */
+.spice h2 {
+  color: #246d48;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.spice ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.spice li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1.2rem;
+  color: #246d48;
+  position: relative;
+  width: 100%;
+}
+
+/* Style the container for plus and minus controls */
+.spice ul li .item-controls {
+  display: flex;
+  gap: 0.5rem;
+}
