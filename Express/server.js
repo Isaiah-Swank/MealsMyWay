@@ -651,7 +651,7 @@ app.put('/calendar/update-shared', async (req, res) => {
       return res.status(404).send({ message: 'Sender not found.' });
     }
     const sharedUsers = userResult.rows[0].shared_plans || [];
-    // Update every calendar that the sender owns by merging the sharedUsers into user_ids.
+    // Update every calendar that the sender owns by merging sharedUsers into user_ids.
     const updateQuery = `
       UPDATE calendar
       SET user_ids = (
@@ -669,62 +669,65 @@ app.put('/calendar/update-shared', async (req, res) => {
   }
 });
 
-// PUT /user/accept-invite
-// Accepts a calendar invite by removing the senderId from the recipient's invites column
-// and (optionally) performing further processing (e.g., updating shared calendars).
-app.put('/user/accept-invite', async (req, res) => {
-  const { senderId, recipientId } = req.body;
-  if (!senderId || !recipientId) {
-    return res.status(400).send({ message: 'senderId and recipientId are required.' });
+// PUT /user/shared-plans
+// Updates the shared_plans array for a user.
+app.put('/user/shared-plans', async (req, res) => {
+  const { userId, shared_plans } = req.body;
+  if (!userId || !Array.isArray(shared_plans)) {
+    return res.status(400).send({ message: 'userId and shared_plans (array) are required.' });
   }
   try {
-    // Remove the senderId from the recipient's invites column using array_remove.
-    const updateQuery = `
-      UPDATE users
-      SET invites = array_remove(invites, $1)
-      WHERE id = $2
-      RETURNING *;
-    `;
-    const result = await db.query(updateQuery, [senderId, recipientId]);
+    const updateQuery = 'UPDATE users SET shared_plans = $1 WHERE id = $2 RETURNING id, username, email, privacy, shared_plans';
+    const result = await db.query(updateQuery, [shared_plans, userId]);
     if (result.rows.length > 0) {
-      console.log('Invite accepted:', result.rows[0]);
-      return res.status(200).send({ message: 'Invite accepted successfully.', user: result.rows[0] });
+      console.log(`[PUT /user/shared-plans] 200 - Updated shared_plans for user ${userId}`);
+      return res.status(200).send({ message: 'Shared plans updated successfully.', user: result.rows[0] });
     } else {
-      return res.status(404).send({ message: 'Recipient not found.' });
+      return res.status(404).send({ message: 'User not found.' });
     }
   } catch (error) {
-    console.error('Error accepting invite:', error.stack);
-    return res.status(500).send({ message: 'Server error while accepting invite.' });
+    console.error('Error updating shared plans:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
   }
 });
 
-// PUT /user/decline-invite
-// Declines a calendar invite by removing the senderId from the recipient's invites column.
-app.put('/user/decline-invite', async (req, res) => {
-  const { senderId, recipientId } = req.body;
-  if (!senderId || !recipientId) {
-    return res.status(400).send({ message: 'senderId and recipientId are required.' });
+// --------------------  Get Multiple Users by IDs --------------------
+// GET /user/multiple
+app.get('/user/multiple', async (req, res) => {
+  const idsParam = req.query.ids;
+  if (!idsParam) {
+    return res.status(400).send({ message: 'ids query parameter is required.' });
   }
   try {
-    // Remove the senderId from the recipient's invites column.
-    const updateQuery = `
-      UPDATE users
-      SET invites = array_remove(invites, $1)
-      WHERE id = $2
-      RETURNING *;
-    `;
-    const result = await db.query(updateQuery, [senderId, recipientId]);
-    if (result.rows.length > 0) {
-      console.log('Invite declined:', result.rows[0]);
-      return res.status(200).send({ message: 'Invite declined successfully.', user: result.rows[0] });
-    } else {
-      return res.status(404).send({ message: 'Recipient not found.' });
-    }
+    // Convert the comma-separated string into an array of numbers
+    const ids = idsParam.split(',').map(Number);
+    const query = 'SELECT id, username, email FROM users WHERE id = ANY($1)';
+    const result = await db.query(query, [ids]);
+    return res.status(200).json(result.rows);
   } catch (error) {
-    console.error('Error declining invite:', error.stack);
-    return res.status(500).send({ message: 'Server error while declining invite.' });
+    console.error('Error fetching multiple users:', error.stack);
+    return res.status(500).send({ message: 'Server error fetching multiple users.' });
   }
 });
+
+// --------------------  Get Users Sharing With Me --------------------
+// GET /user/shared-with
+app.get('/user/shared-with', async (req, res) => {
+  const userId = parseInt(req.query.userId);
+  if (!userId) {
+    return res.status(400).send({ message: 'userId is required.' });
+  }
+  try {
+    const query = 'SELECT id, username, email FROM users WHERE $1 = ANY(shared_plans)';
+    const result = await db.query(query, [userId]);
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching shared-with data:', error.stack);
+    return res.status(500).send({ message: 'Server error.' });
+  }
+});
+
+
 
 // Log Available Routes
 app._router.stack.forEach((layer) => {

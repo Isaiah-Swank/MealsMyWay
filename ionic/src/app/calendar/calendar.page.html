@@ -35,7 +35,7 @@
         <ul>
           <li *ngFor="let user of searchResults">
             {{ user.username }}
-            <ion-button (click)="addUserToCalendar(user)">Add to Calendar</ion-button>
+            <ion-button (click)="shareCalendar(user)">Add to Calendar</ion-button>
           </li>
         </ul>
       </div>

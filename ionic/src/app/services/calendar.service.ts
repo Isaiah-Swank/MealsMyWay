@@ -24,7 +24,7 @@ export interface CalendarPayload {
 
 /**
  * CalendarService
- * Provides methods to save, load, update calendar data, and send calendar invites.
+ * Provides methods to save, load, update calendar data, and share calendars with other users.
  */
 @Injectable({
   providedIn: 'root'
@@ -63,8 +63,7 @@ export class CalendarService {
 
   /**
    * addUserToCalendar
-   * Legacy method: adds a user to the calendar's user_ids list.
-   * (No longer used for sharing invites.)
+   * Adds a user to the calendar's user_ids list and updates the calendar data.
    * @param userId - The ID of the user to add.
    * @param calendar - The current calendar data.
    * @param startDate - The week start date as an ISO string.
@@ -85,16 +84,14 @@ export class CalendarService {
   }
 
   /**
-   * sendCalendarInvite
-   * Instead of directly adding a user to the calendar, this method sends an invitation.
-   * The invite object should include:
-   *   - senderId: The user ID of the sender.
-   *   - recipientId: The user ID of the recipient.
-   *   - plan: (Optional) Details of the plan or additional info.
-   * This method calls the backend endpoint which updates the recipient's "invites" column.
-   * @param invite - The invite object.
+   * updateSenderCalendars
+   * Sends a PUT request to update every calendar that the sender owns by merging
+   * the sender's shared_plans list into each calendar's user_ids.
+   * This endpoint is implemented on the server under /calendar/update-shared.
+   * @param senderId - The ID of the sender (current user).
    */
-  sendCalendarInvite(invite: any): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${environment.apiUrl}/user/send-invite`, invite);
+  updateSenderCalendars(senderId: number): Observable<{ message: string, calendars?: any[] }> {
+    return this.http.put<{ message: string, calendars?: any[] }>(`${environment.apiUrl}/calendar/update-shared`, { senderId });
   }
+  
 }

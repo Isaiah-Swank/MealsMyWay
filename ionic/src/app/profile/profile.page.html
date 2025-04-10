@@ -52,27 +52,37 @@
           <ion-toggle class="privacy-toggle" [(ngModel)]="privacy" (ionChange)="onPrivacyChange()"></ion-toggle>
         </ion-item>
       </div>
+
       
-      <!-- Shared Users Section (formerly Shared Plans) -->
+      <!-- Shared Plans Section -->
       <div class="settings-item" (click)="toggleSharedPlans()">
-        <img src="assets/images/share.png" alt="Shared Users" class="user-settings">
-        <p>Shared Users</p>
+        <img src="assets/images/share.png" alt="Shared Plans" class="user-settings">
+        <p>Shared Plans</p>
       </div>
-      <div *ngIf="showSharedPlans" class="setting-detail shared-users-detail">
-        <!-- List pending invites -->
-        <ion-list>
-          <ion-item *ngIf="sharedInvites.length === 0">
-            No pending invites
-          </ion-item>
-          <ion-item *ngFor="let invite of sharedInvites">
-            <ion-label>
-              <h2>{{ invite.senderUsername }}</h2>
-              <p>Invited you to share calendars</p>
-            </ion-label>
-            <ion-button (click)="acceptInvite(invite)">Accept</ion-button>
-            <ion-button (click)="declineInvite(invite)">Decline</ion-button>
+
+      <!-- Conditional block that displays shared plans details when the icon is clicked -->
+      <div *ngIf="showSharedPlans" class="setting-detail">
+        <!-- Section for plans the current user is sharing with others -->
+        <h3>You are sharing with:</h3>
+        <ion-list *ngIf="mySharedPlans.length > 0; else noSharing">
+          <ion-item *ngFor="let user of mySharedPlans">
+            {{ user.username }}
           </ion-item>
         </ion-list>
+        <ng-template #noSharing>
+          <p>No shared plans yet.</p>
+        </ng-template>
+        
+        <!-- Section for plans shared with the current user -->
+        <h3>Shared with you:</h3>
+        <ion-list *ngIf="sharedWithMe.length > 0; else notSharedWith">
+          <ion-item *ngFor="let user of sharedWithMe">
+            You are sharing {{ user.username }}'s plans.
+          </ion-item>
+        </ion-list>
+        <ng-template #notSharedWith>
+          <p>No plans are shared with you.</p>
+        </ng-template>
       </div>
       
       <!-- Sign Out -->
