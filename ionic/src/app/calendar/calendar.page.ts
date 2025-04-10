@@ -156,7 +156,7 @@ export class Tab2Page implements OnInit {
     async shareCalendar(user: any) {
       const alert = await this.alertController.create({
         header: 'Share Calendar',
-        message: 'Do you want to share only this calendar or all your calendars with this user?',
+        message: 'Do you want to share only this calendar or all your calendars with this user? Single Sharing is for one week and meant for users wanting to share with many people.\nAll Calendar sharing is meant for connecting 2 users within a household, when you share all calendars you and this user will be locked together',
         buttons: [
           {
             text: 'Only This Calendar',
