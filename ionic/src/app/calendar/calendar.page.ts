@@ -147,7 +147,7 @@ export class Tab2Page implements OnInit {
 
   // Adds the specified user to the calendar's shared user list.
   addUserToCalendar(user: any) {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     let calendarData: any = this.events[weekKey];
     if (!calendarData) {
       calendarData = {
@@ -170,7 +170,7 @@ export class Tab2Page implements OnInit {
     if (!calendarData.user_ids.includes(user.id)) {
       calendarData.user_ids.push(user.id);
     }
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const startDateString = this.formatDateLocal(this.selectedPlan);
     this.calendarService.addUserToCalendar(user.id, calendarData, startDateString).subscribe(
       response => {
         console.log('User added to calendar successfully:', response);
@@ -185,12 +185,15 @@ export class Tab2Page implements OnInit {
 
   // Determines the most recent Sunday (start of the week).
   setCurrentWeekStart() {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const sunday = new Date(today);
-    sunday.setDate(today.getDate() - dayOfWeek);
-    this.currentWeekStart = sunday;
-  }
+  const today = new Date();
+  this.currentWeekStart = this.getStartOfWeek(today);
+}
+
+getStartOfWeek(date: Date): Date {
+  const day = date.getDay(); // 0 = Sunday
+  const diff = date.getDate() - day; // Go back to Sunday
+  return new Date(date.getFullYear(), date.getMonth(), diff);
+}
 
   // Generates an array of week start dates (current + previous 19 weeks).
   generatePlans() {
@@ -219,7 +222,7 @@ export class Tab2Page implements OnInit {
 
   // Returns the calendar events for the selected week.
   get currentWeekEvents() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
         sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -311,7 +314,7 @@ export class Tab2Page implements OnInit {
 
   // Clones the selected meal and adds it under the specified day and category.
   pushMeal() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
         sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -368,7 +371,7 @@ export class Tab2Page implements OnInit {
         {
           text: 'Remove',
           handler: () => {
-            const weekKey = this.selectedPlan.toDateString();
+            const weekKey = this.formatDateLocal(this.selectedPlan);
             this.events[weekKey][day][category].splice(index, 1);
             this.calendarChanged = true;
             this.selectedEvent = null;
@@ -383,7 +386,7 @@ export class Tab2Page implements OnInit {
   // -------------------- Prep List Generation --------------------
 
   generatePrepList() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     const weekEvents = this.events[weekKey] || {};
     const prepExists = weekEvents['prep'] && weekEvents['prep'].toString().trim() !== '';
 
@@ -455,7 +458,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
 
   async viewPrepList() {
     let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
   
     if (!prepListMarkdown && this.events[weekKey] && this.events[weekKey]['prep']) {
       const prepFromEvent = this.events[weekKey]['prep'];
@@ -475,7 +478,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   }
 
   async saveEditedPrepList() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     this.events[weekKey]['prep'] = this.editedPrepMarkdown;
     this.prepListDisplay = await marked(this.editedPrepMarkdown);    
     sessionStorage.setItem('prepList', this.editedPrepMarkdown); 
@@ -507,9 +510,17 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     });
     await alert.present();
   }
+
+  private formatDateLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = ('0' + (date.getMonth() + 1)).slice(-2);
+    const day = ('0' + date.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
+  }
+  
   
   async createShoppingList() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     const weekEvents = this.currentWeekEvents;
   
     // First, load pantry data to retrieve pantry, freezer, and spice lists.
@@ -700,7 +711,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       console.error('User details not loaded. Cannot save calendar.');
       return;
     }
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const startDateString = this.formatDateLocal(this.selectedPlan);
     const weekData = this.events[weekKey] || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -737,7 +748,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   // -------------------- View Grocery List --------------------
 
   async viewShoppingList() {
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
     const loadedWeek = this.events[weekKey];
     const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
     if (!groceryList || groceryList.length === 0) {
@@ -756,7 +767,9 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       console.error('User details not loaded. Cannot save calendar.');
       return;
     }
-    const weekKey = this.selectedPlan.toDateString();
+    const weekKey = this.formatDateLocal(this.selectedPlan);
+    console.log("Week Key:");
+    console.log(weekKey);
     const calendarData = this.events[weekKey] || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -768,7 +781,9 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       grocery: [],
       prep: []
     };
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
+    const startDateString = this.formatDateLocal(this.selectedPlan);
+    console.log("startDateString:");
+    console.log(startDateString);
     const weekData = calendarData || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -810,7 +825,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const weekParam = this.selectedPlan.toISOString().split('T')[0];
     this.calendarService.loadCalendar(this.currentUser.id, weekParam).subscribe(
       response => {
-        const weekKey = this.selectedPlan.toDateString();
+        const weekKey = this.formatDateLocal(this.selectedPlan);
         if (response.length > 0) {
           const calendarData = response[0];
           this.events[weekKey] = {
