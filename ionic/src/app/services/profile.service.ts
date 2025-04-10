@@ -35,7 +35,6 @@ export class ProfileService {
 
   /**
    * Accepts a shared invite.
-   * The payload should include senderId and recipientId.
    */
   acceptSharedInvite(payload: { senderId: number; recipientId: number; }): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/user/accept-invite`, payload);
@@ -43,7 +42,6 @@ export class ProfileService {
 
   /**
    * Declines a shared invite.
-   * The payload should include senderId and recipientId.
    */
   declineSharedInvite(payload: { senderId: number; recipientId: number; }): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/user/decline-invite`, payload);
@@ -51,7 +49,6 @@ export class ProfileService {
 
   /**
    * Updates all calendars for the sender with the shared users.
-   * Adds all user IDs from the sender's shared_users column to each calendar's user_ids.
    */
   updateSenderCalendars(senderId: number): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/calendar/update-shared`, { senderId });
@@ -63,5 +60,22 @@ export class ProfileService {
    */
   getSharedPlans(userId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/calendar?user_id=${userId}`);
+  }
+
+  /**
+   * Retrieves details of users by an array of user IDs.
+   * This supports the shared plans feature where we need to show detailed user information.
+   */
+  getUsersByIds(ids: number[]): Observable<any[]> {
+    const idsParam = ids.join(',');
+    return this.http.get<any[]>(`${this.apiUrl}/user/multiple?ids=${idsParam}`);
+  }
+
+  /**
+   * Retrieves users who have added the current user to their shared_plans array.
+   * This is used to display "You are sharing someone else's plans" in the UI.
+   */
+  getUsersSharingWithMe(userId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/user/shared-with?userId=${userId}`);
   }
 }

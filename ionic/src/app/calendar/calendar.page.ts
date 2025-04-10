@@ -145,6 +145,59 @@ export class Tab2Page implements OnInit {
     );
   }
 
+    /**
+   * New Method: shareCalendar
+   * Presents an alert asking whether to share only the current calendar or all calendars.
+   * Based on the selection, calls addUserToCalendar and updates currentUser.shared_plans if needed.
+   */
+    async shareCalendar(user: any) {
+      const alert = await this.alertController.create({
+        header: 'Share Calendar',
+        message: 'Do you want to share only this calendar or all your calendars with this user?',
+        buttons: [
+          {
+            text: 'Only This Calendar',
+            handler: () => {
+              this.addUserToCalendar(user);
+            }
+          },
+          {
+            text: 'All Calendars',
+            handler: () => {
+              this.addUserToCalendar(user);
+              // Update currentUser.shared_plans locally (initialize if necessary)
+              if (!this.currentUser.shared_plans) {
+                this.currentUser.shared_plans = [];
+              }
+              if (!this.currentUser.shared_plans.includes(user.id)) {
+                this.currentUser.shared_plans.push(user.id);
+                // Save the updated currentUser locally
+                sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                // Update the user's shared_plans on the backend
+                this.userService.updateSharedPlans(this.currentUser.id, this.currentUser.shared_plans)
+                  .subscribe(response => {
+                    console.log('Shared plans updated successfully on backend:', response);
+                  }, error => {
+                    console.error('Error updating shared plans on backend:', error);
+                  });
+              }
+              // Update all calendars with shared users using the new backend endpoint.
+              this.calendarService.updateSenderCalendars(this.currentUser.id)
+                .subscribe(response => {
+                  console.log('Calendars updated with shared users:', response);
+                }, error => {
+                  console.error('Error updating calendars:', error);
+                });
+            }
+          }
+        ]
+      });
+      await alert.present();
+    }
+    
+    
+    
+
   // Adds the specified user to the calendar's shared user list.
   addUserToCalendar(user: any) {
     const weekKey = this.selectedPlan.toDateString();
@@ -757,7 +810,8 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       return;
     }
     const weekKey = this.selectedPlan.toDateString();
-    const calendarData = this.events[weekKey] || {
+    // Retrieve existing calendar events or create defaults if none exist.
+    const calendarData: any = this.events[weekKey] || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -768,39 +822,45 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       grocery: [],
       prep: []
     };
+  
     const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    const weekData = calendarData || {
-      sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-      grocery: [],
-      prep: []
-    };
+    // Begin with just the current user id.
+    let userIds: number[] = [this.currentUser.id];
+  
+    // Merge in the sending user's shared_plans ids, if they exist.
+    if (this.currentUser.shared_plans && Array.isArray(this.currentUser.shared_plans)) {
+      this.currentUser.shared_plans.forEach((sharedId: number) => {
+        if (!userIds.includes(sharedId)) {
+          userIds.push(sharedId);
+        }
+      });
+    }
+  
+    // Build the payload for saving the calendar.
     const payload = {
-      user_ids: [this.currentUser.id],
+      user_ids: userIds,
       week: {
-        sunday: weekData['sunday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        monday: weekData['monday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        tuesday: weekData['tuesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        wednesday: weekData['wednesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        thursday: weekData['thursday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        friday: weekData['friday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        saturday: weekData['saturday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-        grocery: weekData['grocery'] || [],
-        prep: weekData['prep'] || []
+        sunday: calendarData['sunday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        monday: calendarData['monday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        tuesday: calendarData['tuesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        wednesday: calendarData['wednesday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        thursday: calendarData['thursday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        friday: calendarData['friday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        saturday: calendarData['saturday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+        grocery: calendarData['grocery'] || [],
+        prep: calendarData['prep'] || []
       },
       start_date: startDateString
     };
-
+  
+    // Save the calendar data via the CalendarService.
     this.calendarService.saveCalendar(payload).subscribe(
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
   }
+  
+  
 
   loadCalendar() {
     if (!this.currentUser || !this.currentUser.id) {

@@ -112,4 +112,8 @@ export class UserService {
     }
     return this.http.get<any[]>(`${environment.apiUrl}/users?username=${query}`);
   }
+
+  updateSharedPlans(userId: number, sharedPlans: number[]): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/user/shared-plans`, { userId, shared_plans: sharedPlans });
+  }
 }
