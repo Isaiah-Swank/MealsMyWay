@@ -46,6 +46,9 @@ export class Tab2Page implements OnInit {
   groceryListRaw: { [ingredient: string]: { unit: number, measurement: string, name: string } } = {};
   showShoppingList: boolean = false;
   groceryListDisplay: string[] = [];
+  editGroceryMode: boolean = false;
+  editedGroceryText: string = '';
+
 
   // -------------------- Prep List Properties --------------------
   prepListDisplay: string = '';
@@ -804,14 +807,37 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const weekKey = this.formatDateLocal(this.selectedPlan);
     const loadedWeek = this.events[weekKey];
     const groceryList = loadedWeek ? loadedWeek['grocery'] : null;
+  
     if (!groceryList || groceryList.length === 0) {
       alert('No grocery list has been generated yet for this week. Please generate a grocery list first.');
     } else {
       console.log('Grocery list for the week:', groceryList);
       this.groceryListDisplay = groceryList;
+      this.editedGroceryText = groceryList.join('\n'); // 👈 Set editable version
       this.showShoppingList = true;
     }
   }
+
+  saveEditedGroceryList() {
+    const weekKey = this.formatDateLocal(this.selectedPlan);
+    
+    // Split edited text into individual ingredients
+    const updatedList = this.editedGroceryText
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean);
+  
+    // Update both memory and session
+    this.events[weekKey]['grocery'] = updatedList;
+    this.shoppingList = updatedList;
+    this.groceryListDisplay = updatedList;
+  
+    this.saveCalendar();
+    this.editGroceryMode = false;
+    alert('Grocery list saved successfully.');
+  }
+  
+  
 
   // -------------------- Save & Load Calendar --------------------
 
