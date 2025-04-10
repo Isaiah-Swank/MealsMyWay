@@ -161,12 +161,16 @@ export class Tab2Page implements OnInit {
           {
             text: 'Only This Calendar',
             handler: () => {
+              // Add the shared user to the current calendar
               this.addUserToCalendar(user);
+              // Immediately save the calendar so that it is created for the receiving user
+              this.saveCalendar();
             }
           },
           {
             text: 'All Calendars',
             handler: () => {
+              // Add the user to the current calendar first
               this.addUserToCalendar(user);
               // Update currentUser.shared_plans locally (initialize if necessary)
               if (!this.currentUser.shared_plans) {
@@ -191,14 +195,14 @@ export class Tab2Page implements OnInit {
                 }, error => {
                   console.error('Error updating calendars:', error);
                 });
+              // Immediately save the calendar so that it is created for the receiving user
+              this.saveCalendar();
             }
           }
         ]
       });
       await alert.present();
     }
-    
-    
     
 
   // Adds the specified user to the calendar's shared user list.
@@ -579,6 +583,11 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const weekKey = this.formatDateLocal(this.selectedPlan);
     const weekEvents = this.currentWeekEvents;
   
+    // Instead of clearing previous aggregated grocery data, ensure it exists.
+    if (!this.groceryListRaw) {
+      this.groceryListRaw = {};
+    }
+  
     // First, load pantry data to retrieve pantry, freezer, and spice lists.
     let pantryData;
     try {
@@ -587,14 +596,14 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       console.error("Error loading pantry data", error);
       pantryData = { item_list: { pantry: [], freezer: [], spice: [] } };
     }
-    // Extract freezer items and spice items from the loaded pantry data.
+    // Extract freezer and spice items from the loaded pantry data.
     const freezerItems: any[] = pantryData?.item_list?.freezer || [];
     const spiceItems: any[] = pantryData?.item_list?.spice || [];
   
-    // Create a new aggregated object for the new generation.
+    // Create an aggregated object for new grocery generation.
     let newAggregated: { [ingredient: string]: { unit: number, measurement: string, name: string } } = {};
   
-    // Loop through each day (excluding 'grocery' & 'prep') to gather ingredients.
+    // Loop through each day (excluding 'grocery' & 'prep') and each category.
     for (const day in weekEvents) {
       if (day === 'grocery' || day === 'prep') continue;
       if (weekEvents.hasOwnProperty(day)) {
@@ -607,7 +616,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
               );
               if (freezerMatch) {
                 console.log(`Skipping meal "${meal.title}" as it is available in the freezer.`);
-                // Decrement freezer quantity by one since this meal is being used.
+                // Decrement freezer quantity by one.
                 freezerMatch.quantity = Math.max((freezerMatch.quantity ?? 0) - 1, 0);
                 continue; // Skip processing this meal.
               }
@@ -618,6 +627,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
               ingredients.forEach((ingredientStr) => {
                 const parsed = this.parseIngredient(ingredientStr);
                 if (parsed && parsed.unit > 0) {
+                  // Use lower-case normalized name as key.
                   const key = parsed.name.toLowerCase();
                   if (newAggregated[key] !== undefined) {
                     newAggregated[key].unit += parsed.unit;
@@ -625,12 +635,12 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
                     newAggregated[key] = {
                       unit: parsed.unit,
                       measurement: parsed.measurement,
-                      name: parsed.name // store original name for display
+                      name: parsed.name
                     };
                   }
                 }
-                // Skip any ingredient that doesn't parse or has zero unit.
               });
+              // Mark this meal as processed so it isn't re-added in subsequent list generations.
               meal.processedForGrocery = true;
             }
           }
@@ -638,70 +648,71 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       }
     }
   
-    // Process each aggregated ingredient by subtracting pantry stock.
+    // Process each aggregated ingredient: subtract pantry quantities.
     for (let key in newAggregated) {
       const newReq = newAggregated[key].unit;
       const measurement = newAggregated[key].measurement;
       const originalName = newAggregated[key].name;
-      let remaining = newReq; // Amount required
+      let remaining = newReq;
+      let foundMatch = false;
   
-      // Subtract from matching pantry items.
+      // --- 1. Direct Match Check ---
       for (const item of pantryData!.item_list.pantry) {
         if ((item.name || '').toLowerCase() === key) {
-          // If measurements match, subtract normally.
+          // Direct match found. Compare measurements.
           if (((item.measurement || '').toLowerCase()) === measurement.toLowerCase()) {
             if ((item.unit ?? 0) >= remaining) {
               item.unit = (item.unit ?? 0) - remaining;
               remaining = 0;
+              foundMatch = true;
               break;
             } else {
               remaining -= (item.unit ?? 0);
               item.unit = 0;
+              foundMatch = true;
+              break;
             }
           } else {
-            // Conversion branch: measurement mismatch.
+            // Measurement mismatch for direct match: invoke conversion popup.
             const conversionResult = await this.showGroceryConversionPopup(
               newAggregated[key].name,
               measurement,
               item.measurement || '',
               (item.unit ?? 0),
-              remaining
+              remaining,
+              item.name // Pass the pantry ingredient name.
             );
-            // Deduct the specified pantry amount from the pantry item.
             item.unit = Math.max((item.unit ?? 0) - (conversionResult.pantryDeduction || 0), 0);
-            // Override the remaining requirement with the grocery purchase value entered by the user.
             remaining = conversionResult.groceryPurchase || 0;
-            // If the user specified a grocery purchase amount, add that to the grocery list.
-            if (remaining > 0) {
-              if (this.groceryListRaw[key] !== undefined) {
-                this.groceryListRaw[key].unit += remaining;
-              } else {
-                this.groceryListRaw[key] = {
-                  unit: remaining,
-                  measurement: measurement,
-                  name: newAggregated[key].name
-                };
-              }
-            }
-            // Exit the loop for the current ingredient once we've handled the conversion.
+            foundMatch = true;
             break;
           }
         }
       }
   
-      // Now check the spice rack for any remaining requirement.
-      if (remaining > 0) {
-        const spiceMatch = spiceItems.find(item => item.name.toLowerCase() === key);
-        if (spiceMatch && (spiceMatch.quantity ?? 0) > 0) {
-          console.log(`Spice "${spiceMatch.name}" decremented by 1. Remaining: ${(spiceMatch.quantity ?? 0) - 1}`);
-          // Decrement exactly one unit from the spice rack.
-          spiceMatch.quantity = (spiceMatch.quantity ?? 0) - 1;
-          remaining = 0;
+      // --- 2. Substring Match Check ---
+      if (!foundMatch) {
+        for (const item of pantryData!.item_list.pantry) {
+          const recipeName = newAggregated[key].name.toLowerCase();
+          const pantryName = (item.name || '').toLowerCase();
+          if (recipeName.includes(pantryName) || pantryName.includes(recipeName)) {
+            const conversionResult = await this.showGroceryConversionPopup(
+              newAggregated[key].name,
+              measurement,
+              item.measurement || '',
+              (item.unit ?? 0),
+              remaining,
+              item.name // Pass the pantry ingredient name.
+            );
+            item.unit = Math.max((item.unit ?? 0) - (conversionResult.pantryDeduction || 0), 0);
+            remaining = conversionResult.groceryPurchase || 0;
+            foundMatch = true;
+            break;
+          }
         }
       }
   
-      // If there's any remaining amount after processing pantry and spice stock,
-      // add it to the persistent groceryListRaw (if the conversion branch wasn't triggered).
+      // --- 3. If any remaining amount, merge it into the aggregated grocery list.
       if (remaining > 0) {
         if (this.groceryListRaw[key] !== undefined) {
           this.groceryListRaw[key].unit += remaining;
@@ -711,24 +722,41 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       }
     }
   
-    // Reformat the entire aggregated groceryListRaw into the final formatted list.
-    const filteredGrocery = Object.entries(this.groceryListRaw).filter(([k, v]) => (v.unit ?? 0) > 0);
+    // ------------------ Process Spice Items ------------------
+    for (let key in newAggregated) {
+      if (newAggregated.hasOwnProperty(key)) {
+        const spiceMatch = spiceItems.find(item => item.name.toLowerCase() === key);
+        if (spiceMatch && (spiceMatch.quantity ?? 0) > 0) {
+          console.log(`Spice "${spiceMatch.name}" decremented by 1. Remaining: ${(spiceMatch.quantity ?? 0) - 1}`);
+          // Decrement exactly one unit from the spice rack.
+          spiceMatch.quantity = (spiceMatch.quantity ?? 0) - 1;
+          // Optionally remove from grocery list if already added.
+          if (this.groceryListRaw[key]) {
+            delete this.groceryListRaw[key];
+          }
+        }
+      }
+    }
+  
+    // ------------------ Format the Aggregated Grocery List ------------------
+    const filteredGrocery = Object.entries(this.groceryListRaw)
+      .filter(([k, v]) => (v.unit ?? 0) > 0);
     const formattedGroceryList = filteredGrocery.map(([key, details]) => {
       const displayName = details.name || (key.charAt(0).toUpperCase() + key.slice(1));
-      // If no measurement and exactly 1 unit (i.e., default for spices), show just the name.
       if (details.measurement.trim() === '' && details.unit === 1) {
         return displayName;
       }
       return `${details.unit} ${details.measurement ? details.measurement + ' ' : ''}${displayName}`;
     });
   
-    // Now update the week's grocery list with the reformatted merged list.
+    // Update the week's grocery list in local state (merging with previous list).
+    // Since we merged new items into the persistent `groceryListRaw`, we now generate the list from it.
     this.shoppingLists[weekKey] = formattedGroceryList;
     this.shoppingList = formattedGroceryList;
     console.log('Updated Grocery List for', weekKey, ':', formattedGroceryList);
     this.showShoppingList = true;
   
-    // Ensure the events object for this week exists, then update the grocery field.
+    // Ensure events object for this week exists, then update the grocery field.
     if (!this.events[weekKey]) {
       this.events[weekKey] = {
         sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -742,9 +770,10 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
         prep: []
       };
     }
+    // Update the week's grocery list with the merged result.
     this.events[weekKey]['grocery'] = formattedGroceryList;
   
-    // Save the updated pantry (with updated pantry, freezer, and spice quantities).
+    // ------------------ Update Pantry Data in the Backend ------------------
     const updatedPantryItems = pantryData!.item_list.pantry.filter(item => (item.unit ?? 0) > 0);
     const pantryPayload = {
       user_id: this.currentUser.id,
@@ -763,11 +792,13 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       console.error('Error updating pantry:', error);
     }
   
+    // ------------------ Save the Updated Calendar ------------------
     if (!this.currentUser || !this.currentUser.id) {
       console.error('User details not loaded. Cannot save calendar.');
       return;
     }
     const startDateString = this.formatDateLocal(this.selectedPlan);
+    // Use the updated events data for this week.
     const weekData = this.events[weekKey] || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -779,8 +810,19 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       grocery: [],
       prep: []
     };
+  
+    // Build userIds from currentUser and shared_plans.
+    let userIds: number[] = [this.currentUser.id];
+    if (this.currentUser.shared_plans && Array.isArray(this.currentUser.shared_plans)) {
+      this.currentUser.shared_plans.forEach((sharedId: number) => {
+        if (!userIds.includes(sharedId)) {
+          userIds.push(sharedId);
+        }
+      });
+    }
+  
     const payload = {
-      user_ids: [this.currentUser.id],
+      user_ids: userIds,
       week: {
         sunday: weekData['sunday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
         monday: weekData['monday'] || { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -799,7 +841,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
-  }
+  }  
   
   // -------------------- View Grocery List --------------------
 
@@ -842,13 +884,18 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   // -------------------- Save & Load Calendar --------------------
 
   saveCalendar() {
-    if (!this.currentUser || !this.currentUser.id) {
+    // Reload currentUser from session storage to ensure we have the latest shared_plans
+    const storedUser = sessionStorage.getItem('currentUser');
+    if (storedUser) {
+      this.currentUser = JSON.parse(storedUser);
+    } else {
       console.error('User details not loaded. Cannot save calendar.');
       return;
     }
+  
     const weekKey = this.formatDateLocal(this.selectedPlan);
-    console.log("Week Key:");
-    console.log(weekKey);
+    console.log("Week Key:", weekKey);
+  
     const calendarData = this.events[weekKey] || {
       sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
       monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -861,11 +908,8 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       prep: []
     };
   
-    const startDateString = this.selectedPlan.toISOString().split('T')[0];
-    // Begin with just the current user id.
+    // Create the user IDs array by always including the currentUser ID and merging shared_plans
     let userIds: number[] = [this.currentUser.id];
-  
-    // Merge in the sending user's shared_plans ids, if they exist.
     if (this.currentUser.shared_plans && Array.isArray(this.currentUser.shared_plans)) {
       this.currentUser.shared_plans.forEach((sharedId: number) => {
         if (!userIds.includes(sharedId)) {
@@ -873,6 +917,8 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
         }
       });
     }
+  
+    const startDateString = this.selectedPlan.toISOString().split('T')[0];
   
     // Build the payload for saving the calendar.
     const payload = {
@@ -1147,16 +1193,19 @@ private parseIngredient(ingredientStr: string): { unit: number, measurement: str
   }
 
   async showGroceryConversionPopup(
-    ingredientName: string,
+    recipeIngredientName: string,
     recipeUnit: string,
     pantryMeasurement: string,
     availablePantryQuantity: number,
-    requiredQuantity: number
+    requiredQuantity: number,
+    pantryItemName?: string
   ): Promise<{ pantryDeduction: number, groceryPurchase: number }> {
     return new Promise(async (resolve, reject) => {
       const alert = await this.alertController.create({
         header: 'Grocery Conversion',
-        message: `The recipe calls for ${requiredQuantity} ${recipeUnit} of ${ingredientName}, but you have ${availablePantryQuantity} ${pantryMeasurement}. How much would you like to use?`,
+        message: `The recipe calls for ${requiredQuantity} ${recipeUnit} ${recipeIngredientName}, 
+  but you have ${availablePantryQuantity} ${pantryMeasurement} ${pantryItemName ? pantryItemName : 'the ingredient'} in your pantry.
+  How much would you like to use?`,
         inputs: [
           {
             name: 'pantryDeduction',
@@ -1193,7 +1242,5 @@ private parseIngredient(ingredientStr: string): { unit: number, measurement: str
       await alert.present();
     });
   }
-  
-  
   
 }
