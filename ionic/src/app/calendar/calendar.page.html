@@ -207,12 +207,24 @@
           </ng-container>
           
           <ng-container *ngIf="showShoppingList">
-            <ul>
-              <li *ngFor="let ingredient of groceryListDisplay">
-                {{ ingredient }}
-              </li>
-            </ul>
-            <ion-button (click)="showShoppingList = false">Close</ion-button>
+            <div *ngIf="editGroceryMode; else groceryView">
+              <ion-textarea
+                [(ngModel)]="editedGroceryText"
+                auto-grow="true"
+                placeholder="Edit your grocery list (one item per line)">
+              </ion-textarea>
+              <ion-button color="success" (click)="saveEditedGroceryList()">Save</ion-button>
+              <ion-button color="medium" (click)="editGroceryMode = false">Cancel</ion-button>
+            </div>
+            <ng-template #groceryView>
+              <ul>
+                <li *ngFor="let ingredient of groceryListDisplay">
+                  {{ ingredient }}
+                </li>
+              </ul>
+              <ion-button (click)="editGroceryMode = true">Edit</ion-button>
+              <ion-button (click)="showShoppingList = false">Close</ion-button>
+            </ng-template>
           </ng-container>
           <ng-container *ngIf="!showPrepList && !showShoppingList">
             <div *ngIf="hoveredRecipe; else recipeList">
