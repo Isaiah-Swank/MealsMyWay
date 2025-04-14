@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { PantryService, PantryPayload, PantryItem } from '../services/pantry.service';
 import { UserService } from '../services/user.service';
 import { AlertController } from '@ionic/angular';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-pantry',
@@ -22,7 +23,8 @@ export class PantryPage implements OnInit {
   constructor(
     private pantryService: PantryService,
     private userService: UserService,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -347,6 +349,43 @@ export class PantryPage implements OnInit {
 
     await this.pantryService.updatePantry(payload).toPromise();
     console.log(`[SPICE] SUCCESS - Spice rack updated for user ID=${this.userId}`);
+  }
+
+  /**
+   * Increment portion count for a spice item.
+   */
+  async incrementSpiceItem(index: number) {
+    if (index < 0 || index >= this.spiceItems.length) return;
+    this.spiceItems[index].quantity++;
+    console.log(`[SPICE] Incremented to ${this.spiceItems[index].quantity}`);
+    await this.updateSpice();
+  }
+
+  /**
+   * Decrement portion count for a spice item (if above 0).
+   */
+  async decrementSpiceItem(index: number) {
+    if (index < 0 || index >= this.spiceItems.length) return;
+
+    if(this.spiceItems[index].quantity > 0) {
+       this.lowSpiceAmountNotif(this.spiceItems[index].name, this.spiceItems[index].quantity);
+    }
+
+    if (this.spiceItems[index].quantity > 0) {
+      this.spiceItems[index].quantity--;
+      console.log(`[SPICE] Decremented to ${this.spiceItems[index].quantity}`);
+      await this.updateSpice();
+    }
+  }
+
+  async lowSpiceAmountNotif(itemName: string, quantity: number) {
+    const toast = await this.toastController.create({
+      message: `Warning: ${itemName} is low on stock (${quantity}).`,
+      duration: 3000,
+      position: 'top',
+      color: 'warning'
+    });
+    toast.present();
   }
 
   /**
