@@ -87,6 +87,10 @@
       <ul>
         <li *ngFor="let item of spiceItems; let i = index">
           {{ item.name }}
+          <span class="item-controls" *ngIf="!freezerEditMode">
+            <span class="plus" (click)="incrementSpiceItem(i)">+</span>
+            <span class="minus" (click)="decrementSpiceItem(i)">-</span>
+          </span>
           <span class="delete-icon" *ngIf="spiceEditMode" (click)="deleteSpiceItem(i)">✖</span>
         </li>
         <li class="new-item" (click)="openAddSpiceItemPrompt()">New Item</li>
