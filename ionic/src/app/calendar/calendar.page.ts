@@ -10,6 +10,8 @@ import { environment } from '../../environments/environment';
 import { marked } from 'marked';
 import { PopoverController } from '@ionic/angular';
 import { DatePopoverComponent } from '../date-popover/date-popover.component';
+import { ToastController } from '@ionic/angular';
+import { LoadingController } from '@ionic/angular';
 
 
 @Component({
@@ -68,6 +70,8 @@ export class Tab2Page implements OnInit {
 
   // -------------------- Constructor & Dependency Injection --------------------
   constructor(
+    private loadingController: LoadingController,
+    private toastController: ToastController,
     private popoverController: PopoverController,
     private recipeService: RecipeService,
     private alertController: AlertController,
@@ -163,46 +167,46 @@ export class Tab2Page implements OnInit {
             handler: () => {
               // Add the shared user to the current calendar
               this.addUserToCalendar(user);
-              // Immediately save the calendar so that it is created for the receiving user
-              this.saveCalendar();
+              // Save the calendar without showing the saved toast
+              this.saveCalendar(false);
+              // Display toast message for individual calendar share
+              this.presentToast(`Calendar shared successfully with ${user.username} (only this calendar).`);
             }
           },
           {
             text: 'All Calendars',
             handler: () => {
-              // Add the user to the current calendar first
               this.addUserToCalendar(user);
-              // Update currentUser.shared_plans locally (initialize if necessary)
               if (!this.currentUser.shared_plans) {
                 this.currentUser.shared_plans = [];
               }
               if (!this.currentUser.shared_plans.includes(user.id)) {
                 this.currentUser.shared_plans.push(user.id);
-                // Save the updated currentUser locally
                 sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                // Update the user's shared_plans on the backend
                 this.userService.updateSharedPlans(this.currentUser.id, this.currentUser.shared_plans)
                   .subscribe(response => {
-                    console.log('Shared plans updated successfully on backend:', response);
+                    console.log('Shared plans updated on backend:', response);
                   }, error => {
-                    console.error('Error updating shared plans on backend:', error);
+                    console.error('Error updating shared plans:', error);
                   });
               }
-              // Update all calendars with shared users using the new backend endpoint.
               this.calendarService.updateSenderCalendars(this.currentUser.id)
                 .subscribe(response => {
                   console.log('Calendars updated with shared users:', response);
                 }, error => {
                   console.error('Error updating calendars:', error);
                 });
-              // Immediately save the calendar so that it is created for the receiving user
-              this.saveCalendar();
+              // Save the calendar without showing the saved toast
+              this.saveCalendar(false);
+              // Display toast message for sharing all calendars
+              this.presentToast(`All calendars shared successfully with ${user.username}.`);
             }
           }
         ]
       });
       await alert.present();
-    }
+    }    
+    
     
 
   // Adds the specified user to the calendar's shared user list.
@@ -467,16 +471,16 @@ getStartOfWeek(date: Date): Date {
 
   // -------------------- Prep List Generation --------------------
 
-  generatePrepList() {
+  async generatePrepList() {
     const weekKey = this.formatDateLocal(this.selectedPlan);
     const weekEvents = this.events[weekKey] || {};
     const prepExists = weekEvents['prep'] && weekEvents['prep'].toString().trim() !== '';
-
+  
     if (prepExists && !this.calendarChanged) {
       alert("No changes to the calendar detected. Prep list is up to date.");
       return;
     }
-
+  
     let prepInstructions: string[] = [];
     // Loop through each day (excluding grocery & prep) and each category.
     for (const day in weekEvents) {
@@ -491,28 +495,38 @@ getStartOfWeek(date: Date): Date {
         }
       }
     }
-
+  
     if (prepInstructions.length === 0) {
       alert("No recipes with instructions found for the selected week.");
       return;
     }
-
+  
     const requestBody = {
       prompt: `Generate a combined prep list for the following recipes. 
-Combine overlapping ingredients (e.g., chicken, onions) into a single step. 
-Format the output as a numbered list with clear, concise instructions. 
-Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and specify quantities for each recipe:\n\n${prepInstructions.join('\n\n')}`,
+  Combine overlapping ingredients (e.g., chicken, onions) into a single step. 
+  Format the output as a numbered list with clear, concise instructions. 
+  Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and specify quantities for each recipe:\n\n${prepInstructions.join('\n\n')}`,
       max_tokens: 8192,
       temperature: 0.7
     };
-
+  
+    // Show a loading spinner with a message
+    const loading = await this.loadingController.create({
+      message: 'Generating prep list... please wait',
+      spinner: 'crescent'
+    });
+    await loading.present();
+  
     console.log("Sending request to backend:", requestBody);
-
     this.http.post(`${environment.apiUrl}/api/deepseek`, requestBody).subscribe(
-      (response: any) => {
+      async (response: any) => {
+        // Dismiss the spinner once response is received
+        await loading.dismiss();
+  
         const prepListMarkdown = response.choices[0].message.content;
         console.log("DeepSeek response:", prepListMarkdown);
         sessionStorage.setItem('prepList', prepListMarkdown);
+        
         if (!this.events[weekKey]) {
           this.events[weekKey] = {
             sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
@@ -528,15 +542,19 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
         }
         this.events[weekKey]['prep'] = prepListMarkdown;
         this.calendarChanged = false;
-        this.saveCalendar();
-        alert("Prep list generated successfully! Check console.");
+        this.saveCalendar(false);
+  
+        // Show a toast message indicating success (using your presentToast method)
+        this.presentToast('Prep list generated successfully! It is now ready.');
       },
-      (error) => {
+      async (error) => {
+        await loading.dismiss();
         console.error("Error generating prep list:", error);
-        alert("Failed to generate prep list.");
+        this.presentToast("Failed to generate prep list. Please try again.");
       }
     );
   }
+  
 
   async viewPrepList() {
     let prepListMarkdown: string = sessionStorage.getItem('prepList') || "";
@@ -605,6 +623,9 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     const weekKey = this.formatDateLocal(this.selectedPlan);
     const weekEvents = this.currentWeekEvents;
   
+    // NEW: Array to track freezer items used
+    let freezerUsed: string[] = [];
+  
     // Instead of clearing previous aggregated grocery data, ensure it exists.
     if (!this.groceryListRaw) {
       this.groceryListRaw = {};
@@ -638,6 +659,10 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
               );
               if (freezerMatch) {
                 console.log(`Skipping meal "${meal.title}" as it is available in the freezer.`);
+                // NEW: Record freezer item used if not already tracked.
+                if (!freezerUsed.includes(freezerMatch.name)) {
+                  freezerUsed.push(freezerMatch.name);
+                }
                 // Decrement freezer quantity by one.
                 freezerMatch.quantity = Math.max((freezerMatch.quantity ?? 0) - 1, 0);
                 continue; // Skip processing this meal.
@@ -866,7 +891,13 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
+  
+    // NEW: After the grocery list is generated, display a toast if any freezer items were used.
+    if (freezerUsed.length > 0) {
+      this.presentToast(`Used from freezer: ${freezerUsed.join(', ')}`);
+    }
   }
+  
   
   
   // -------------------- View Grocery List --------------------
@@ -909,7 +940,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
 
   // -------------------- Save & Load Calendar --------------------
 
-  saveCalendar() {
+  saveCalendar(showToast: boolean = true) {
     // Reload currentUser from session storage to ensure we have the latest shared_plans
     const storedUser = sessionStorage.getItem('currentUser');
     if (storedUser) {
@@ -934,7 +965,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       prep: []
     };
   
-    // Create the user IDs array by always including the currentUser ID and merging shared_plans
+    // Build user IDs array
     let userIds: number[] = [this.currentUser.id];
     if (this.currentUser.shared_plans && Array.isArray(this.currentUser.shared_plans)) {
       this.currentUser.shared_plans.forEach((sharedId: number) => {
@@ -946,7 +977,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   
     const startDateString = this.selectedPlan.toISOString().split('T')[0];
   
-    // Build the payload for saving the calendar.
+    // Construct payload for saving
     const payload = {
       user_ids: userIds,
       week: {
@@ -963,14 +994,22 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       start_date: startDateString
     };
   
-    // Save the calendar data via the CalendarService.
     this.calendarService.saveCalendar(payload).subscribe(
-      response => console.log('Calendar saved successfully:', response),
-      error => console.error('Error saving calendar:', error)
+      response => {
+        console.log('Calendar saved successfully:', response);
+        // Only show the calendar saved toast if showToast is true.
+        if (showToast) {
+          this.presentToast('Calendar saved successfully!');
+        }
+      },
+      error => {
+        console.error('Error saving calendar:', error);
+        if (showToast) {
+          this.presentToast('Error saving calendar. Please try again.');
+        }
+      }
     );
   }
-  
-  
 
   loadCalendar() {
     if (!this.currentUser || !this.currentUser.id) {
@@ -1267,6 +1306,16 @@ private parseIngredient(ingredientStr: string): { unit: number, measurement: str
       });
       await alert.present();
     });
+  }
+
+  async presentToast(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2000,
+      position: 'middle',
+      cssClass: 'my-custom-toast' // Apply your custom CSS class here
+    });
+    toast.present();
   }
   
 }
