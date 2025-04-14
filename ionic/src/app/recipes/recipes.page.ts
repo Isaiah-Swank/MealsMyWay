@@ -132,7 +132,9 @@ export class RecipesPage implements OnInit {
       (recipes) => {
         this.recipeService.setRecipes(recipes);
         // Ensure every recipe has a tag field defined (empty string if not provided)
-        this.recipes = recipes.map(recipe => ({
+        this.recipes = recipes
+          .filter(recipe => recipe.pantry === false)
+          .map(recipe => ({
           ...recipe,
           tag: recipe.tag || ''
         }));
