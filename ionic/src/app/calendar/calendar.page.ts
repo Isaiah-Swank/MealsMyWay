@@ -30,7 +30,7 @@ export class Tab2Page implements OnInit {
   recipes: any[] = [];           // Available recipes
   selectedMeal: any = null;      // Recipe to add to calendar
   selectedDay: string = '';      // Day to add the meal (e.g., "monday")
-  selectedCategory: string = ''; // NEW: Category (e.g., 'kidsLunch')
+  selectedCategories: string[] = []; // NEW: Category (e.g., 'kidsLunch')
 
   // List of categories for meal selection and display
   categoryList: string[] = ['kidsLunch', 'adultsLunch', 'familyDinner'];
@@ -272,17 +272,10 @@ getStartOfWeek(date: Date): Date {
 
   // Loads recipes from navigation state or session storage.
   loadRecipes() {
-    const nav = this.router.getCurrentNavigation();
-    let selectedRecipes = [];
-    if (nav && nav.extras && nav.extras.state && nav.extras.state['recipes']) {
-      selectedRecipes = nav.extras.state['recipes'];
-      sessionStorage.setItem('selectedRecipes', JSON.stringify(selectedRecipes));
-    } else {
-      selectedRecipes = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
-    }
-    this.recipes = selectedRecipes;
+    this.recipes = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
     console.log('Updated recipes in Calendar:', this.recipes);
   }
+  
 
   // Returns the calendar events for the selected week.
   get currentWeekEvents() {
@@ -342,13 +335,15 @@ getStartOfWeek(date: Date): Date {
 
   // Called when a user adds a meal. Ensures a meal, day, and category are selected.
   addMeal() {
-    if (!this.selectedMeal || !this.selectedDay || !this.selectedCategory) {
-      alert('Please select a meal, day, and category.');
+    // Check that a meal is selected, a day is selected, and at least one category is chosen.
+    if (!this.selectedMeal || !this.selectedDay || !this.selectedCategories || this.selectedCategories.length === 0) {
+      alert('Please select a meal, day, and at least one category.');
       return;
     }
+  
     // If API details are missing, fetch them first.
     if ((!this.selectedMeal.ingredients || this.selectedMeal.ingredients.length === 0) &&
-         this.selectedMeal.api_id && !this.selectedMeal.instructions) {
+        this.selectedMeal.api_id && !this.selectedMeal.instructions) {
       this.recipeService.getRecipeDetailsFromApi(this.selectedMeal.api_id).subscribe(
         response => {
           const mealData = (response as any).meals[0];
@@ -375,6 +370,7 @@ getStartOfWeek(date: Date): Date {
       this.pushMeal();
     }
   }
+  
 
   // Clones the selected meal and adds it under the specified day and category.
   pushMeal() {
@@ -392,15 +388,27 @@ getStartOfWeek(date: Date): Date {
         prep: []
       };
     }
+    
+    // Clone the selected meal once.
     const mealClone = JSON.parse(JSON.stringify(this.selectedMeal));
     mealClone.processedForGrocery = false;
-    this.events[weekKey][this.selectedDay][this.selectedCategory].push(mealClone);
+    
+    // Loop through each selected category and push the meal clone.
+    this.selectedCategories.forEach((category: string) => {
+      // Make sure that the day has an array for the current category.
+      if (!this.events[weekKey][this.selectedDay][category]) {
+        this.events[weekKey][this.selectedDay][category] = [];
+      }
+      this.events[weekKey][this.selectedDay][category].push(mealClone);
+    });
+  
     this.calendarChanged = true;
     // Clear selections after adding.
     this.selectedMeal = null;
     this.selectedDay = '';
-    this.selectedCategory = '';
+    this.selectedCategories = [];
   }
+  
 
   // When a recipe is clicked, set it as hovered for details display.
   onRecipeClick(recipe: any) {

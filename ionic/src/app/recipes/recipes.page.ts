@@ -320,16 +320,26 @@ export class RecipesPage implements OnInit {
    * Stores selected recipes in session storage and navigates to the calendar view.
    */
   addToCalendar() {
-    console.log("Checked recipes before navigating:", this.selectedRecipes);
-
-    if (this.selectedRecipes.length === 0) {
-      alert("No recipes selected! Please select recipes first.");
-      return;
-    }
-
-    sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipes));
-    this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipes } });
+    // Retrieve the combined list from session storage (or start with an empty array)
+    const currentRecipes: any[] = JSON.parse(sessionStorage.getItem('selectedRecipes') || '[]');
+  
+    // Loop through the currently selected recipes from this page,
+    // and add them to the combined list if they aren’t already present.
+    this.selectedRecipes.forEach((recipe: any) => {
+      if (!currentRecipes.some((r: any) => r.id === recipe.id)) {
+        currentRecipes.push(recipe);
+      }
+    });
+  
+    console.log("Combined recipes to add to calendar:", currentRecipes);
+  
+    // Save the merged recipe list to session storage
+    sessionStorage.setItem('selectedRecipes', JSON.stringify(currentRecipes));
+  
+    // Navigate to the calendar page, passing the combined list.
+    this.router.navigate(['/tabs/calendar'], { state: { recipes: currentRecipes } });
   }
+  
 
   /**
    * deleteRecipe
