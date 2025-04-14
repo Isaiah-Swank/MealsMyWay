@@ -443,6 +443,28 @@ getStartOfWeek(date: Date): Date {
     await alert.present();
   }
 
+  async confirmRemoveRecipe(recipe: any, index: number, ev: Event) {
+    ev.stopPropagation(); // Prevent propagation to the recipe click handler
+    const alert = await this.alertController.create({
+      header: 'Confirm Removal',
+      message: `Are you sure you want to remove "${recipe.title}" from your recipe list?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          handler: () => {
+            // Remove the recipe from the recipes array
+            this.recipes.splice(index, 1);
+            // Optionally update the session storage if recipes are persisted there
+            sessionStorage.setItem('selectedRecipes', JSON.stringify(this.recipes));
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+  
+
   // -------------------- Prep List Generation --------------------
 
   generatePrepList() {
@@ -551,7 +573,7 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
   async generateShoppingList() {
     const alert = await this.alertController.create({
       header: 'Confirm',
-      message: 'Are you sure you want to create your shopping list? Only new ingredients will remove items from the pantry.',
+      message: 'Are you sure you want to create your shopping list? This will remove ingredients from your pantry if there is a match. If you are generating a new list over an old one, just the new recipe ingredeints will be removed from the pantry.',
       buttons: [
         {
           text: 'Wait a minute',
@@ -753,6 +775,9 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
     // Since we merged new items into the persistent `groceryListRaw`, we now generate the list from it.
     this.shoppingLists[weekKey] = formattedGroceryList;
     this.shoppingList = formattedGroceryList;
+    // NEW: Immediately update display variables to show the new list.
+    this.groceryListDisplay = formattedGroceryList;
+    this.editedGroceryText = formattedGroceryList.join('\n');
     console.log('Updated Grocery List for', weekKey, ':', formattedGroceryList);
     this.showShoppingList = true;
   
@@ -841,7 +866,8 @@ Group ingredients by type (e.g., proteins, vegetables, dry ingredients) and spec
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
-  }  
+  }
+  
   
   // -------------------- View Grocery List --------------------
 

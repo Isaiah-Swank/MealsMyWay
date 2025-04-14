@@ -245,8 +245,12 @@
             <ng-template #recipeList>
               <div *ngIf="recipes && recipes.length > 0; else noRecipes">
                 <ul class="all-recipes-list">
-                  <li *ngFor="let recipe of recipes" (click)="onRecipeClick(recipe)">
-                    {{ recipe.title }}
+                  <li *ngFor="let recipe of recipes; let i = index">
+                    <span (click)="onRecipeClick(recipe)">{{ recipe.title }}</span>
+                    <ion-button class="remove-button" fill="clear" color="danger" size="small"
+                                (click)="confirmRemoveRecipe(recipe, i, $event)">
+                      ✖
+                    </ion-button>
                   </li>
                 </ul>
               </div>
@@ -254,6 +258,7 @@
                 <p>No recipes are selected.</p>
               </ng-template>
             </ng-template>
+            
           </ng-container>
         </div>
       </div>

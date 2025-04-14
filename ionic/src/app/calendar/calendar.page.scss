@@ -151,6 +151,53 @@ ion-button {
   justify-content: space-evenly;
 }
 
+.all-recipes-list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  width: 100%; // Ensures full width usage
+}
+
+.all-recipes-list li {
+  /* Make each list item occupy the full width, if desired */
+  width: 100%;
+
+  /* Add some padding for comfortable spacing */
+  padding: 8px 12px;
+
+  /* Round the corners to match the container, e.g., 5px or 8px */
+  border-radius: 8px;
+
+  /* Use a transition so hover effects are smooth */
+  transition: transform 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  /* You can also adjust margin if needed to space items out vertically */
+  margin-bottom: 8px;
+}
+
+.all-recipes-list li:hover {
+  /* Slight scale on hover */
+  transform: scale(1.05);
+  /* Light background highlight; tweak to your preference */
+  background-color: rgba(118, 186, 143, 0.2);
+
+  /* Keep the corners curved on hover, too */
+  border-radius: 8px;
+}
+
+/* Show the remove "X" button only on hover */
+.all-recipes-list li ion-button.remove-button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.all-recipes-list li:hover ion-button.remove-button {
+  opacity: 1;
+}
+
 .recipe-details h3,
 .add-meal-form h3 {
   text-align: center;
