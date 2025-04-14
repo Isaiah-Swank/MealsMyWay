@@ -72,7 +72,7 @@ export class PantryPage implements OnInit {
         {
           name: 'measurement',
           type: 'text',
-          placeholder: 'Measurement label (e.g., "oz", or leave blank)'
+          placeholder: '(e.g., "oz", or leave blank)'
         },
         {
           name: 'unit',
