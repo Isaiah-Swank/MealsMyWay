@@ -74,7 +74,7 @@ export class PantryPage implements OnInit {
         {
           name: 'measurement',
           type: 'text',
-          placeholder: 'Measurement label (e.g., "oz", or leave blank)'
+          placeholder: '(e.g., "oz", or leave blank)'
         },
         {
           name: 'unit',
@@ -367,7 +367,7 @@ export class PantryPage implements OnInit {
   async decrementSpiceItem(index: number) {
     if (index < 0 || index >= this.spiceItems.length) return;
 
-    if(this.spiceItems[index].quantity > 0) {
+    if(this.spiceItems[index].quantity <= 20) {
        this.lowSpiceAmountNotif(this.spiceItems[index].name, this.spiceItems[index].quantity);
     }
 

@@ -184,6 +184,16 @@ ion-content {
   transform: scale(1.2);
 }
 
+/* Add hover effects for pantry, freezer, and spice list items */
+.pantry li:hover,
+.freezer li:hover,
+.spice li:hover {
+  transform: scale(1.05);          /* Enlarge slightly */
+  background-color: rgba(118, 186, 143, 0.2);  /* Subtle highlight */
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+
 
 /* ===============================
    Mobile View Adjustments
