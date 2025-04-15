@@ -86,7 +86,7 @@
       <h2>SPICE RACK</h2>
       <ul>
         <li *ngFor="let item of spiceItems; let i = index">
-          {{ item.name }}
+          {{ item.name }} - {{ item.quantity }} Uses
           <span class="item-controls" *ngIf="!freezerEditMode">
             <span class="plus" (click)="incrementSpiceItem(i)">+</span>
             <span class="minus" (click)="decrementSpiceItem(i)">-</span>
