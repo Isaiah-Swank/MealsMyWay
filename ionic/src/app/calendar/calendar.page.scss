@@ -300,3 +300,13 @@ ion-button {
 
   }
 }
+
+
+@media (prefers-color-scheme: dark) {
+
+  
+  /* If you have other elements where you want to change the text color, include them here */
+  .recipe-details{
+    color: #000 !important;  /* Change text color to black for better readability in dark mode */
+  }
+}
