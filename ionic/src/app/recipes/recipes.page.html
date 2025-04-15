@@ -13,12 +13,6 @@
       <!-- INLINE CREATE RECIPE FORM -->
       <!-- This form is now always visible below the header instead of using a modal -->
       <form (ngSubmit)="submitRecipe()">
-        <ion-button 
-        expand="full" 
-        type="submit" 
-        [disabled]="!newRecipe.author || !newRecipe.title || !newRecipe.ingredients || !newRecipe.instructions">
-        Create Recipe
-      </ion-button>
         <ion-item>
           <ion-label position="stacked">Author</ion-label>
           <ion-input [(ngModel)]="newRecipe.author" name="author" required></ion-input>
@@ -40,6 +34,12 @@
           <ion-input [(ngModel)]="newRecipe.tag" name="tag"></ion-input>
         </ion-item>
         <!-- The Create Recipe button is disabled until all required fields are filled out -->
+        <ion-button 
+          expand="full" 
+          type="submit" 
+          [disabled]="!newRecipe.author || !newRecipe.title || !newRecipe.ingredients || !newRecipe.instructions">
+          Create Recipe
+        </ion-button>
       </form>
       
       <!-- DISPLAY SELECTED RECIPES (if any) -->
@@ -111,7 +111,7 @@
         </ion-item>
       </ion-list>
       <ion-button expand="full" (click)="addToCalendar()" [disabled]="selectedRecipes.length === 0">
-        Add Selected to Calendar
+        Add to Recipe List
       </ion-button>
     </div>
   </div>
