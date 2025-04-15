@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { PantryService, PantryPayload, PantryItem } from '../services/pantry.service';
 import { UserService } from '../services/user.service';
 import { AlertController } from '@ionic/angular';
-import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-pantry',
@@ -23,8 +22,7 @@ export class PantryPage implements OnInit {
   constructor(
     private pantryService: PantryService,
     private userService: UserService,
-    private alertCtrl: AlertController,
-    private toastController: ToastController
+    private alertCtrl: AlertController
   ) {}
 
   ngOnInit() {
@@ -367,25 +365,11 @@ export class PantryPage implements OnInit {
   async decrementSpiceItem(index: number) {
     if (index < 0 || index >= this.spiceItems.length) return;
 
-    if(this.spiceItems[index].quantity <= 20) {
-       this.lowSpiceAmountNotif(this.spiceItems[index].name, this.spiceItems[index].quantity);
-    }
-
     if (this.spiceItems[index].quantity > 0) {
       this.spiceItems[index].quantity--;
       console.log(`[SPICE] Decremented to ${this.spiceItems[index].quantity}`);
       await this.updateSpice();
     }
-  }
-
-  async lowSpiceAmountNotif(itemName: string, quantity: number) {
-    const toast = await this.toastController.create({
-      message: `Warning: ${itemName} is low on stock (${quantity}).`,
-      duration: 3000,
-      position: 'top',
-      color: 'warning'
-    });
-    toast.present();
   }
 
   /**

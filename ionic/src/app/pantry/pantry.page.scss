@@ -324,13 +324,15 @@ ion-content {
 }
 
 /* Style the container for plus and minus controls */
-.freezer ul li .item-controls {
+.freezer ul li .item-controls,
+.spice ul li .item-controls {
   display: flex;
   gap: 0.5rem;
 }
 
 /* Style the plus and minus controls */
-.freezer ul li .item-controls span {
+.freezer ul li .item-controls span,
+.spice ul li .item-controls span {
   background-color: #f6f6e9;
   border-radius: 4px;
   padding: 2px 6px;
@@ -340,7 +342,8 @@ ion-content {
 }
 
 /* Hover effect for the plus and minus controls */
-.freezer ul li .item-controls span:hover {
+.freezer ul li .item-controls span:hover,
+.spice ul li .item-controls span:hover {
   background-color: #77ba8f;
 }
 
