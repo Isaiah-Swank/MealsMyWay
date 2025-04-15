@@ -1,16 +1,31 @@
+<!--
+  Recipes Page Template
+  This page allows users to create, view, edit, delete, and select recipes.
+  It also lets users add selected recipes to a calendar.
+-->
+
 <ion-header [translucent]="true">
+  <!-- Toolbar containing the page title -->
   <ion-toolbar>
     <ion-title>Recipes</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Main container wrapping both left and right sections -->
   <div class="book-container">
-    <!-- Left Container: Create Recipe Form and Selected Recipes -->
+    
+    <!-- =====================================================
+         LEFT CONTAINER: Recipe Creation & Selected Recipes
+         -----------------------------------------------------
+         Contains the recipe creation form (which is collapsible)
+         and the list of recipes that have been selected.
+         ===================================================== -->
     <div class="my-recipes-container">
       <h1>Recipe Creation and Information</h1>
 
-      <!-- Button to toggle the create recipe form -->
+      <!-- Button to toggle the create recipe form.
+           Its label changes based on whether the form is visible. -->
       <ion-button expand="full" (click)="toggleCreateRecipe()">
         {{ showCreateRecipe ? 'Hide Recipe Form' : 'Show Recipe Form' }}
       </ion-button>
@@ -18,26 +33,32 @@
       <!-- Collapsible Create Recipe Form -->
       <div *ngIf="showCreateRecipe">
         <form (ngSubmit)="submitRecipe()">
+          <!-- Author Field -->
           <ion-item>
             <ion-label position="stacked">Author</ion-label>
             <ion-input [(ngModel)]="newRecipe.author" name="author" required></ion-input>
           </ion-item>
+          <!-- Title Field -->
           <ion-item>
             <ion-label position="stacked">Title</ion-label>
             <ion-input [(ngModel)]="newRecipe.title" name="title" required></ion-input>
           </ion-item>
+          <!-- Ingredients Field -->
           <ion-item>
             <ion-label position="stacked">Ingredients</ion-label>
             <ion-textarea [(ngModel)]="newRecipe.ingredients" name="ingredients" required></ion-textarea>
           </ion-item>
+          <!-- Instructions Field -->
           <ion-item>
             <ion-label position="stacked">Instructions</ion-label>
             <ion-textarea [(ngModel)]="newRecipe.instructions" name="instructions" required></ion-textarea>
           </ion-item>
+          <!-- Tag Field (optional) -->
           <ion-item>
             <ion-label position="stacked">Tag</ion-label>
             <ion-input [(ngModel)]="newRecipe.tag" name="tag"></ion-input>
           </ion-item>
+          <!-- Submit Button for Creating a Recipe -->
           <ion-button
             expand="full"
             type="submit"
@@ -50,48 +71,69 @@
       <!-- Selected Recipes Section -->
       <ng-container *ngIf="selectedRecipesList.length > 0">
         <h2>Selected Recipes</h2>
+        <!-- Loop through each recipe in the selectedRecipesList -->
         <div *ngFor="let recipe of selectedRecipesList">
-          <!-- Recipe Title rendered as a clickable button for toggling details -->
+          <!-- Recipe title displayed as a clickable button that toggles the recipe details -->
           <ion-button expand="full" (click)="toggleRecipeDetails(recipe)">
             {{ recipe.title }}
+            <!-- Icon indicates collapse/expand state -->
             <ion-icon slot="end" *ngIf="!recipe.isExpanded" name="chevron-down-outline"></ion-icon>
             <ion-icon slot="end" *ngIf="recipe.isExpanded" name="chevron-up-outline"></ion-icon>
           </ion-button>
 
-          <!-- Collapsible Recipe Details -->
+          <!-- Collapsible Recipe Details for the selected recipe -->
           <div *ngIf="recipe.isExpanded" class="recipe-details">
             <p><strong>Author:</strong> {{ recipe.author }}</p>
             <p><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
             <p><strong>Instructions:</strong> {{ recipe.instructions }}</p>
+            <!-- Conditionally show Tag if available -->
             <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
+            <!-- Button to collapse the recipe details -->
             <ion-button fill="clear" (click)="toggleRecipeDetails(recipe)">Close</ion-button>
+            <!-- Edit Recipe Button -->
             <ion-button (click)="editRecipe(recipe)">Edit</ion-button>
+            <!-- Delete Recipe Button -->
             <ion-button (click)="deleteRecipe(recipe.id)">Delete</ion-button>
-            <!-- Use the removeSelectedRecipe method (or an alias method) to deselect -->
+            <!-- Deselect the recipe (removes it from the selected recipes list) -->
             <ion-button (click)="removeSelectedRecipe(recipe)">Deselect</ion-button>
           </div>
         </div>
 
-        <!-- Add to Calendar Button: Only visible if there are selected recipes -->
+        <!-- Button to add all selected recipes to the calendar.
+             Visible only if there are selected recipes. -->
         <ion-button expand="full"  (click)="addToCalendar()">
           Add Selected Recipes to Calendar
         </ion-button>
       </ng-container>
     </div>
 
-    <!-- Book Spine (Visual Separator) -->
+    <!-- =====================================================
+         BOOK SPINE: Visual Separator
+         -----------------------------------------------------
+         This element serves as a visual separator between
+         the left (recipe creation and selection) and right
+         (all recipes list) containers.
+         ===================================================== -->
     <div class="book-spine"></div>
 
-    <!-- Right Container: List of All Recipes (fetched from your database) with Checkboxes -->
+    <!-- =====================================================
+         RIGHT CONTAINER: List of All Recipes
+         -----------------------------------------------------
+         Displays all recipes fetched from the database.
+         Each recipe is accompanied by a checkbox for selection.
+         ===================================================== -->
     <div class="recipes-container">
       <h1>Choose Recipes</h1>
+      <!-- Search Bar for filtering recipes -->
       <ion-searchbar
         class="search-bar"
         placeholder="Search..."
         (ionInput)="filterRecipes($event)">
       </ion-searchbar>
+      <!-- List of recipes with checkboxes -->
       <ion-list class="recipe-list">
         <ion-item *ngFor="let recipe of filteredRecipes">
+          <!-- Checkbox indicates whether the recipe is selected -->
           <ion-checkbox
             slot="start"
             [checked]="isRecipeSelected(recipe)"
@@ -103,7 +145,12 @@
     </div>
   </div>
 
-  <!-- Edit Recipe Modal -->
+  <!-- =====================================================
+       EDIT RECIPE MODAL
+       -----------------------------------------------------
+       A modal window for editing an existing recipe.
+       It displays a form with pre-filled recipe data.
+       ===================================================== -->
   <ion-modal cssClass="light-green-modal" [isOpen]="isEditFormOpen" (didDismiss)="closeEditForm()">
     <ng-template>
       <ion-header>
@@ -116,22 +163,27 @@
       </ion-header>
       <ion-content>
         <form (ngSubmit)="updateRecipe()">
+          <!-- Title Field -->
           <ion-item>
             <ion-label position="stacked">Title</ion-label>
             <ion-input [(ngModel)]="editRecipeData.title" name="title" required></ion-input>
           </ion-item>
+          <!-- Ingredients Field -->
           <ion-item>
             <ion-label position="stacked">Ingredients</ion-label>
             <ion-textarea [(ngModel)]="editRecipeData.ingredients" name="ingredients" required></ion-textarea>
           </ion-item>
+          <!-- Instructions Field -->
           <ion-item>
             <ion-label position="stacked">Instructions</ion-label>
             <ion-textarea [(ngModel)]="editRecipeData.instructions" name="instructions" required></ion-textarea>
           </ion-item>
+          <!-- Tag Field (optional) -->
           <ion-item>
             <ion-label position="stacked">Tag</ion-label>
             <ion-input [(ngModel)]="editRecipeData.tag" name="tag"></ion-input>
           </ion-item>
+          <!-- Submit Button for updating the recipe -->
           <ion-button expand="full" type="submit">Update Recipe</ion-button>
         </form>
       </ion-content>
