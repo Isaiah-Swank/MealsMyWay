@@ -1,12 +1,27 @@
-/* signup.page.scss */
-/* Sign Up page styling consistent with Log In page styling */
+/* 
+  signup.page.scss
+  ---------------
+  Sign Up page styling that is consistent with the Log In page styling.
+*/
 
+/* 
+  Styling for the ion-title element on the sign-up page.
+  - Sets a font size of 32px.
+  - Centers the title using justify-self.
+  - Applies the dark green color (#246d48) to the text.
+*/
 ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
 }
 
+/* 
+  Main container for the sign-up page.
+  - Uses a flex layout to center its child content both vertically and horizontally.
+  - Ensures the container takes at least the full viewport height.
+  - Adds padding and sets a light greenish background.
+*/
 .signup-container {
   display: flex;
   justify-content: center;
@@ -15,6 +30,13 @@ ion-title {
   padding: 20px;
   background: #cbddd1;
 
+  /* 
+    Styles for the form inside the sign-up container.
+    - White background with generous padding.
+    - Rounded corners and a subtle box shadow for depth.
+    - The form occupies 100% width up to a maximum of 400px.
+    - Uses a vertical flex layout with a consistent gap between form elements.
+  */
   form {
     background-color: #fff;
     padding: 40px;
@@ -26,21 +48,40 @@ ion-title {
     flex-direction: column;
     gap: 20px;
 
+    /* 
+      Styles for ion-item elements within the form.
+      - Removes the default padding at the start.
+      - Sets the border color to a light grey (#ccc).
+    */
     ion-item {
       --padding-start: 0;
       --border-color: #ccc;
 
+      /* 
+        Styles for ion-label within each ion-item.
+        - Sets the text color to dark green and uses a small font size.
+      */
       ion-label {
         color: #246d48;
         font-size: 14px;
       }
 
+      /* 
+        Styles for ion-input within each ion-item.
+        - Adds horizontal padding on both the left and right sides.
+      */
       ion-input {
         --padding-start: 10px;
         --padding-end: 10px;
       }
     }
 
+    /* 
+      Styles for ion-button elements within the form.
+      - The button fills the available width, has a green background,
+        white text, a set font size, and slightly rounded corners.
+      - Background color changes on hover and when disabled.
+    */
     ion-button {
       width: 100%;
       background-color: #246d48;
@@ -48,26 +89,42 @@ ion-title {
       font-size: 16px;
       border-radius: 5px;
 
+      /* Hover state: Change background color to a lighter shade (#cbddd1). */
       &:hover {
         --background: #cbddd1;
       }
 
+      /* Disabled state: Set background to grey. */
       &[disabled] {
         --background: #ccc;
       }
     }
   }
 
-  
+  /* 
+    Styles for the "log-in-message" section.
+    - Centers the text and adds a top margin.
+    - Typically used to display a message with a call-to-action for users
+      who already have an account (or need to switch to login).
+  */
   .log-in-message {
     text-align: center;
     margin-top: 20px;
 
+    /* 
+      Paragraph styling within the log-in-message section.
+      - Adds a bottom margin and uses a smaller font size.
+    */
     p {
       margin-bottom: 10px;
       font-size: 14px;
     }
 
+    /* 
+      Styles for ion-button elements within the log-in-message.
+      - Uses a specific font size, white text on a green background with rounded corners.
+      - The background color changes on hover.
+    */
     ion-button {
       font-size: 16px;
       color: #ffffff;
@@ -81,7 +138,13 @@ ion-title {
   }
 }
 
-/* Optional: Additional submit button styling if needed */
+/* 
+  Optional: Additional styling for submit buttons.
+  This rule specifically targets ion-button elements with type="submit".
+  - Ensures the button fills the width.
+  - Uses a green background with white text and rounded corners.
+  - On hover, changes the background color to a lighter shade (#cbddd1).
+*/
 ion-button[type="submit"] {
   width: 100%;
   background-color: #246d48;
