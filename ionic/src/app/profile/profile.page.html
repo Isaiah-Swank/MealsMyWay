@@ -1,74 +1,106 @@
 <ion-header [translucent]="true">
+  <!-- Top header toolbar with page title "Profile" -->
   <ion-toolbar>
     <ion-title>Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Collapsible header shown when scrolling -->
   <ion-header collapse="condense">
     <ion-toolbar>
+      <!-- Large title for the condensed header -->
       <ion-title size="large">Profile</ion-title>
     </ion-toolbar>
   </ion-header>
 
+  <!-- Main container for the profile page content -->
   <div class="profile-container">
+    <!-- Display a welcome message with the user's username -->
     <h2>Welcome, {{ username }}!</h2>
     
+    <!-- Container for all the settings items -->
     <div class="settings-container">
-      <!-- Email Section -->
+      <!-- ================================
+           Email Section
+           --------------------------------
+           Toggling displays the user's email.
+           ================================ -->
       <div class="settings-item" (click)="toggleEmail()">
+        <!-- Icon image for email setting -->
         <img src="assets/images/email.png" alt="User Email" class="user-settings">
         <p>Email</p>
       </div>
+      <!-- Conditionally display the email detail when toggled on -->
       <div *ngIf="showEmail" class="setting-detail">
         <p>{{ userEmail }}</p>
       </div>
       
-      <!-- Password Section -->
+      <!-- ================================
+           Password Section
+           --------------------------------
+           Toggling displays password update form.
+           ================================ -->
       <div class="settings-item" (click)="togglePassword()">
+        <!-- Icon image for password setting -->
         <img src="assets/images/password.png" alt="User Password" class="user-settings">
         <p>Password</p>
       </div>
+      <!-- Conditionally display the password update form when toggled on -->
       <div *ngIf="showPassword" class="setting-detail">
+        <!-- Field for entering old password -->
         <ion-item>
           <ion-label position="floating">Old Password</ion-label>
           <ion-input type="password" [(ngModel)]="oldPassword"></ion-input>
         </ion-item>
+        <!-- Field for entering new password -->
         <ion-item>
           <ion-label position="floating">New Password</ion-label>
           <ion-input type="password" [(ngModel)]="newPassword"></ion-input>
         </ion-item>
+        <!-- Button to trigger password update -->
         <ion-button class="update-password-btn" (click)="updatePassword()">Update Password</ion-button>
       </div>
       
-      <!-- Privacy Section -->
+      <!-- ================================
+           Privacy Section
+           --------------------------------
+           Toggles the private/public profile setting.
+           ================================ -->
       <div class="settings-item" (click)="togglePrivacy()">
+        <!-- Icon image for privacy settings -->
         <img src="assets/images/privacy.png" alt="Privacy Settings" class="user-settings">
         <p>Privacy</p>
       </div>
+      <!-- Conditionally display the privacy setting detail when toggled on -->
       <div *ngIf="showPrivacy" class="setting-detail">
         <ion-item>
           <ion-label>Private Profile</ion-label>
+          <!-- Toggle to switch privacy setting -->
           <ion-toggle class="privacy-toggle" [(ngModel)]="privacy" (ionChange)="onPrivacyChange()"></ion-toggle>
         </ion-item>
       </div>
 
-      
-      <!-- Shared Plans Section -->
+      <!-- ================================
+           Shared Plans Section
+           --------------------------------
+           Toggling displays details of shared plans.
+           ================================ -->
       <div class="settings-item" (click)="toggleSharedPlans()">
+        <!-- Icon image for shared plans -->
         <img src="assets/images/share.png" alt="Shared Plans" class="user-settings">
         <p>Shared Plans</p>
       </div>
-
-      <!-- Conditional block that displays shared plans details when the icon is clicked -->
+      <!-- Conditionally display shared plans details when toggled on -->
       <div *ngIf="showSharedPlans" class="setting-detail">
-        <!-- Section for plans the current user is sharing with others -->
+        <!-- Section showing the plans that the current user is sharing with others -->
         <h3>You are sharing with:</h3>
         <ion-list *ngIf="mySharedPlans.length > 0; else noSharing">
           <ion-item *ngFor="let user of mySharedPlans">
             {{ user.username }}
           </ion-item>
         </ion-list>
+        <!-- Template displayed if no shared plans are found -->
         <ng-template #noSharing>
           <p>No shared plans yet.</p>
         </ng-template>
@@ -80,13 +112,19 @@
             You are sharing {{ user.username }}'s plans.
           </ion-item>
         </ion-list>
+        <!-- Template displayed if no plans are shared with the user -->
         <ng-template #notSharedWith>
           <p>No plans are shared with you.</p>
         </ng-template>
       </div>
       
-      <!-- Sign Out -->
+      <!-- ================================
+           Sign Out Section
+           --------------------------------
+           Clicking this item logs the user out.
+           ================================ -->
       <div class="settings-item" (click)="logout()">
+        <!-- Icon image for signing out -->
         <img src="assets/images/sign-out.png" alt="Sign Out" class="user-settings">
         <p>Sign Out</p>
       </div>

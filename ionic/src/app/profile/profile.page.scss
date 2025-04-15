@@ -1,19 +1,40 @@
+/* 
+  Set the background color for the ion-content element via a CSS variable.
+  This creates a light greenish background for the main content.
+*/
 ion-content {
   --background: #cbddd1;
 }
 
+/* 
+  Styles for the ion-title element.
+  - Sets a font size of 32px.
+  - Centers the title horizontally.
+  - Applies a dark green color (#246d48) to the text.
+*/
 ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
 }
 
+/* 
+  Profile container styling.
+  - Adds 20px padding inside the container.
+  - Sets the text color to dark green (#246d48) for all contained text.
+*/
 .profile-container {
   padding: 20px;
   color: #246d48;
 }
 
-/* Profile Settings Container */
+/* 
+  Profile Settings Container
+  - Displays its children in a vertical (column) layout.
+  - Aligns items to the start (left side).
+  - Adds a 10px gap between elements.
+  - Provides top and left margins to separate from other content.
+*/
 .settings-container {
   display: flex;
   flex-direction: column;
@@ -23,7 +44,13 @@ ion-title {
   margin-left: 20px;
 }
 
-/* Settings item container */
+/* 
+  Settings item container
+  - Displays each setting as a flex container aligned centrally.
+  - Adds a 10px gap between the icon and text.
+  - Sets the font size for better readability.
+  - Uses dark green (#246d48) for text color.
+*/
 .settings-item {
   display: flex;
   align-items: center;
@@ -32,13 +59,23 @@ ion-title {
   color: #246d48;
 }
 
-/* Size of the settings image */
+/* 
+  Size of the settings image
+  - Sets a fixed width and height of 75px for user settings images.
+*/
 .user-settings {
   width: 75px;
   height: 75px;
 }
 
-/* Settings link */
+/* 
+  Settings link styling
+  - Displays links as a horizontal flex row.
+  - Centers items vertically.
+  - Removes text decoration (no underline).
+  - Inherits parent color for consistency.
+  - Adds a 10px gap between items.
+*/
 .profile-nav-link {
   display: flex;
   flex-direction: row;
@@ -48,7 +85,12 @@ ion-title {
   gap: 10px;
 }
 
-/* Custom styles for the Update Password button */
+/* 
+  Custom styles for the Update Password button
+  - Forces specific background colors for various states (default, activated, hover, focused).
+  - Uses !important to override any conflicting styles.
+  - Sets the text color to white.
+*/
 ion-button.update-password-btn {
   --background: #246d48 !important;
   --background-activated: #1f5f40 !important;
@@ -57,7 +99,12 @@ ion-button.update-password-btn {
   --color: #fff !important;
 }
 
-/* Override Ion Toggle shadow DOM styles for privacy toggle */
+/* 
+  Override Ion Toggle shadow DOM styles for privacy toggle.
+  - For the off state, sets the background to dark green.
+  - For the on state, sets both the background and handle to a light green shade (#a8e6a3).
+  - Uses ::ng-deep to target elements within the Shadow DOM and !important to enforce the styles.
+*/
 :host ::ng-deep ion-toggle.privacy-toggle {
   /* Off state */
   --background: #246d48 !important;
@@ -66,7 +113,12 @@ ion-button.update-password-btn {
   --handle-background: #a8e6a3 !important;
 }
 
-/* Shared Users Section Styles */
+/* 
+  Shared Users Section Styles
+  - Sets a minimum height of 150px and full width.
+  - Adds 10px padding, a light gray border, and slight rounded corners.
+  - Uses a light brown background (#d2b48c) and dark green text, both enforced with !important.
+*/
 .shared-users-detail {
   min-height: 150px;
   width: 100%;
@@ -77,7 +129,10 @@ ion-button.update-password-btn {
   color: #246d48 !important; /* Dark green font */
 }
 
-/* Force all child elements to inherit dark green text */
+/* 
+  Force all child elements of .shared-users-detail to inherit dark green text.
+  This ensures consistent color styling across nested elements.
+*/
 .shared-users-detail * {
   color: #246d48 !important;
 }
