@@ -78,43 +78,48 @@ export class PantryPage implements OnInit {
       ingredientLine = `${unitValue} ${item.name}`;
     }
     
-    // Check the database for an existing recipe with the same name (case-insensitive)
+    // Check the database for an existing recipe (using your RecipeService).
     this.recipeService.getRecipes().subscribe(
       (recipes: any[]) => {
+        let newRecipe: any;
         const matchingRecipe = recipes.find(recipe => 
           recipe.title.toLowerCase() === item.name.toLowerCase()
         );
+        
         if (matchingRecipe) {
-          // If a matching recipe is found, use it instead of creating a new one.
           console.log('[PANTRY] Recipe already exists for item:', matchingRecipe);
-          const createdRecipe = { ...matchingRecipe, isExpanded: false };
-          this.selectedRecipesList.push(createdRecipe);
-          sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipesList));
-          this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipesList } });
+          // Use the matching recipe (add an extra property for display).
+          newRecipe = { ...matchingRecipe, isExpanded: false };
         } else {
-          // If no matching recipe is found, create a new recipe as usual.
-          const newRecipe = {
+          // If no match is found, create a new recipe.
+          newRecipe = {
             title: item.name,
             author: this.username || 'Unknown',
             ingredients: ingredientLine,
             instructions: 'eat and enjoy',
             tag: 'snacks',
-            pantry: true
+            pantry: true,
+            isExpanded: false
           };
           console.log('[PANTRY] Adding new recipe from pantry item:', newRecipe);
-          
+        }
+    
+        // If we need to create a new recipe in the database...
+        if (!matchingRecipe) {
           this.recipeService.addRecipe(newRecipe).subscribe(
             (response: any) => {
               console.log('[PANTRY] Successfully added recipe from pantry item.', response);
-              const createdRecipe = { ...newRecipe, id: response.id || undefined, isExpanded: false };
-              this.selectedRecipesList.push(createdRecipe);
-              sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipesList));
-              this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipesList } });
+              // Attach the returned id (if any) and then merge the recipe into our list.
+              newRecipe = { ...newRecipe, id: response.id || undefined };
+              this.mergeAndStoreRecipe(newRecipe);
             },
             (error) => {
               console.error('[PANTRY] Failed to add recipe:', error);
             }
           );
+        } else {
+          // Otherwise, if a matching recipe already exists, merge it immediately.
+          this.mergeAndStoreRecipe(newRecipe);
         }
       },
       (error) => {
@@ -122,6 +127,45 @@ export class PantryPage implements OnInit {
       }
     );
   }
+  
+  /**
+   * Helper method to merge the new recipe with what’s already in session storage.
+   */
+  mergeAndStoreRecipe(newRecipe: any) {
+    // Retrieve existing recipes from session storage.
+    let existingRecipes: any[] = [];
+    const storedRecipes = sessionStorage.getItem('selectedRecipes');
+    if (storedRecipes) {
+      try {
+        existingRecipes = JSON.parse(storedRecipes);
+      } catch (e) {
+        console.error('[PANTRY] Error parsing existing recipes from session storage:', e);
+      }
+    }
+    
+    // Check for duplicates (by title or id) before appending.
+    const duplicate = existingRecipes.some(
+      (recipe: any) =>
+        (recipe.id && recipe.id === newRecipe.id) ||
+        recipe.title.toLowerCase() === newRecipe.title.toLowerCase()
+    );
+    
+    if (!duplicate) {
+      existingRecipes.push(newRecipe);
+    } else {
+      console.log('[PANTRY] Skipping merge: Recipe already exists in the current list.');
+    }
+    
+    // Save the merged list back to session storage.
+    sessionStorage.setItem('selectedRecipes', JSON.stringify(existingRecipes));
+    
+    // Optionally, update your local selectedRecipesList variable.
+    this.selectedRecipesList = existingRecipes;
+    
+    // Navigate to the calendar page using the merged list.
+    this.router.navigate(['/tabs/calendar'], { state: { recipes: existingRecipes } });
+  }
+  
   
 
 
