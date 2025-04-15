@@ -18,10 +18,10 @@
       <h2>PANTRY</h2>
       <ul>
         <!--
-          We want:
-            If unit>0 & measurement is not empty => "unit + measurement - name" (e.g. "14oz - Flour")
-            If unit>0 & measurement is empty      => "unit name" (e.g. "2 Onions")
-            If unit<=0, just show name (e.g. "Flour" if user typed no numeric unit)
+          Display Rules:
+          - If unit>0 & measurement is non-empty => "unit + measurement - name"
+          - If unit>0 & measurement is empty      => "unit name"
+          - If unit<=0, display only the name
         -->
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
           <div class="item-info">
@@ -37,8 +37,13 @@
               {{ item.name }}
             </ng-template>
           </div>
-        
-          <!-- Edit controls only show in editMode -->
+
+          <!-- "Add to Recipe List" button only displays when NOT in edit mode -->
+          <ion-button *ngIf="!editMode" size="small" (click)="addToRecipeList(i)">
+            Add to Recipe List
+          </ion-button>
+
+          <!-- Edit controls (only show when editing) -->
           <div class="item-controls" *ngIf="editMode">
             <ion-button fill="clear" size="small" class="icon-button" (click)="decrementPantryItem(i)">
               <ion-icon slot="icon-only" name="remove-circle"></ion-icon>
@@ -49,12 +54,12 @@
             <ion-icon name="close-circle" class="delete-icon" (click)="deletePantryItem(i)"></ion-icon>
           </div>
         </li>
-        
 
-        <!-- "New Item" prompt if not editing -->
+        <!-- "New Item" prompt (shown only when not editing) -->
         <li class="new-item" *ngIf="!editMode" (click)="openAddItemPrompt()">New Item</li>
       </ul>
 
+      <!-- Toggle edit mode button -->
       <ion-button (click)="toggleEditMode()" expand="block" class="edit-button-pantry">
         {{ editMode ? 'All Done' : 'Edit Pantry' }}
       </ion-button>
@@ -65,7 +70,6 @@
       <img src="assets/images/icicles.png" alt="Icicles" class="icicles">
       <h2>FREEZER</h2>
       <ul>
-        <!-- Freezer items remain the same. -->
         <li *ngFor="let item of freezerItems; let i = index">
           {{ item.name }} - {{ item.quantity }} Portion{{ item.quantity > 1 ? 's' : '' }}
           <span class="item-controls" *ngIf="!freezerEditMode">
@@ -100,5 +104,5 @@
       </ion-button>
     </div>
 
-  </div> <!-- Closing container div -->
+  </div> <!-- End container -->
 </ion-content>

@@ -12,7 +12,7 @@ export class RecipeService {
 
   // Fetch all recipes from the backend
   getRecipes() {
-    return this.http.get<any[]>(`${environment.apiUrl}/recipes`); // Change URL to match your API
+    return this.http.get<any[]>(`${environment.apiUrl}/recipes`);
   }
 
   // Save recipes into the service variable
@@ -24,5 +24,9 @@ export class RecipeService {
   getRecipeDetailsFromApi(apiId: string) {
     return this.http.get(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${apiId}`);
   }
-  
+
+  // Post a new recipe to the backend.
+  addRecipe(recipe: any) {
+    return this.http.post(`${environment.apiUrl}/recipes`, recipe);
+  }
 }

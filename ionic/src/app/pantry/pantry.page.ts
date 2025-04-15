@@ -2,6 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { PantryService, PantryPayload, PantryItem } from '../services/pantry.service';
 import { UserService } from '../services/user.service';
 import { AlertController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { RecipeService } from '../services/recipe.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-pantry',
@@ -9,20 +13,27 @@ import { AlertController } from '@ionic/angular';
   styleUrls: ['./pantry.page.scss']
 })
 export class PantryPage implements OnInit {
-  // Pantry items store name, measurement (text), and unit (number).
   pantryItems: PantryItem[] = [];
   freezerItems: any[] = [];
   spiceItems: any[] = [];
 
   userId: number = -1;
+  username: string = '';
+
   editMode: boolean = false;
   freezerEditMode: boolean = false;
   spiceEditMode: boolean = false;
 
+  // This array holds recipes created from pantry items.
+  selectedRecipesList: any[] = [];
+
   constructor(
     private pantryService: PantryService,
     private userService: UserService,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private http: HttpClient,
+    private recipeService: RecipeService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -37,13 +48,12 @@ export class PantryPage implements OnInit {
     this.loadPantryItems();
   }
 
-  /**
-   * Retrieve the current user and, if valid, load pantry data.
-   */
+  // Modified to store the username.
   loadUser() {
     const user = this.userService.getUser();
     if (user && typeof user.id === 'number') {
       this.userId = user.id;
+      this.username = user.username;
       console.log(`[PANTRY] User loaded: ID=${this.userId}, Username="${user.username}"`);
       this.loadPantryItems();
     } else {
@@ -51,6 +61,68 @@ export class PantryPage implements OnInit {
       this.userId = -1;
     }
   }
+
+  async addToRecipeList(index: number) {
+    const item = this.pantryItems[index];
+    if (!item) {
+      console.error('[PANTRY] Error: Pantry item not found.');
+      return;
+    }
+    
+    // Force unit to always be 1.
+    const unitValue = 1;
+    let ingredientLine = '';
+    if (item.measurement && item.measurement.trim() !== '') {
+      ingredientLine = `${unitValue}${item.measurement} - ${item.name}`;
+    } else {
+      ingredientLine = `${unitValue} ${item.name}`;
+    }
+    
+    // Check the database for an existing recipe with the same name (case-insensitive)
+    this.recipeService.getRecipes().subscribe(
+      (recipes: any[]) => {
+        const matchingRecipe = recipes.find(recipe => 
+          recipe.title.toLowerCase() === item.name.toLowerCase()
+        );
+        if (matchingRecipe) {
+          // If a matching recipe is found, use it instead of creating a new one.
+          console.log('[PANTRY] Recipe already exists for item:', matchingRecipe);
+          const createdRecipe = { ...matchingRecipe, isExpanded: false };
+          this.selectedRecipesList.push(createdRecipe);
+          sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipesList));
+          this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipesList } });
+        } else {
+          // If no matching recipe is found, create a new recipe as usual.
+          const newRecipe = {
+            title: item.name,
+            author: this.username || 'Unknown',
+            ingredients: ingredientLine,
+            instructions: 'eat and enjoy',
+            tag: 'snacks',
+            pantry: true
+          };
+          console.log('[PANTRY] Adding new recipe from pantry item:', newRecipe);
+          
+          this.recipeService.addRecipe(newRecipe).subscribe(
+            (response: any) => {
+              console.log('[PANTRY] Successfully added recipe from pantry item.', response);
+              const createdRecipe = { ...newRecipe, id: response.id || undefined, isExpanded: false };
+              this.selectedRecipesList.push(createdRecipe);
+              sessionStorage.setItem('selectedRecipes', JSON.stringify(this.selectedRecipesList));
+              this.router.navigate(['/tabs/calendar'], { state: { recipes: this.selectedRecipesList } });
+            },
+            (error) => {
+              console.error('[PANTRY] Failed to add recipe:', error);
+            }
+          );
+        }
+      },
+      (error) => {
+        console.error('[PANTRY] Error fetching recipes for duplicate check:', error);
+      }
+    );
+  }
+  
 
 
   /**
@@ -455,7 +527,6 @@ export class PantryPage implements OnInit {
         this.pantryItems  = data.item_list?.pantry  || [];
         this.freezerItems = data.item_list?.freezer || [];
         this.spiceItems   = data.item_list?.spice   || [];
-
         console.log(`[PANTRY] SUCCESS - Pantry loaded for user ID=${this.userId}`);
         console.log(`[PANTRY] Current state:`, JSON.stringify({
           pantry: this.pantryItems,

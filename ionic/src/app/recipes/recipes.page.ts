@@ -129,8 +129,11 @@ export class RecipesPage implements OnInit {
   loadRecipes() {
     this.recipeService.getRecipes().subscribe(
       (recipes) => {
+
         // Ensure every recipe has a defined tag field.
-        this.recipes = recipes.map(recipe => ({
+        this.recipes = recipes
+          .filter(recipe => recipe.pantry === false)
+          .map(recipe => ({
           ...recipe,
           tag: recipe.tag || ''
         }));
