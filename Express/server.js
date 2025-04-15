@@ -1,3 +1,4 @@
+// Import necessary modules and load environment variables
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
@@ -5,11 +6,13 @@ const { Pool } = require('pg');
 const app = express();
 const argon2 = require('argon2');
 
-// Express Middleware Configuration
+// -------------------- Express Middleware Configuration --------------------
+// Enable Cross-Origin Resource Sharing and JSON parsing for all incoming requests.
 app.use(cors());
 app.use(express.json());
 
-// PostgreSQL Database Connection Configuration
+// -------------------- PostgreSQL Database Connection Configuration --------------------
+// Create a new connection pool using environment variables for secure access.
 const db = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -21,7 +24,8 @@ const db = new Pool({
   },
 });
 
-// Test Database Connection
+// -------------------- Test Database Connection --------------------
+// Attempt to connect to the PostgreSQL database and log the outcome.
 db.connect((err) => {
   if (err) {
     console.error('Database connection error:', err.stack);
@@ -30,9 +34,10 @@ db.connect((err) => {
   }
 });
 
-// User Authentication Routes
+// -------------------- User Authentication Routes --------------------
 
 // POST /login
+// Authenticates a user using username and password.
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -41,7 +46,7 @@ app.post('/login', async (req, res) => {
   }
 
   try {
-    // Fetch the user by username
+    // Fetch user details from the database using the provided username.
     const query = 'SELECT * FROM users WHERE username = $1';
     const result = await db.query(query, [username]);
 
@@ -53,7 +58,7 @@ app.post('/login', async (req, res) => {
     const user = result.rows[0];
     const storedHash = user.password;
 
-    // Verify password using Argon2
+    // Verify the provided password against the stored hash using Argon2.
     const isPasswordValid = await argon2.verify(storedHash, password);
 
     if (!isPasswordValid) {
@@ -69,26 +74,29 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// DeepSeek API Proxy Route
+// -------------------- DeepSeek API Proxy Route --------------------
+// POST /api/deepseek
+// Acts as a proxy to call the DeepSeek API with a formatted request.
 app.post('/api/deepseek', async (req, res) => {
   try {
     console.log("Made it to back end");
     const requestBody = req.body;
     console.log("Request Body:", requestBody);
 
-    // Format the request body to include the `model` and `messages` fields
+    // Format the request body for the DeepSeek API including model and messages.
     const deepSeekRequestBody = {
-      model: "deepseek-chat", // Replace with the correct model name
+      model: "deepseek-chat", // Replace with the correct model name if needed.
       messages: [
         {
           role: "user",
-          content: requestBody.prompt, // Use the prompt from the frontend
+          content: requestBody.prompt, // Use the prompt provided by the frontend.
         },
       ],
       max_tokens: requestBody.max_tokens,
       temperature: requestBody.temperature,
     };
 
+    // Call the DeepSeek API using fetch with proper headers.
     const deepSeekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -107,6 +115,7 @@ app.post('/api/deepseek', async (req, res) => {
       return res.status(deepSeekResponse.status).send({ error: errorMessage });
     }
 
+    // Parse and return the JSON response from DeepSeek.
     const responseData = await deepSeekResponse.json();
     res.status(200).json(responseData);
   } catch (error) {
@@ -115,7 +124,10 @@ app.post('/api/deepseek', async (req, res) => {
   }
 });
 
+// -------------------- User Sign-Up Route --------------------
+
 // POST /signup
+// Creates a new user account with hashed password.
 app.post('/signup', async (req, res) => {
   const { username, password, email } = req.body;
   if (!username || !password) {
@@ -123,7 +135,7 @@ app.post('/signup', async (req, res) => {
   }
 
   try {
-    // Check if the username already exists
+    // Check if a user with the same username already exists.
     const checkUserQuery = 'SELECT * FROM users WHERE username = $1';
     const existingUser = await db.query(checkUserQuery, [username]);
 
@@ -131,7 +143,7 @@ app.post('/signup', async (req, res) => {
       return res.status(400).send({ message: 'Username already exists.' });
     }
 
-    // Hash the password before storing
+    // Hash the password using Argon2 with specified configuration.
     const hashedPassword = await argon2.hash(password, {
       type: argon2.argon2id,
       memoryCost: 2 ** 16,
@@ -139,7 +151,7 @@ app.post('/signup', async (req, res) => {
       parallelism: 2
     });
 
-    // Insert the user with the hashed password
+    // Insert new user data, including hashed password and email, into the database.
     const insertUserQuery = 'INSERT INTO users (username, password, email) VALUES ($1, $2, $3)';
     await db.query(insertUserQuery, [username, hashedPassword, email]);
 
@@ -150,9 +162,10 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// User Data Routes
+// -------------------- User Data Routes --------------------
 
 // GET /userbyusername
+// Retrieves user details by username.
 app.get('/userbyusername', async (req, res) => {
   const { username } = req.query;
   if (!username) {
@@ -175,6 +188,7 @@ app.get('/userbyusername', async (req, res) => {
 });
 
 // GET /users
+// Retrieves users whose usernames match a search term (case-insensitive).
 app.get('/users', async (req, res) => {
   const { username } = req.query;
   if (!username) {
@@ -197,6 +211,7 @@ app.get('/users', async (req, res) => {
 });
 
 // GET /user
+// Retrieves full user details by user ID.
 app.get('/user', async (req, res) => {
   const { id } = req.query;
   if (!id) {
@@ -218,7 +233,10 @@ app.get('/user', async (req, res) => {
   }
 });
 
+// -------------------- User Privacy Update Route --------------------
+
 // PUT /user/privacy
+// Updates a user's privacy setting in the database.
 app.put('/user/privacy', async (req, res) => {
   const { userId, privacy } = req.body;
   if (typeof userId === 'undefined' || typeof privacy !== 'boolean') {
@@ -239,14 +257,17 @@ app.put('/user/privacy', async (req, res) => {
   }
 });
 
+// -------------------- User Password Update Route --------------------
+
 // PUT /user/password
+// Updates a user's password after verifying the old password.
 app.put('/user/password', async (req, res) => {
   const { userId, oldPassword, newPassword } = req.body;
   if (!userId || !oldPassword || !newPassword) {
     return res.status(400).send({ message: 'userId, oldPassword, and newPassword are required.' });
   }
   try {
-    // Fetch the user to retrieve the current password hash
+    // Fetch the user details to get the current password hash.
     const userQuery = 'SELECT * FROM users WHERE id = $1';
     const userResult = await db.query(userQuery, [userId]);
     if (userResult.rows.length === 0) {
@@ -254,13 +275,13 @@ app.put('/user/password', async (req, res) => {
     }
     const user = userResult.rows[0];
     
-    // Verify the provided oldPassword against the stored hash
+    // Verify the provided old password using argon2.
     const isValid = await argon2.verify(user.password, oldPassword);
     if (!isValid) {
       return res.status(401).send({ message: 'Old password is incorrect.' });
     }
 
-    // Hash the new password before storing
+    // Hash the new password with Argon2 before storing.
     const hashedPassword = await argon2.hash(newPassword, {
       type: argon2.argon2id,
       memoryCost: 2 ** 16,
@@ -281,9 +302,10 @@ app.put('/user/password', async (req, res) => {
   }
 });
 
-// Recipes Routes
+// -------------------- Recipes Routes --------------------
 
 // GET /recipes
+// Retrieves all recipes, optionally filtering by tag.
 app.get('/recipes', async (req, res) => {
   const { tag } = req.query;
   try {
@@ -302,8 +324,9 @@ app.get('/recipes', async (req, res) => {
 });
 
 // POST /recipes
+// Creates a new recipe record.
 app.post('/recipes', async (req, res) => {
-  const { author, title, ingredients, instructions, tag, pantry } = req.body; // Include pantry
+  const { author, title, ingredients, instructions, tag, pantry } = req.body; // Include pantry flag
   if (!author || !title || !ingredients || !instructions) {
     return res.status(400).send({ message: 'All fields (author, title, ingredients, instructions) are required.' });
   }
@@ -313,7 +336,7 @@ app.post('/recipes', async (req, res) => {
       INSERT INTO Recipes (author, title, ingredients, instructions, tag, pantry) 
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
     `;
-    const values = [author, title, ingredients, instructions, tag || null, pantry]; // Now six values
+    const values = [author, title, ingredients, instructions, tag || null, pantry];
     const result = await db.query(query, values);
     return res.status(201).send({ message: 'Recipe created successfully.', recipe: result.rows[0] });
   } catch (error) {
@@ -322,8 +345,8 @@ app.post('/recipes', async (req, res) => {
   }
 });
 
-
 // PUT /recipes/:id
+// Updates an existing recipe.
 app.put('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   const { title, ingredients, instructions, tag } = req.body;
@@ -352,6 +375,7 @@ app.put('/recipes/:id', async (req, res) => {
 });
 
 // DELETE /recipes/:id
+// Deletes a recipe.
 app.delete('/recipes/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -369,9 +393,10 @@ app.delete('/recipes/:id', async (req, res) => {
   }
 });
 
-// Calendar Routes
+// -------------------- Calendar Routes --------------------
 
 // POST /calendar
+// Creates a new calendar entry or updates an existing one based on the start_date and user_ids.
 app.post('/calendar', async (req, res) => {
   const { user_ids, week, start_date } = req.body;
   
@@ -381,16 +406,19 @@ app.post('/calendar', async (req, res) => {
   }
 
   try {
+    // Check if a calendar already exists for the given start_date and a user in user_ids.
     const checkQuery = 'SELECT * FROM calendar WHERE start_date = $1 AND $2 = ANY(user_ids)';
     const existingCalendar = await db.query(checkQuery, [start_date, user_ids[0]]);
 
     if (existingCalendar.rows.length > 0) {
+      // If found, update the week field.
       const updateQuery = 'UPDATE calendar SET week = $1 WHERE start_date = $2 AND $3 = ANY(user_ids) RETURNING *';
       const result = await db.query(updateQuery, [week, start_date, user_ids[0]]);
       
       console.log(`[POST /calendar] 200 - Calendar updated for user ${user_ids[0]}`);
       return res.status(200).send({ message: 'Calendar updated successfully.', calendar: result.rows[0] });
     } else {
+      // If not found, create a new calendar entry.
       const insertQuery = 'INSERT INTO calendar (user_ids, week, start_date) VALUES ($1, $2, $3) RETURNING *';
       const result = await db.query(insertQuery, [user_ids, week, start_date]);
 
@@ -404,6 +432,7 @@ app.post('/calendar', async (req, res) => {
 });
 
 // PUT /calendar
+// Updates an existing calendar entry.
 app.put('/calendar', async (req, res) => {
   const { user_ids, week, start_date } = req.body;
   if (!user_ids || !week || !start_date) {
@@ -432,6 +461,7 @@ app.put('/calendar', async (req, res) => {
 });
 
 // GET /calendar
+// Retrieves calendar entries. If start_date is provided, returns the calendar for that week and user; otherwise, returns all calendars for the user.
 app.get('/calendar', async (req, res) => {
   const { start_date, user_id } = req.query;
   if (!user_id) {
@@ -457,9 +487,10 @@ app.get('/calendar', async (req, res) => {
   }
 });
 
-// Pantry Routes
+// -------------------- Pantry Routes --------------------
 
 // GET /pantry
+// Retrieves the pantry items for a given user.
 app.get('/pantry', async (req, res) => {
   const userId = parseInt(req.query.userId);
   if (isNaN(userId)) {
@@ -491,6 +522,7 @@ app.get('/pantry', async (req, res) => {
 });
 
 // POST /pantry
+// Creates or updates the pantry for a user.
 app.post('/pantry', async (req, res) => {
   const { user_id, pf_flag, item_list } = req.body;
 
@@ -500,10 +532,12 @@ app.post('/pantry', async (req, res) => {
   }
 
   try {
+    // Check if a pantry record already exists for the user.
     const checkQuery = 'SELECT * FROM pantry_freezer WHERE user_id = $1 AND pf_flag = $2';
     const existingPantry = await db.query(checkQuery, [user_id, pf_flag]);
 
     if (existingPantry.rows.length > 0) {
+      // If found, update the existing pantry record.
       const updateQuery = `
         UPDATE pantry_freezer
         SET item_list = $1
@@ -514,6 +548,7 @@ app.post('/pantry', async (req, res) => {
       console.log(`[POST /pantry] 200 - Pantry updated for user ID=${user_id}`);
       return res.status(200).send({ message: 'Pantry updated successfully.', pantry: result.rows[0] });
     } else {
+      // If not found, create a new pantry record.
       const insertQuery = `
         INSERT INTO pantry_freezer (user_id, pf_flag, item_list)
         VALUES ($1, $2, $3) RETURNING *
@@ -529,6 +564,7 @@ app.post('/pantry', async (req, res) => {
 });
 
 // PUT /pantry
+// Updates an existing pantry record for a user.
 app.put('/pantry', async (req, res) => {
   const { user_id, pf_flag, item_list } = req.body;
 
@@ -560,6 +596,7 @@ app.put('/pantry', async (req, res) => {
 });
 
 // DELETE /pantry
+// Deletes a pantry record for the specified user.
 app.delete('/pantry', async (req, res) => {
   const userId = parseInt(req.query.userId);
   if (isNaN(userId)) {
@@ -585,15 +622,15 @@ app.delete('/pantry', async (req, res) => {
 });
 
 // -------------------- New Route: Send Calendar Invite --------------------
-// Instead of directly adding a user, this route updates the recipient's "invites" column
-// in the users table by appending the senderId.
+// POST /user/send-invite
+// Updates the recipient's "invites" column by appending the sender's ID.
 app.post('/user/send-invite', async (req, res) => {
   const { senderId, recipientId, plan } = req.body;
   if (!senderId || !recipientId) {
     return res.status(400).send({ message: 'senderId and recipientId are required.' });
   }
   try {
-    // Update the recipient's invites column. Cast the array literal to integer[]
+    // Update the recipient's invites column using a conditional update.
     const updateQuery = `
       UPDATE users 
       SET invites = CASE 
@@ -616,6 +653,8 @@ app.post('/user/send-invite', async (req, res) => {
   }
 });
 
+// -------------------- New Route: Retrieve Pending Invites --------------------
+// GET /user/pending-invites
 // Retrieves the invites array from the user's record.
 app.get('/user/pending-invites', async (req, res) => {
   const userId = parseInt(req.query.userId);
@@ -626,7 +665,7 @@ app.get('/user/pending-invites', async (req, res) => {
     const query = 'SELECT invites FROM users WHERE id = $1';
     const result = await db.query(query, [userId]);
     if (result.rows.length > 0) {
-      // Return the invites array; if null, return an empty array.
+      // Return the invites array, or an empty array if it is null.
       const invites = result.rows[0].invites || [];
       return res.status(200).json(invites);
     } else {
@@ -639,20 +678,21 @@ app.get('/user/pending-invites', async (req, res) => {
 });
 
 // -------------------- New Route: Update Sender's Calendars with Shared Users --------------------
-// This endpoint updates every calendar that the sender owns by merging the sender's shared_plans list into user_ids.
+// PUT /calendar/update-shared
+// Merges the sender's shared_plans list into the user_ids of every calendar entry the sender owns.
 app.put('/calendar/update-shared', async (req, res) => {
   const { senderId } = req.body;
   if (!senderId) {
     return res.status(400).send({ message: 'senderId is required.' });
   }
   try {
-    // Retrieve the sender's shared_plans list.
+    // Retrieve the shared_plans array for the sender.
     const userResult = await db.query('SELECT shared_plans FROM users WHERE id = $1', [senderId]);
     if (userResult.rows.length === 0) {
       return res.status(404).send({ message: 'Sender not found.' });
     }
     const sharedUsers = userResult.rows[0].shared_plans || [];
-    // Update every calendar that the sender owns by merging sharedUsers into user_ids.
+    // Update all calendar entries that include the sender in user_ids by merging in sharedUsers.
     const updateQuery = `
       UPDATE calendar
       SET user_ids = (
@@ -670,8 +710,9 @@ app.put('/calendar/update-shared', async (req, res) => {
   }
 });
 
+// -------------------- User Shared Plans Update Route --------------------
 // PUT /user/shared-plans
-// Updates the shared_plans array for a user.
+// Updates the shared_plans array in the user's record.
 app.put('/user/shared-plans', async (req, res) => {
   const { userId, shared_plans } = req.body;
   if (!userId || !Array.isArray(shared_plans)) {
@@ -692,15 +733,16 @@ app.put('/user/shared-plans', async (req, res) => {
   }
 });
 
-// --------------------  Get Multiple Users by IDs --------------------
+// -------------------- Get Multiple Users by IDs --------------------
 // GET /user/multiple
+// Retrieves the basic details of multiple users based on a list of IDs.
 app.get('/user/multiple', async (req, res) => {
   const idsParam = req.query.ids;
   if (!idsParam) {
     return res.status(400).send({ message: 'ids query parameter is required.' });
   }
   try {
-    // Convert the comma-separated string into an array of numbers
+    // Convert comma-separated IDs into an array of numbers.
     const ids = idsParam.split(',').map(Number);
     const query = 'SELECT id, username, email FROM users WHERE id = ANY($1)';
     const result = await db.query(query, [ids]);
@@ -711,8 +753,9 @@ app.get('/user/multiple', async (req, res) => {
   }
 });
 
-// --------------------  Get Users Sharing With Me --------------------
+// -------------------- Get Users Sharing With Me --------------------
 // GET /user/shared-with
+// Retrieves users who have included the current user in their shared_plans.
 app.get('/user/shared-with', async (req, res) => {
   const userId = parseInt(req.query.userId);
   if (!userId) {
@@ -728,18 +771,19 @@ app.get('/user/shared-with', async (req, res) => {
   }
 });
 
-
-
-// Log Available Routes
+// -------------------- Log Available Routes --------------------
+// Iterate over the Express router stack to log each available route for debugging purposes.
 app._router.stack.forEach((layer) => {
   if (layer.route && layer.route.path) {
     console.log(`Route available: ${layer.route.stack[0].method.toUpperCase()} ${layer.route.path}`);
   }
 });
 
+// -------------------- Start the Server --------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+// Export the app module for testing or further integration.
 module.exports = app;
