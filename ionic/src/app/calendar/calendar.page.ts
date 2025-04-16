@@ -389,13 +389,11 @@ getStartOfWeek(date: Date): Date {
       };
     }
     
-    // Clone the selected meal once.
-    const mealClone = JSON.parse(JSON.stringify(this.selectedMeal));
-    mealClone.processedForGrocery = false;
-    
-    // Loop through each selected category and push the meal clone.
+    // For each selected category, create a new deep clone.
     this.selectedCategories.forEach((category: string) => {
-      // Make sure that the day has an array for the current category.
+      const mealClone = JSON.parse(JSON.stringify(this.selectedMeal)); // Clone inside the loop
+      mealClone.processedForGrocery = false;
+  
       if (!this.events[weekKey][this.selectedDay][category]) {
         this.events[weekKey][this.selectedDay][category] = [];
       }
@@ -408,6 +406,7 @@ getStartOfWeek(date: Date): Date {
     this.selectedDay = '';
     this.selectedCategories = [];
   }
+  
   
 
   // When a recipe is clicked, set it as hovered for details display.

@@ -2,6 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { PantryService, PantryPayload, PantryItem } from '../services/pantry.service';
 import { UserService } from '../services/user.service';
 import { AlertController } from '@ionic/angular';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { RecipeService } from '../services/recipe.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-pantry',
@@ -9,20 +13,27 @@ import { AlertController } from '@ionic/angular';
   styleUrls: ['./pantry.page.scss']
 })
 export class PantryPage implements OnInit {
-  // Pantry items store name, measurement (text), and unit (number).
   pantryItems: PantryItem[] = [];
   freezerItems: any[] = [];
   spiceItems: any[] = [];
 
   userId: number = -1;
+  username: string = '';
+
   editMode: boolean = false;
   freezerEditMode: boolean = false;
   spiceEditMode: boolean = false;
 
+  // This array holds recipes created from pantry items.
+  selectedRecipesList: any[] = [];
+
   constructor(
     private pantryService: PantryService,
     private userService: UserService,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private http: HttpClient,
+    private recipeService: RecipeService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -37,13 +48,12 @@ export class PantryPage implements OnInit {
     this.loadPantryItems();
   }
 
-  /**
-   * Retrieve the current user and, if valid, load pantry data.
-   */
+  // Modified to store the username.
   loadUser() {
     const user = this.userService.getUser();
     if (user && typeof user.id === 'number') {
       this.userId = user.id;
+      this.username = user.username;
       console.log(`[PANTRY] User loaded: ID=${this.userId}, Username="${user.username}"`);
       this.loadPantryItems();
     } else {
@@ -51,6 +61,112 @@ export class PantryPage implements OnInit {
       this.userId = -1;
     }
   }
+
+  async addToRecipeList(index: number) {
+    const item = this.pantryItems[index];
+    if (!item) {
+      console.error('[PANTRY] Error: Pantry item not found.');
+      return;
+    }
+    
+    // Force unit to always be 1.
+    const unitValue = 1;
+    let ingredientLine = '';
+    if (item.measurement && item.measurement.trim() !== '') {
+      ingredientLine = `${unitValue}${item.measurement} - ${item.name}`;
+    } else {
+      ingredientLine = `${unitValue} ${item.name}`;
+    }
+    
+    // Check the database for an existing recipe (using your RecipeService).
+    this.recipeService.getRecipes().subscribe(
+      (recipes: any[]) => {
+        let newRecipe: any;
+        const matchingRecipe = recipes.find(recipe => 
+          recipe.title.toLowerCase() === item.name.toLowerCase()
+        );
+        
+        if (matchingRecipe) {
+          console.log('[PANTRY] Recipe already exists for item:', matchingRecipe);
+          // Use the matching recipe (add an extra property for display).
+          newRecipe = { ...matchingRecipe, isExpanded: false };
+        } else {
+          // If no match is found, create a new recipe.
+          newRecipe = {
+            title: item.name,
+            author: this.username || 'Unknown',
+            ingredients: ingredientLine,
+            instructions: 'eat and enjoy',
+            tag: 'snacks',
+            pantry: true,
+            isExpanded: false
+          };
+          console.log('[PANTRY] Adding new recipe from pantry item:', newRecipe);
+        }
+    
+        // If we need to create a new recipe in the database...
+        if (!matchingRecipe) {
+          this.recipeService.addRecipe(newRecipe).subscribe(
+            (response: any) => {
+              console.log('[PANTRY] Successfully added recipe from pantry item.', response);
+              // Attach the returned id (if any) and then merge the recipe into our list.
+              newRecipe = { ...newRecipe, id: response.id || undefined };
+              this.mergeAndStoreRecipe(newRecipe);
+            },
+            (error) => {
+              console.error('[PANTRY] Failed to add recipe:', error);
+            }
+          );
+        } else {
+          // Otherwise, if a matching recipe already exists, merge it immediately.
+          this.mergeAndStoreRecipe(newRecipe);
+        }
+      },
+      (error) => {
+        console.error('[PANTRY] Error fetching recipes for duplicate check:', error);
+      }
+    );
+  }
+  
+  /**
+   * Helper method to merge the new recipe with what’s already in session storage.
+   */
+  mergeAndStoreRecipe(newRecipe: any) {
+    // Retrieve existing recipes from session storage.
+    let existingRecipes: any[] = [];
+    const storedRecipes = sessionStorage.getItem('selectedRecipes');
+    if (storedRecipes) {
+      try {
+        existingRecipes = JSON.parse(storedRecipes);
+      } catch (e) {
+        console.error('[PANTRY] Error parsing existing recipes from session storage:', e);
+      }
+    }
+    
+    // Check for duplicates (by title or id) before appending.
+    const duplicate = existingRecipes.some(
+      (recipe: any) =>
+        (recipe.id && recipe.id === newRecipe.id) ||
+        recipe.title.toLowerCase() === newRecipe.title.toLowerCase()
+    );
+    
+    if (!duplicate) {
+      existingRecipes.push(newRecipe);
+    } else {
+      console.log('[PANTRY] Skipping merge: Recipe already exists in the current list.');
+    }
+    
+    // Save the merged list back to session storage.
+    sessionStorage.setItem('selectedRecipes', JSON.stringify(existingRecipes));
+    
+    // Optionally, update your local selectedRecipesList variable.
+    this.selectedRecipesList = existingRecipes;
+    
+    // Navigate to the calendar page using the merged list.
+    this.router.navigate(['/tabs/calendar'], { state: { recipes: existingRecipes } });
+  }
+  
+  
 
 
   /**
@@ -455,7 +571,6 @@ export class PantryPage implements OnInit {
         this.pantryItems  = data.item_list?.pantry  || [];
         this.freezerItems = data.item_list?.freezer || [];
         this.spiceItems   = data.item_list?.spice   || [];
-
         console.log(`[PANTRY] SUCCESS - Pantry loaded for user ID=${this.userId}`);
         console.log(`[PANTRY] Current state:`, JSON.stringify({
           pantry: this.pantryItems,

@@ -146,6 +146,18 @@ ion-content {
   gap: 12px;
 }
 
+/* Style the "Add to Recipe List" button in the Pantry section */
+.pantry .pantry-item ion-button {
+  --background: #246d48;      /* Use the dark green from other text */
+  --color: #ffffff;            /* White text color */
+  font-size: 0.8rem;           /* Reduce font size */
+  --padding-start: 8px;        /* Reduce horizontal padding */
+  --padding-end: 8px;
+  --padding-top: 4px;          /* Reduce vertical padding */
+  --padding-bottom: 4px;
+  min-width: auto;             /* Allow button to shrink to its content */
+}
+
 .item-info {
   flex: 1;
   text-align: left;

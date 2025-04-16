@@ -303,17 +303,17 @@ app.get('/recipes', async (req, res) => {
 
 // POST /recipes
 app.post('/recipes', async (req, res) => {
-  const { author, title, ingredients, instructions, tag } = req.body;
+  const { author, title, ingredients, instructions, tag, pantry } = req.body; // Include pantry
   if (!author || !title || !ingredients || !instructions) {
     return res.status(400).send({ message: 'All fields (author, title, ingredients, instructions) are required.' });
   }
 
   try {
     const query = `
-      INSERT INTO Recipes (author, title, ingredients, instructions, tag) 
-      VALUES ($1, $2, $3, $4, $5) RETURNING *
+      INSERT INTO Recipes (author, title, ingredients, instructions, tag, pantry) 
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
     `;
-    const values = [author, title, ingredients, instructions, tag || null];
+    const values = [author, title, ingredients, instructions, tag || null, pantry]; // Now six values
     const result = await db.query(query, values);
     return res.status(201).send({ message: 'Recipe created successfully.', recipe: result.rows[0] });
   } catch (error) {
@@ -321,6 +321,7 @@ app.post('/recipes', async (req, res) => {
     return res.status(500).send({ message: 'Server error.' });
   }
 });
+
 
 // PUT /recipes/:id
 app.put('/recipes/:id', async (req, res) => {
