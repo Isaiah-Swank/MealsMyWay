@@ -5,8 +5,20 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
+interface Recipe {
+  id: number;
+  author: string;
+  title: string;
+  ingredients: string;
+  instructions: string;
+  tag: string;
+  api_id?: string | null;
+  pantry?: boolean | null;
+}
+
 interface RecipeResponse {
   message: string;
+  recipe: Recipe;
 }
 
 @Component({
@@ -86,27 +98,34 @@ export class RecipesPage implements OnInit {
   submitRecipe() {
     if (this.isSubmitting) return;
     this.isSubmitting = true;
-
+  
     const recipeData = { ...this.newRecipe };
-
-    // Validate required fields.
+  
+    // 🧹 Clean and format ingredients
+    recipeData.ingredients = recipeData.ingredients
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((line: string) => line.replace(/,/g, ''))
+      .join(', ');
+  
+    // Validate required fields after cleaning
     if (!recipeData.author || !recipeData.title || !recipeData.ingredients || !recipeData.instructions) {
       alert('Please fill in all required fields.');
       this.isSubmitting = false;
       return;
     }
-
+  
     console.log('Submitting recipe:', recipeData);
-
+  
     this.http.post<RecipeResponse>(`${environment.apiUrl}/recipes`, recipeData).subscribe(
       (response) => {
         console.log('Backend Response:', response);
-        if (response.message === 'Recipe created successfully.') {
+        if (response.message === 'Recipe created successfully.' && response['recipe']) {
+          const newRecipeWithId = { ...(response as any).recipe, isExpanded: false };
+          this.selectedRecipes.push(newRecipeWithId);
+          this.selectedRecipesList.push(newRecipeWithId);
           this.loadRecipes();
-          // Optionally add the newly created recipe to the left side list.
-          // Here we copy recipeData and set isExpanded to false.
-          this.selectedRecipesList.push({ ...recipeData, isExpanded: false });
-          // Reset the form.
           this.newRecipe = { author: '', title: '', ingredients: '', instructions: '', tag: '' };
         } else {
           alert('Failed to add the recipe');
@@ -120,6 +139,7 @@ export class RecipesPage implements OnInit {
       }
     );
   }
+  
 
   /**
    * loadRecipes
@@ -132,7 +152,7 @@ export class RecipesPage implements OnInit {
 
         // Ensure every recipe has a defined tag field.
         this.recipes = recipes
-          .filter(recipe => recipe.pantry === false)
+          .filter(recipe => recipe.pantry != true)
           .map(recipe => ({
           ...recipe,
           tag: recipe.tag || ''
@@ -260,7 +280,10 @@ export class RecipesPage implements OnInit {
    * Opens the edit modal with the selected recipe data.
    */
   editRecipe(recipe: any) {
-    this.editRecipeData = { ...recipe };
+    this.editRecipeData = {
+      ...recipe,
+      ingredients: recipe.ingredients.split(',').map((line: string) => line.trim()).join('\n')
+    };
     this.openEditForm();
   }
 
@@ -269,8 +292,16 @@ export class RecipesPage implements OnInit {
    * Sends the updated recipe data to the backend and reloads recipes on success.
    */
   updateRecipe() {
+    // Convert ingredients from newlines → cleaned, comma-separated string
+    this.editRecipeData.ingredients = this.editRecipeData.ingredients
+      .split('\n')
+      .map((line: string) => line.trim())
+      .filter((line: string) => line.length > 0)
+      .map((line: string) => line.replace(/,/g, ''))
+      .join(', ');
+  
     console.log('Updating recipe with data:', this.editRecipeData);
-
+  
     this.http.put(`${environment.apiUrl}/recipes/${this.editRecipeData.id}`, this.editRecipeData)
       .subscribe(
         (response) => {
@@ -284,6 +315,7 @@ export class RecipesPage implements OnInit {
         }
       );
   }
+  
 
   /**
    * deleteRecipe
