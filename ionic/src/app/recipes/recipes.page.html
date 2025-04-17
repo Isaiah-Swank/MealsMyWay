@@ -84,7 +84,12 @@
           <!-- Collapsible Recipe Details for the selected recipe -->
           <div *ngIf="recipe.isExpanded" class="recipe-details">
             <p><strong>Author:</strong> {{ recipe.author }}</p>
-            <p><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
+            <div>
+              <strong>Ingredients:</strong>
+              <ul>
+                <li *ngFor="let ingredient of recipe.ingredients.split(',')">{{ ingredient.trim() }}</li>
+              </ul>
+            </div>
             <p><strong>Instructions:</strong> {{ recipe.instructions }}</p>
             <!-- Conditionally show Tag if available -->
             <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
