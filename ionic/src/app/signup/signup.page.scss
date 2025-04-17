@@ -146,13 +146,10 @@ ion-title {
   - On hover, changes the background color to a lighter shade (#cbddd1).
 */
 ion-button[type="submit"] {
-  width: 100%;
-  background-color: #246d48;
-  color: white;
-  font-size: 16px;
-  border-radius: 5px;
+  --background: #246d48;
+  --color: #cbddd1;
 
   &:hover {
-    --background: #cbddd1;
+    --background: #000000;
   }
 }
