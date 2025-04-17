@@ -61,7 +61,12 @@
           <!-- Collapsible Recipe Details -->
           <div *ngIf="recipe.isExpanded" class="recipe-details">
             <p><strong>Author:</strong> {{ recipe.author }}</p>
-            <p><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
+            <div>
+              <strong>Ingredients:</strong>
+              <ul>
+                <li *ngFor="let ingredient of recipe.ingredients.split(',')">{{ ingredient.trim() }}</li>
+              </ul>
+            </div>
             <p><strong>Instructions:</strong> {{ recipe.instructions }}</p>
             <p *ngIf="recipe.tag"><strong>Tag:</strong> {{ recipe.tag }}</p>
             <ion-button fill="clear" (click)="toggleRecipeDetails(recipe)">Close</ion-button>
