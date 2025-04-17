@@ -17,14 +17,18 @@
     <div class="pantry">
       <h2>PANTRY</h2>
       <ul>
-        <!--
-          Display Rules:
-          - If unit>0 & measurement is non-empty => "unit + measurement - name"
-          - If unit>0 & measurement is empty      => "unit name"
-          - If unit<=0, display only the name
+        <!-- 
+          Pantry Item Display Rules:
+          - If `unit > 0` and `measurement` is non-empty:
+            Display as "unit + measurement - name" (e.g., "2 cups - Sugar").
+          - If `unit > 0` and `measurement` is empty:
+            Display as "unit name" (e.g., "3 Apples").
+          - If `unit <= 0`:
+            Display only the name (e.g., "Salt").
         -->
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
           <div class="item-info">
+            <!-- Display item with unit and measurement if available -->
             <ng-container *ngIf="item.unit && item.unit > 0; else noUnitBlock">
               <ng-container *ngIf="item.measurement && item.measurement.trim() !== ''">
                 {{ item.unit }}{{ item.measurement }} - {{ item.name }}
@@ -33,17 +37,18 @@
                 {{ item.unit }} {{ item.name }}
               </ng-container>
             </ng-container>
+            <!-- Display item name only if no unit is available -->
             <ng-template #noUnitBlock>
               {{ item.name }}
             </ng-template>
           </div>
 
-          <!-- "Add to Recipe List" button only displays when NOT in edit mode -->
+          <!-- "Add to Recipe List" button (only visible when NOT in edit mode) -->
           <ion-button *ngIf="!editMode" size="small" (click)="addToRecipeList(i)">
             Add to Recipe List
           </ion-button>
 
-          <!-- Edit controls (only show when editing) -->
+          <!-- Edit controls (visible only in edit mode) -->
           <div class="item-controls" *ngIf="editMode">
             <ion-button fill="clear" size="small" class="icon-button" (click)="decrementPantryItem(i)">
               <ion-icon slot="icon-only" name="remove-circle"></ion-icon>
@@ -55,7 +60,7 @@
           </div>
         </li>
 
-        <!-- "New Item" prompt (shown only when not editing) -->
+        <!-- "New Item" prompt (visible only when NOT in edit mode) -->
         <li class="new-item" *ngIf="!editMode" (click)="openAddItemPrompt()">New Item</li>
       </ul>
 
@@ -70,16 +75,21 @@
       <img src="assets/images/icicles.png" alt="Icicles" class="icicles">
       <h2>FREEZER</h2>
       <ul>
+        <!-- Freezer items display -->
         <li *ngFor="let item of freezerItems; let i = index">
           {{ item.name }} - {{ item.quantity }} Portion{{ item.quantity > 1 ? 's' : '' }}
+          <!-- Increment and decrement controls (visible when NOT in edit mode) -->
           <span class="item-controls" *ngIf="!freezerEditMode">
             <span class="plus" (click)="incrementFreezerItem(i)">+</span>
             <span class="minus" (click)="decrementFreezerItem(i)">-</span>
           </span>
+          <!-- Delete icon (visible only in edit mode) -->
           <span class="delete-icon" *ngIf="freezerEditMode" (click)="deleteFreezerItem(i)">✖</span>
         </li>
+        <!-- "New Item" prompt -->
         <li class="new-item" (click)="openAddFreezerItemPrompt()">New Item</li>
       </ul>
+      <!-- Toggle edit mode button -->
       <ion-button class="edit-button-freezer" expand="block" (click)="toggleFreezerEditMode()">
         {{ freezerEditMode ? 'All Done' : 'Edit Freezer' }}
       </ion-button>
@@ -89,16 +99,21 @@
     <div class="spice">
       <h2>SPICE RACK</h2>
       <ul>
+        <!-- Spice items display -->
         <li *ngFor="let item of spiceItems; let i = index">
           {{ item.name }} - {{ item.quantity }} Uses
+          <!-- Increment and decrement controls (visible when NOT in edit mode) -->
           <span class="item-controls" *ngIf="!freezerEditMode">
             <span class="plus" (click)="incrementSpiceItem(i)">+</span>
             <span class="minus" (click)="decrementSpiceItem(i)">-</span>
           </span>
+          <!-- Delete icon (visible only in edit mode) -->
           <span class="delete-icon" *ngIf="spiceEditMode" (click)="deleteSpiceItem(i)">✖</span>
         </li>
+        <!-- "New Item" prompt -->
         <li class="new-item" (click)="openAddSpiceItemPrompt()">New Item</li>
       </ul>
+      <!-- Toggle edit mode button -->
       <ion-button class="edit-button-spice" expand="block" (click)="toggleSpiceEditMode()">
         {{ spiceEditMode ? 'All Done' : 'Edit Spice Rack' }}
       </ion-button>

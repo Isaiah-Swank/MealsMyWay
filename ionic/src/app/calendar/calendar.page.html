@@ -1,15 +1,29 @@
+<!-- 
+  Weekly Meal Prep Calendar Template
+  This view presents a weekly calendar layout for meal preparation, 
+  including functionality for selecting a week, sharing the calendar,
+  viewing and editing details about meals, and adding new meals.
+-->
+
 <ion-header [translucent]="true">
+  <!-- Header section with toolbar and calendar title -->
   <ion-toolbar>
     <ion-title>Weekly Meal Prep Calendar</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Main container for the calendar and associated UI elements -->
   <div class="calendar-container">
+
     <!-- ===================================================
          CALENDAR HEADER
          ---------------------------------------------------
          Contains the plan selection dropdown, week header, and share calendar button.
+         Additional comments:
+         - The "Select Week" button opens a date popover for week selection.
+         - The week header displays the currently selected week formatted as a long date.
+         - The "Share Calendar" button toggles the share calendar UI.
          =================================================== -->
     <div class="calendar-header">
       <ion-button class="date-button" (click)="openDatePopover($event)">
@@ -18,7 +32,6 @@
       <h2 class="header-date">
         Week of: {{ selectedPlan | date:'longDate' }}
       </h2>
-
       <ion-button (click)="toggleShareCalendar()">Share Calendar</ion-button>
     </div>
 
@@ -26,6 +39,10 @@
          SHARE CALENDAR SEARCH BAR
          ---------------------------------------------------
          Allows users to search for other users to share the calendar with.
+         Additional comments:
+         - When "showShareCalendar" is true, the search bar appears.
+         - Users can type in a query which triggers "searchUsers()" on input.
+         - Matching results are displayed with an option to add the user to the calendar.
          =================================================== -->
     <div *ngIf="showShareCalendar">
       <ion-item>
@@ -45,19 +62,26 @@
          CALENDAR GRID
          ---------------------------------------------------
          Displays a grid layout representing the week with each day divided by category.
+         Additional comments:
+         - The grid shows days from Sunday to Saturday.
+         - For each day, it iterates over the defined category list.
+         - Within each category block, events are displayed.
+         - Each event shows its title and an optional remove button if it is the currently selected event.
          =================================================== -->
     <div class="calendar">
       <!-- Sunday -->
       <div class="day sunday">
         <h3>Sunday</h3>
         <div class="category-container">
-          <!-- Loop over the defined categories -->
+          <!-- Loop over each category defined in categoryList -->
           <div class="category" *ngFor="let cat of categoryList">
             <h4>{{ formatCategory(cat) }}</h4>
             <div class="events">
-              <!-- Display events for the day & category -->
+              <!-- Loop over the events for Sunday in this category -->
               <div *ngFor="let event of currentWeekEvents['sunday'][cat]; let i = index" class="event-item">
+                <!-- Clicking the event calls onRecipeClick to display more details -->
                 <span (click)="onRecipeClick(event)">{{ event.title }}</span>
+                <!-- If the event is the selected one, show a button to remove it -->
                 <ion-button *ngIf="selectedEvent === event" fill="clear" color="danger" size="small" 
                   (click)="confirmRemoveEvent(event, 'sunday', cat, i, $event)">✖</ion-button>
               </div>
@@ -173,10 +197,15 @@
          MEAL SECTION CONTAINER
          ---------------------------------------------------
          Contains Recipe Details/Shopping List and the Add Meal Form.
+         Additional comments:
+         - Shows either a prep list, shopping list, recipe details, or a recipe list based on UI state.
+         - Allows toggling between edit and view modes for the prep and grocery lists.
+         - Provides an interface for viewing detailed recipe information or a list of recipes.
          =================================================== -->
     <div class="meal-section-container">
       <div class="recipe-details">
         <h3>
+          <!-- Conditional heading based on which list is currently shown -->
           <ng-container *ngIf="showPrepList">
             Prep List
           </ng-container>
@@ -189,8 +218,10 @@
           </ng-container>
         </h3>
         <div class="details-container">
+          <!-- PREP LIST EDITING/VIEW MODE -->
           <ng-container *ngIf="showPrepList">
             <div *ngIf="editMode; else viewMode">
+              <!-- Textarea for editing prep list markdown -->
               <ion-textarea
                 [(ngModel)]="editedPrepMarkdown"
                 auto-grow="true"
@@ -200,14 +231,17 @@
               <ion-button color="medium" (click)="editMode = false">Cancel</ion-button>
             </div>
             <ng-template #viewMode>
+              <!-- Display prep list with HTML formatting -->
               <div [innerHTML]="prepListDisplay"></div>
               <ion-button (click)="editMode = true">Edit</ion-button>
               <ion-button (click)="showPrepList = false">Close</ion-button>
             </ng-template>
           </ng-container>
           
+          <!-- SHOPPING LIST EDITING/VIEW MODE -->
           <ng-container *ngIf="showShoppingList">
             <div *ngIf="editGroceryMode; else groceryView">
+              <!-- Textarea for editing shopping/grocery list -->
               <ion-textarea
                 [(ngModel)]="editedGroceryText"
                 auto-grow="true"
@@ -217,6 +251,7 @@
               <ion-button color="medium" (click)="editGroceryMode = false">Cancel</ion-button>
             </div>
             <ng-template #groceryView>
+              <!-- Display shopping list as a list of ingredients -->
               <ul>
                 <li *ngFor="let ingredient of groceryListDisplay">
                   {{ ingredient }}
@@ -226,8 +261,11 @@
               <ion-button (click)="showShoppingList = false">Close</ion-button>
             </ng-template>
           </ng-container>
+
+          <!-- Recipe Details / List Display -->
           <ng-container *ngIf="!showPrepList && !showShoppingList">
             <div *ngIf="hoveredRecipe; else recipeList">
+              <!-- Detailed view for a single hovered recipe -->
               <p><strong>Title:</strong> {{ hoveredRecipe.title }}</p>
               <div *ngIf="hoveredRecipe.ingredients && hoveredRecipe.ingredients.length">
                 <strong>Ingredients:</strong>
@@ -243,6 +281,7 @@
               <ion-button (click)="closeRecipeDetails()">Close</ion-button>
             </div>
             <ng-template #recipeList>
+              <!-- List of all selected recipes, with an option to remove each -->
               <div *ngIf="recipes && recipes.length > 0; else noRecipes">
                 <ul class="all-recipes-list">
                   <li *ngFor="let recipe of recipes; let i = index">
@@ -267,10 +306,16 @@
            UPDATED ADD MEAL FORM WITH CATEGORY FIELD
            ---------------------------------------------------
            Users select a meal, day, and now a category.
+           Additional comments:
+           - This form allows the user to add a new meal event.
+           - The meal is selected from a list of available recipes.
+           - The day and one or more categories are selected to classify the meal.
+           - The "Add Meal" button triggers the addMeal() method.
            =================================================== -->
       <div class="add-meal-form">
         <h3>Add Meal</h3>
         <div class="form-items">
+          <!-- Select Meal from available recipes -->
           <ion-item>
             <ion-select placeholder="Select Meal" [(ngModel)]="selectedMeal" interface="popover">
               <ion-select-option *ngFor="let recipe of recipes" [value]="recipe">
@@ -278,6 +323,7 @@
               </ion-select-option>
             </ion-select>
           </ion-item>
+          <!-- Select Day for the meal -->
           <ion-item>
             <ion-select placeholder="Select Day" [(ngModel)]="selectedDay">
               <ion-select-option value="sunday">Sunday</ion-select-option>
@@ -289,6 +335,7 @@
               <ion-select-option value="saturday">Saturday</ion-select-option>
             </ion-select>
           </ion-item>
+          <!-- Select one or more categories for the meal -->
           <ion-item>
             <ion-select placeholder="Select Category" [(ngModel)]="selectedCategories" multiple="true">
               <ion-select-option value="kidsLunch">Kids Lunch</ion-select-option>
@@ -296,6 +343,7 @@
               <ion-select-option value="familyDinner">Family Dinner</ion-select-option>
             </ion-select>
           </ion-item>
+          <!-- Button to add the meal using the selected inputs -->
           <ion-button (click)="addMeal()">Add Meal</ion-button>
         </div>
       </div>
@@ -305,15 +353,21 @@
          BOTTOM BUTTONS CONTAINER
          ---------------------------------------------------
          Contains buttons for generating/viewing the shopping list and saving the calendar.
+         Additional comments:
+         - Provides quick access actions to generate or view shopping and prep lists.
+         - Also includes a button to save the current state of the calendar.
          =================================================== -->
     <div class="button-container">
+      <!-- Shopping List Actions -->
       <div class="generate-shopping-list">
         <ion-button (click)="generateShoppingList()">Generate Shopping List</ion-button>
         <ion-button (click)="viewShoppingList()">View Shopping List</ion-button>
       </div>
+      <!-- Calendar Save Action -->
       <div class="save-calendar">
         <ion-button (click)="saveCalendar()">Save Calendar</ion-button>
       </div>
+      <!-- Prep List Actions -->
       <div class="generate-prep-list">
         <ion-button (click)="generatePrepList()">Generate Prep List</ion-button>
         <ion-button (click)="viewPrepList()">View Prep List</ion-button>

@@ -1,6 +1,8 @@
+// Import necessary Angular core features and services used by the RecipesPage component.
 import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { Platform, ModalController } from '@ionic/angular';
+import { UserService } from '../services/user.service';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -27,26 +29,35 @@ interface RecipeResponse {
   styleUrls: ['./recipes.page.scss'],
 })
 export class RecipesPage implements OnInit {
-  // Collapsible create recipe form flag.
+  // -------------------- Flags & State Variables --------------------
+
+  // Flag to show or hide the collapsible create recipe form.
   showCreateRecipe: boolean = false;
 
-  // Main recipe arrays.
+  // -------------------- Recipe Data Arrays --------------------
+
+  // Array holding all recipes fetched from the backend.
   recipes: any[] = [];
+  // Array of recipes that match the user's search query.
   filteredRecipes: any[] = [];
-  // Used when selecting recipes via checkboxes (if applicable).
+  // Array of recipes selected via checkboxes (if applicable).
   selectedRecipes: any[] = [];
-  // Recipes added on the left side; each recipe gets an extra property 'isExpanded'
-  // for toggling detailed view.
+  // Array of recipes added to the left container; each gets an extra 'isExpanded' property
+  // for toggling detailed view display.
   selectedRecipesList: any[] = [];
 
-  // Device type flag.
+  // -------------------- Device & UI Control --------------------
+
+  // Flag to determine whether the app is running on a mobile device.
   isMobile: boolean = false;
-  // Edit form control.
+  // Flag to control the visibility of the edit recipe modal.
   isEditFormOpen: boolean = false;
-  // Indicates if a submission is in progress.
+  // Indicates if a recipe submission is currently in progress to prevent duplicate submissions.
   isSubmitting: boolean = false;
 
-  // New Recipe model.
+  // -------------------- New Recipe Model --------------------
+
+  // Model for a new recipe, bound to the create recipe form.
   newRecipe: any = {
     author: '',
     title: '',
@@ -55,7 +66,9 @@ export class RecipesPage implements OnInit {
     tag: ''
   };
 
-  // Edit Recipe model.
+  // -------------------- Edit Recipe Model --------------------
+
+  // Model for editing an existing recipe.
   editRecipeData: any = {
     id: null,
     author: '',
@@ -65,7 +78,9 @@ export class RecipesPage implements OnInit {
     tag: ''
   };
 
+  // -------------------- Constructor & Dependency Injection --------------------
   constructor(
+    private userService: UserService,
     private recipeService: RecipeService,
     private platform: Platform,
     private http: HttpClient,
@@ -73,29 +88,46 @@ export class RecipesPage implements OnInit {
     private router: Router
   ) {}
 
+  // -------------------- Lifecycle Hook --------------------
   ngOnInit() {
+    const user = this.userService.getUser();
+    console.log(user);
+    if (user && user.username) {
+      this.newRecipe.author = user.username;
+    }
+    // Load all recipes from the backend.
     this.loadRecipes();
+    // Check the device type to adjust UI elements for mobile if needed.
     this.checkDeviceType();
   }
 
-  // Checks the device type to adjust UI for mobile screens.
+  /**
+   * checkDeviceType
+   * Determines if the app is on a mobile device (screen width <= 767px).
+   */
   checkDeviceType() {
     this.platform.ready().then(() => {
       this.isMobile = this.platform.width() <= 767;
     });
   }
 
-  // Toggle the visibility of the create recipe form.
+  // -------------------- UI Toggling Methods --------------------
+
+  /**
+   * toggleCreateRecipe
+   * Shows or hides the create recipe form.
+   */
   toggleCreateRecipe() {
     this.showCreateRecipe = !this.showCreateRecipe;
   }
 
   /**
    * submitRecipe
-   * Validates and sends the new recipe to the backend.
-   * On success, it reloads the recipes and clears the form.
+   * Validates the new recipe form and sends a POST request to the backend.
+   * On success, reloads recipes, adds the new recipe to the selected list, and resets form fields (except author).
    */
   submitRecipe() {
+    // Prevent duplicate submissions.
     if (this.isSubmitting) return;
     this.isSubmitting = true;
   
@@ -126,7 +158,12 @@ export class RecipesPage implements OnInit {
           this.selectedRecipes.push(newRecipeWithId);
           this.selectedRecipesList.push(newRecipeWithId);
           this.loadRecipes();
-          this.newRecipe = { author: '', title: '', ingredients: '', instructions: '', tag: '' };
+
+          // Clear only title, ingredients, instructions & tag (keep author)
+          this.newRecipe.title = '';
+          this.newRecipe.ingredients = '';
+          this.newRecipe.instructions = '';
+          this.newRecipe.tag = '';
         } else {
           alert('Failed to add the recipe');
         }
@@ -139,25 +176,20 @@ export class RecipesPage implements OnInit {
       }
     );
   }
-  
 
   /**
    * loadRecipes
    * Retrieves recipes from the backend via the RecipeService.
-   * Also calls the setRecipes method on the service.
    */
   loadRecipes() {
     this.recipeService.getRecipes().subscribe(
       (recipes) => {
-
-        // Ensure every recipe has a defined tag field.
         this.recipes = recipes
           .filter(recipe => recipe.pantry != true)
           .map(recipe => ({
-          ...recipe,
-          tag: recipe.tag || ''
-        }));
-        // Inform the service (if required by other parts of your app).
+            ...recipe,
+            tag: recipe.tag || ''
+          }));
         this.recipeService.setRecipes(this.recipes);
         this.filteredRecipes = [...this.recipes];
       },
@@ -169,7 +201,7 @@ export class RecipesPage implements OnInit {
 
   /**
    * filterRecipes
-   * Filters the recipes list based on search term (searching title and tag).
+   * Filters the list of recipes as the user types in the search bar.
    */
   filterRecipes(event: any) {
     const searchTerm = event.target.value.toLowerCase();
@@ -185,7 +217,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * isRecipeSelected
-   * Returns true if the given recipe is in the selectedRecipes array.
    */
   isRecipeSelected(recipe: any): boolean {
     return this.selectedRecipes.some(r => r.id === recipe.id);
@@ -193,8 +224,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * toggleRecipeSelection
-   * Adds or removes a recipe from the selected recipes arrays based on checkbox state.
-   * If the recipe has an API ID and no details yet, it fetches extra details.
    */
   toggleRecipeSelection(recipe: any, event: any) {
     if (event.detail.checked) {
@@ -215,7 +244,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * selectRecipe
-   * Adds a recipe (clicked from the right container) into the left container's selected list.
    */
   selectRecipe(recipe: any) {
     if (!this.selectedRecipesList.find(r => r.id === recipe.id)) {
@@ -225,7 +253,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * toggleRecipeDetails
-   * Toggles the collapsed/expanded state of the selected recipe details.
    */
   toggleRecipeDetails(recipe: any) {
     recipe.isExpanded = !recipe.isExpanded;
@@ -233,7 +260,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * removeSelectedRecipe
-   * Removes a recipe from the selected arrays.
    */
   removeSelectedRecipe(recipe: any) {
     this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
@@ -242,7 +268,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * fetchRecipeDetails
-   * If available, retrieves extended recipe details from an external API and updates the recipe object.
    */
   fetchRecipeDetails(recipe: any) {
     if (!recipe.api_id) return;
@@ -251,9 +276,7 @@ export class RecipesPage implements OnInit {
       (response: any) => {
         if (response.meals && response.meals.length > 0) {
           const mealData = response.meals[0];
-          // Attach full API details for potential later use.
           recipe.apiDetails = mealData;
-          // Build an ingredients array with measurements.
           const ingredients: string[] = [];
           for (let i = 1; i <= 20; i++) {
             const ingredient = mealData[`strIngredient${i}`];
@@ -265,7 +288,6 @@ export class RecipesPage implements OnInit {
             }
           }
           recipe.ingredients = ingredients;
-          // Set the instructions from the API.
           recipe.instructions = mealData.strInstructions;
         }
       },
@@ -277,7 +299,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * editRecipe
-   * Opens the edit modal with the selected recipe data.
    */
   editRecipe(recipe: any) {
     this.editRecipeData = {
@@ -289,10 +310,8 @@ export class RecipesPage implements OnInit {
 
   /**
    * updateRecipe
-   * Sends the updated recipe data to the backend and reloads recipes on success.
    */
   updateRecipe() {
-    // Convert ingredients from newlines → cleaned, comma-separated string
     this.editRecipeData.ingredients = this.editRecipeData.ingredients
       .split('\n')
       .map((line: string) => line.trim())
@@ -315,11 +334,9 @@ export class RecipesPage implements OnInit {
         }
       );
   }
-  
 
   /**
    * deleteRecipe
-   * Deletes a recipe (after confirmation) from the backend and updates local lists.
    */
   deleteRecipe(recipeId: number) {
     if (confirm('Are you sure you want to delete this recipe?')) {
@@ -340,7 +357,6 @@ export class RecipesPage implements OnInit {
 
   /**
    * addToCalendar
-   * Stores selected recipes in session storage and navigates to the calendar view.
    */
   addToCalendar() {
     if (this.selectedRecipesList.length === 0) {
@@ -348,15 +364,12 @@ export class RecipesPage implements OnInit {
       return;
     }
   
-    // Retrieve existing recipes from session storage, if any.
     let existingRecipes: any[] = [];
     const storedRecipes = sessionStorage.getItem('selectedRecipes');
     if (storedRecipes) {
       existingRecipes = JSON.parse(storedRecipes);
     }
   
-    // Merge existing recipes with selected recipes from the recipe page.
-    // Optionally, filter out duplicates by checking the recipe id.
     const mergedRecipes = [...existingRecipes];
     this.selectedRecipesList.forEach(newRecipe => {
       if (!mergedRecipes.some(recipe => recipe.id === newRecipe.id)) {
@@ -364,22 +377,18 @@ export class RecipesPage implements OnInit {
       }
     });
   
-    // Update session storage with the merged recipe list.
     sessionStorage.setItem('selectedRecipes', JSON.stringify(mergedRecipes));
-  
-    // Navigate to the calendar page with the updated recipe list.
     this.router.navigate(['/tabs/calendar'], { state: { recipes: mergedRecipes } });
   }
-  
 
-  /**
-   * openEditForm and closeEditForm
-   * Manage the visibility of the edit recipe modal.
-   */
+  // -------------------- Edit Modal Control Methods --------------------
+
+  // Opens the edit recipe modal.
   openEditForm() {
     this.isEditFormOpen = true;
   }
 
+  // Closes the edit recipe modal.
   closeEditForm() {
     this.isEditFormOpen = false;
   }

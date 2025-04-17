@@ -1,3 +1,7 @@
+<!-- 
+  Sign Up Page Header:
+  The header displays a translucent toolbar with the title "Sign Up".
+-->
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Sign Up</ion-title>
@@ -5,27 +9,53 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Main container for the sign-up form -->
   <div class="signup-container">
+    <!-- 
+         Sign Up Form:
+         - The form uses POST method for submitting to "/signup".
+         - (ngSubmit)="onSubmit()" binds the form submission to the component method.
+         - A local template reference (#signupForm="ngForm") is used for form validation.
+    -->
     <form action="/signup" method="POST" (ngSubmit)="onSubmit()" #signupForm="ngForm">
+      
+      <!-- Username Field -->
       <ion-item>
+        <!-- Floating label for the username input -->
         <ion-label position="floating">Username</ion-label>
+        <!-- Input field bound to the "username" property -->
         <ion-input type="text" [(ngModel)]="username" name="username" required></ion-input>
       </ion-item>
 
+      <!-- Password Field -->
       <ion-item>
+        <!-- Floating label for the password input -->
         <ion-label position="floating">Password</ion-label>
+        <!-- Input field bound to the "password" property -->
         <ion-input type="password" [(ngModel)]="password" name="password" required></ion-input>
       </ion-item>
       
+      <!-- Email Field -->
       <ion-item>
+        <!-- Floating label for the email input -->
         <ion-label position="floating">Email</ion-label>
+        <!-- Input field bound to the "email" property -->
         <ion-input type="email" [(ngModel)]="email" name="email" required></ion-input>
       </ion-item>
 
+      <!-- Submit Button -->
+      <!-- 
+           The button expands to block width and is disabled if the form is invalid.
+      -->
       <ion-button expand="block" type="submit" [disabled]="!signupForm.form.valid">
         Sign Up
       </ion-button>
 
+      <!-- Log In Message -->
+      <!-- 
+           Provides a call-to-action for users who already have an account.
+           Contains a text message and a clear-styled button that navigates to the login page.
+      -->
       <div class="log-in-message">
         <p>Already have an account?</p>
         <ion-button fill="clear" routerLink="/login">Log in</ion-button>

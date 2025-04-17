@@ -1,43 +1,59 @@
+<!-- 
+  Login Page Header:
+  The header contains a translucent toolbar with a title "Log In".
+-->
 <ion-header [translucent]="true">
-    <ion-toolbar>
-      <ion-title>Log In</ion-title>
-    </ion-toolbar>
+  <ion-toolbar>
+    <ion-title>Log In</ion-title>
+  </ion-toolbar>
 </ion-header>
-  
+
 <ion-content [fullscreen]="true">
-    <div class="login-container">
-      <form action="/login" method="POST" (ngSubmit)="onSubmit()" #loginForm="ngForm">
-        <ion-item>
-          <ion-label position="floating">Username</ion-label>
-          <ion-input 
-            type="text" 
-            id="username" 
-            name="username" 
-            [(ngModel)]="username" 
-            required>
-          </ion-input>
-        </ion-item>
-  
-        <ion-item>
-          <ion-label position="floating">Password</ion-label>
-          <ion-input 
-            type="password" 
-            id="password" 
-            name="password" 
-            [(ngModel)]="password" 
-            required>
-          </ion-input>
-        </ion-item>
-  
-        <ion-button expand="block" type="submit" [disabled]="!loginForm.form.valid">
-          Login
-        </ion-button>
-  
-        <div class="create-account-message">
-          <p>Don't have an account?</p>
-          <ion-button fill="clear" routerLink="/signup">Create one here</ion-button>
-        </div>
-      </form>
-    </div>
+  <!-- Main container for the login form -->
+  <div class="login-container">
+    <!-- 
+         Login Form:
+         - The form is set to POST to "/login" on submission.
+         - (ngSubmit)="onSubmit()" calls the Angular component's onSubmit() method.
+         - A local reference #loginForm="ngForm" is used to validate the form.
+    -->
+    <form action="/login" method="POST" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <!-- Username Field -->
+      <ion-item>
+        <ion-label position="floating">Username</ion-label>
+        <ion-input 
+          type="text" 
+          id="username" 
+          name="username" 
+          [(ngModel)]="username" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <!-- Password Field -->
+      <ion-item>
+        <ion-label position="floating">Password</ion-label>
+        <ion-input 
+          type="password" 
+          id="password" 
+          name="password" 
+          [(ngModel)]="password" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <!-- Submit Button -->
+      <!-- The button is disabled if the form is invalid -->
+      <ion-button expand="block" type="submit" [disabled]="!loginForm.form.valid">
+        Login
+      </ion-button>
+
+      <!-- Create Account Message -->
+      <!-- Provides a call-to-action for users who don't have an account -->
+      <div class="create-account-message">
+        <p>Don't have an account?</p>
+        <ion-button fill="clear" routerLink="/signup">Create one here</ion-button>
+      </div>
+    </form>
+  </div>
 </ion-content>
-  

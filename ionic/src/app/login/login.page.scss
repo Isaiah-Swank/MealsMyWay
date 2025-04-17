@@ -1,92 +1,132 @@
-/* Styles for the login page */
+/* 
+  Styles for the login page 
+*/
 
-ion-title{
+/* 
+  Styling for ion-title elements.
+  - Sets the font size to 32px.
+  - Centers the title using justify-self.
+  - Applies a dark green color (#246d48) to the text.
+*/
+ion-title {
   font-size: 32px;
   justify-self: center;
   color: #246d48;
 }
 
-/* Login container */
+/* 
+  Login container styles.
+  - Uses flex layout to center its children both vertically and horizontally.
+  - Ensures the container takes at least the full viewport height (100vh).
+  - Adds padding and a light green background.
+*/
 .login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: #cbddd1;
+  
+  /* Styles for the form element inside the login container */
+  form {
+    /* 
+      Form styling:
+      - White background with generous padding.
+      - Rounded corners and a subtle box shadow for depth.
+      - Fluid width (100%) but capped at 400px maximum.
+      - Displays as a vertical flex container with consistent gaps between items.
+    */
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    background: #cbddd1;
+    flex-direction: column;
+    gap: 20px;
   
-    form {
-      background-color: #fff;
-      padding: 40px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 400px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* Styling for ion-item elements within the form */
+    ion-item {
+      /* Removes default start padding for a cleaner layout */
+      --padding-start: 0;
+      /* Sets the border color for ion-item elements */
+      --border-color: #ccc;
   
-      ion-item {
-        --padding-start: 0; /* Remove padding for cleaner layout */
-        --border-color: #ccc;
-  
-        ion-label {
-          color: #246d48;
-          font-size: 14px;
-        }
-  
-        ion-input {
-          --padding-start: 10px;
-          --padding-end: 10px;
-        }
-      }
-  
-      ion-button {
-        width: 100%;
-        background-color: #246d48;
-        color: white;
-        font-size: 16px;
-        border-radius: 5px;
-  
-        &:hover {
-          --background: #cbddd1;
-        }
-  
-        &[disabled] {
-          --background: #ccc;
-        }
-      }
-    }
-  
-    .create-account-message {
-      text-align: center;
-      margin-top: 20px;
-  
-      p {
-        margin-bottom: 10px;
+      /* Styling for ion-label within each ion-item */
+      ion-label {
+        color: #246d48;
         font-size: 14px;
       }
   
-      ion-button {
-        font-size: 16px;
-        color: #ffffff;
-        --background: #246d48;
-        border-radius: 5px;
-  
-        &:hover {
-          --background: #cbddd1;
-        }
+      /* Styling for ion-input elements within each ion-item */
+      ion-input {
+        --padding-start: 10px;
+        --padding-end: 10px;
       }
     }
+  
+    /* Styling for ion-button elements within the form */
+    ion-button {
+      /* Ensure the button fills the available width */
+      width: 100%;
+      background-color: #246d48;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+  
+      /* Change background on hover for interactive feedback */
+      &:hover {
+        --background: #cbddd1;
+      }
+  
+      /* When the button is disabled, use a grey background */
+      &[disabled] {
+        --background: #ccc;
+      }
+    }
+  }
+  
+  /* 
+    Styles for the create account message section
+    - Centers the text and adds margin on top.
+  */
+  .create-account-message {
+    text-align: center;
+    margin-top: 20px;
+  
+    /* Paragraph styling within the create account message */
+    p {
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+  
+    /* Styling for ion-button elements within the create account message */
+    ion-button {
+      font-size: 16px;
+      color: #ffffff;
+      --background: #246d48;
+      border-radius: 5px;
+  
+      /* Change background on hover */
+      &:hover {
+        --background: #cbddd1;
+      }
+    }
+  }
 }
 
-/* Login Button Styling */
+/* 
+  Specific styling for ion-button elements of type="submit"
+  - Sets the background and text colors for the submit button.
+  - On hover, changes the background color to black.
+*/
 ion-button[type="submit"] {
   --background: #246d48;
   --color: #cbddd1;
 
-  &:hover{
+  &:hover {
     --background: #000000;
   }
 }
-  
