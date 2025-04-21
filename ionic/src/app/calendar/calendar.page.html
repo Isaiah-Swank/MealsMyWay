@@ -316,16 +316,16 @@
         <h3>Add Meal</h3>
         <div class="form-items">
           <!-- Select Meal from available recipes -->
-          <ion-item>
-            <ion-select placeholder="Select Meal" [(ngModel)]="selectedMeal" interface="popover">
+          <ion-item>    
+            <ion-select [(ngModel)]="selectedRecipes" multiple="true" placeholder="Select Recipes">
               <ion-select-option *ngFor="let recipe of recipes" [value]="recipe">
                 {{ recipe.title }}
               </ion-select-option>
             </ion-select>
           </ion-item>
-          <!-- Select Day for the meal -->
+          <!-- Select one or more days for the meal -->
           <ion-item>
-            <ion-select placeholder="Select Day" [(ngModel)]="selectedDay">
+            <ion-select [(ngModel)]="selectedDays" multiple="true" placeholder="Select Days">
               <ion-select-option value="sunday">Sunday</ion-select-option>
               <ion-select-option value="monday">Monday</ion-select-option>
               <ion-select-option value="tuesday">Tuesday</ion-select-option>
