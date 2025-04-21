@@ -37,10 +37,10 @@ export class Tab2Page implements OnInit {
 
   // List of recipes available for selection.
   recipes: any[] = [];
-  // The meal (recipe) selected by the user to add to the calendar.
-  selectedMeal: any = null;
-  // The selected day (e.g., "monday") for the meal to be added.
-  selectedDay: string = '';
+  // Holds the selected recipes (e.g., [{ title: 'Recipe 1' }, { title: 'Recipe 2' }]).
+  selectedRecipes: any[] = [];
+  // Holds the selected days (e.g., ['monday', 'wednesday']).
+  selectedDays: string[] = [];
   // Selected categories for the meal (can select multiple, e.g., 'kidsLunch').
   selectedCategories: string[] = [];
 
@@ -378,47 +378,49 @@ export class Tab2Page implements OnInit {
 
   // Adds a meal to the calendar; validates selections and fetches API details if necessary.
   addMeal() {
-    // Ensure a meal, day, and at least one category are selected.
-    if (!this.selectedMeal || !this.selectedDay || !this.selectedCategories || this.selectedCategories.length === 0) {
-      alert('Please select a meal, day, and at least one category.');
+    // Ensure at least one recipe, one day, and one category are selected.
+    if (!this.selectedRecipes || this.selectedRecipes.length === 0 || !this.selectedDays || this.selectedDays.length === 0 || !this.selectedCategories || this.selectedCategories.length === 0) {
+      alert('Please select at least one recipe, one day, and one category.');
       return;
     }
   
-    // If the selected meal is missing ingredients/instructions but has an API id, fetch details from the API.
-    if ((!this.selectedMeal.ingredients || this.selectedMeal.ingredients.length === 0) &&
-        this.selectedMeal.api_id && !this.selectedMeal.instructions) {
-      this.recipeService.getRecipeDetailsFromApi(this.selectedMeal.api_id).subscribe(
-        response => {
-          const mealData = (response as any).meals[0];
-          const ingredients: string[] = [];
-          // Loop through potential ingredient fields.
-          for (let i = 1; i <= 20; i++) {
-            const ingredient = mealData[`strIngredient${i}`];
-            const measure = mealData[`strMeasure${i}`];
-            if (ingredient && ingredient.trim()) {
-              ingredients.push(`${ingredient.trim()} - ${measure ? measure.trim() : ''}`);
-            } else {
-              break;
+    // Loop through each selected recipe.
+    this.selectedRecipes.forEach((recipe) => {
+      // If the recipe is missing ingredients/instructions but has an API id, fetch details from the API.
+      if ((!recipe.ingredients || recipe.ingredients.length === 0) && recipe.api_id && !recipe.instructions) {
+        this.recipeService.getRecipeDetailsFromApi(recipe.api_id).subscribe(
+          response => {
+            const mealData = (response as any).meals[0];
+            const ingredients: string[] = [];
+            // Loop through potential ingredient fields.
+            for (let i = 1; i <= 20; i++) {
+              const ingredient = mealData[`strIngredient${i}`];
+              const measure = mealData[`strMeasure${i}`];
+              if (ingredient && ingredient.trim()) {
+                ingredients.push(`${ingredient.trim()} - ${measure ? measure.trim() : ''}`);
+              } else {
+                break;
+              }
             }
+            // Assign fetched ingredients and instructions to the recipe.
+            recipe.ingredients = ingredients;
+            recipe.instructions = mealData.strInstructions;
+            this.pushMeal(recipe);
+          },
+          error => {
+            console.error('Error fetching recipe details:', error);
+            this.pushMeal(recipe);
           }
-          // Assign fetched ingredients and instructions to the selected meal.
-          this.selectedMeal.ingredients = ingredients;
-          this.selectedMeal.instructions = mealData.strInstructions;
-          this.pushMeal();
-        },
-        error => {
-          console.error('Error fetching recipe details:', error);
-          this.pushMeal();
-        }
-      );
-    } else {
-      // If details are already present, directly add the meal.
-      this.pushMeal();
-    }
+        );
+      } else {
+        // If details are already present, directly add the recipe.
+        this.pushMeal(recipe);
+      }
+    });
   }
   
   // Clones the selected meal and adds it to the calendar under each chosen category.
-  pushMeal() {
+  pushMeal(recipe: any) {
     const weekKey = this.formatDateLocal(this.selectedPlan);
     // Initialize week events if they do not exist.
     if (!this.events[weekKey]) {
@@ -434,26 +436,24 @@ export class Tab2Page implements OnInit {
         prep: []
       };
     }
-    
-    // Loop through each selected category and add a deep clone of the meal.
-    this.selectedCategories.forEach((category: string) => {
-      const mealClone = JSON.parse(JSON.stringify(this.selectedMeal)); // Deep clone the meal.
-      mealClone.processedForGrocery = false;
   
-      // Ensure the category array exists for the selected day.
-      if (!this.events[weekKey][this.selectedDay][category]) {
-        this.events[weekKey][this.selectedDay][category] = [];
-      }
-      // Add the cloned meal into the specified day and category.
-      this.events[weekKey][this.selectedDay][category].push(mealClone);
+    // Loop through each selected day and category to add the recipe.
+    this.selectedDays.forEach((day: string) => {
+      this.selectedCategories.forEach((category: string) => {
+        const mealClone = JSON.parse(JSON.stringify(recipe)); // Deep clone the recipe.
+        mealClone.processedForGrocery = false;
+  
+        // Ensure the category array exists for the selected day.
+        if (!this.events[weekKey][day][category]) {
+          this.events[weekKey][day][category] = [];
+        }
+        // Add the cloned recipe into the specified day and category.
+        this.events[weekKey][day][category].push(mealClone);
+      });
     });
   
     // Mark that changes have been made to the calendar.
     this.calendarChanged = true;
-    // Clear selections after adding the meal.
-    this.selectedMeal = null;
-    this.selectedDay = '';
-    this.selectedCategories = [];
   }
   
   // When a recipe is clicked, show its details by setting it as hovered.
@@ -893,7 +893,7 @@ export class Tab2Page implements OnInit {
   
     // ------------------ Update Pantry Data in the Backend ------------------
     // Filter out pantry items with zero unit.
-    const updatedPantryItems = pantryData!.item_list.pantry.filter(item => (item.unit ?? 0) > 0);
+    const updatedPantryItems = pantryData!.item_list.pantry;
     const pantryPayload = {
       user_id: this.currentUser.id,
       pf_flag: false,
@@ -1104,30 +1104,58 @@ export class Tab2Page implements OnInit {
             prep: calendarData.week.prep || []
           };
           console.log('Loaded Calendar for week:', weekKey);
-          if (this.events[weekKey]['grocery'] && this.events[weekKey]['grocery'].length > 0) {
-            this.shoppingList = this.events[weekKey]['grocery'];
-          }
+
+          // Update the shopping list and groceryListRaw for the selected week.
+          this.shoppingList = this.events[weekKey]['grocery'] || [];
+          this.groceryListRaw = {};
+          this.shoppingList.forEach(item => {
+            const parsed = this.parseIngredient(item);
+            if (parsed) {
+              const key = parsed.name.toLowerCase();
+              if (this.groceryListRaw[key]) {
+                this.groceryListRaw[key].unit += parsed.unit;
+              } else {
+                this.groceryListRaw[key] = {
+                  unit: parsed.unit,
+                  measurement: parsed.measurement,
+                  name: parsed.name
+                };
+              }
+            }
+          });
         } else {
           // Initialize an empty calendar structure if no data is found.
-          this.events[weekKey] = {
-            sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
-            grocery: [],
-            prep: []
-          };
           console.log('No calendar data found for week:', weekKey);
+          this.initializeBlankCalendar(weekKey);
         }
-        console.log('Loaded Calendar!', this.events[weekKey]);
       },
       error => {
         console.error('Error loading calendar:', error);
+        const weekKey = this.formatDateLocal(this.selectedPlan);
+        // Initialize a blank calendar if an error occurs.
+        this.initializeBlankCalendar(weekKey);
       }
     );
+  }
+
+  // Initializes a blank calendar for the given week key.
+  initializeBlankCalendar(weekKey: string) {
+    this.events[weekKey] = {
+      sunday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      monday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      tuesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      wednesday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      thursday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      friday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      saturday: { kidsLunch: [], adultsLunch: [], familyDinner: [] },
+      grocery: [],
+      prep: []
+    };
+    console.log('Initialized blank calendar for week:', weekKey);
+
+    // Reset the shopping list and groceryListRaw for the new week.
+    this.shoppingList = [];
+    this.groceryListRaw = {};
   }
 
   // -------------------- Helper Methods --------------------
