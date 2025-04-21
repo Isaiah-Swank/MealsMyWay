@@ -38,6 +38,7 @@ export class LoginPage {
    * and navigates to the calendar page if login is successful.
    */
   onSubmit() {
+    console.log('API URL:', environment.apiUrl);
     console.log('Username:', this.username);
     console.log('Password:', this.password);
 
