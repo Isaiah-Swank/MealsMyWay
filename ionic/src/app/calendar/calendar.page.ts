@@ -455,7 +455,7 @@ export class Tab2Page implements OnInit {
     // Mark that changes have been made to the calendar.
     this.calendarChanged = true;
 
-    this.saveCalendar(); // Save the calendar after adding the meal.
+    this.saveCalendar(false); // Save the calendar after adding the meal.
   }
   
   // When a recipe is clicked, show its details by setting it as hovered.
@@ -777,6 +777,9 @@ export class Tab2Page implements OnInit {
   
       // --- 1. Direct Match Check ---
       for (const item of pantryData!.item_list.pantry) {
+
+        if ((item.unit ?? 0) <= 0) continue;
+
         if ((item.name || '').toLowerCase() === key) {
           // If the measurement also matches.
           if (((item.measurement || '').toLowerCase()) === measurement.toLowerCase()) {
@@ -812,6 +815,7 @@ export class Tab2Page implements OnInit {
       // --- 2. Substring Match Check ---
       if (!foundMatch) {
         for (const item of pantryData!.item_list.pantry) {
+          if ((item.unit ?? 0) <= 0) continue;
           const recipeName = newAggregated[key].name.toLowerCase();
           const pantryName = (item.name || '').toLowerCase();
           if (recipeName.includes(pantryName) || pantryName.includes(recipeName)) {
