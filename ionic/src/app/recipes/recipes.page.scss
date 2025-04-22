@@ -137,6 +137,26 @@
   ::ng-deep .light-green-modal .modal-wrapper {
     --background: #cbddd1 !important; /* Light green background for modal */
   }
+
+  ::ng-deep ion-checkbox {
+    --size: 30px;
+    --checkmark-color: #cbddd1;
+    --border-radius: 10px;
+  }
+  
+  /* Style the checkbox container (visible box) */
+  ::ng-deep ion-checkbox::part(container) {
+    background: #fff !important; 
+    border: 2px solid #ccc;
+    border-radius: 10px;
+  }
+  
+  /* Style the checkbox when it is checked */
+  ::ng-deep ion-checkbox[aria-checked="true"]::part(container) {
+    background: #246d48 !important;
+    border-color: #246d48;
+  }
+
   
   /* ============================
      Responsive Layout for Mobile

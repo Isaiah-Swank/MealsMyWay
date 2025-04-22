@@ -454,6 +454,8 @@ export class Tab2Page implements OnInit {
   
     // Mark that changes have been made to the calendar.
     this.calendarChanged = true;
+
+    this.saveCalendar(false); // Save the calendar after adding the meal.
   }
   
   // When a recipe is clicked, show its details by setting it as hovered.
@@ -775,6 +777,9 @@ export class Tab2Page implements OnInit {
   
       // --- 1. Direct Match Check ---
       for (const item of pantryData!.item_list.pantry) {
+
+        if ((item.unit ?? 0) <= 0) continue;
+
         if ((item.name || '').toLowerCase() === key) {
           // If the measurement also matches.
           if (((item.measurement || '').toLowerCase()) === measurement.toLowerCase()) {
@@ -810,6 +815,7 @@ export class Tab2Page implements OnInit {
       // --- 2. Substring Match Check ---
       if (!foundMatch) {
         for (const item of pantryData!.item_list.pantry) {
+          if ((item.unit ?? 0) <= 0) continue;
           const recipeName = newAggregated[key].name.toLowerCase();
           const pantryName = (item.name || '').toLowerCase();
           if (recipeName.includes(pantryName) || pantryName.includes(recipeName)) {
@@ -960,6 +966,9 @@ export class Tab2Page implements OnInit {
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
+
+    // Reset calendarChanged flag
+    this.calendarChanged = false;
   
     // ------------------ Toast Notification for Freezer Items Used ------------------
     if (freezerUsed.length > 0) {
