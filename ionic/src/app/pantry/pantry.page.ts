@@ -238,9 +238,10 @@ export class PantryPage implements OnInit {
           handler: async (data) => {
             if (data.itemName) {
               // Parse the numeric unit if provided; default to 0 if not.
-              const unitVal = data.unit ? parseInt(data.unit, 10) : 0;
+              const unitVal = parseInt(data.unit, 10);
+              const finalUnit = isNaN(unitVal) ? 0 : unitVal;
               // Calls addPantryItem with the provided data.
-              await this.addPantryItem(data.itemName, data.measurement, unitVal);
+              await this.addPantryItem(data.itemName, data.measurement, finalUnit);
             } else {
               console.warn(`[PANTRY] WARNING - Item name is required.`);
             }
@@ -333,9 +334,7 @@ export class PantryPage implements OnInit {
     if (measurement && measurement.trim() !== '') {
       newItem.measurement = measurement.trim();
     }
-    if (unit && unit > 0) {
-      newItem.unit = unit;
-    }
+    newItem.unit = unit;
 
     // Add the new item to the local list.
     this.pantryItems.push(newItem);
