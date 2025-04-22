@@ -28,16 +28,20 @@
         -->
         <li *ngFor="let item of pantryItems; let i = index" class="pantry-item">
           <div class="item-info">
-            <!-- Display item with unit and measurement if available -->
-            <ng-container *ngIf="item.unit && item.unit > 0; else noUnitBlock">
-              <ng-container *ngIf="item.measurement && item.measurement.trim() !== ''">
-                {{ item.unit }}{{ item.measurement }} - {{ item.name }}
+            <!-- Display item with unit and measurement if available, including 0 -->
+            <ng-container *ngIf="item.unit !== null && item.unit !== undefined; else noUnitBlock">
+              <ng-container *ngIf="item.unit > 0">
+                <ng-container *ngIf="item.measurement && item.measurement.trim() !== ''">
+                  {{ item.unit }}{{ item.measurement }} - {{ item.name }}
+                </ng-container>
+                <ng-container *ngIf="!item.measurement || item.measurement.trim() === ''">
+                  {{ item.unit }} {{ item.name }}
+                </ng-container>
               </ng-container>
-              <ng-container *ngIf="!item.measurement || item.measurement.trim() === ''">
-                {{ item.unit }} {{ item.name }}
+              <ng-container *ngIf="item.unit === 0">
+                0 {{ item.name }}
               </ng-container>
             </ng-container>
-            <!-- Display item name only if no unit is available -->
             <ng-template #noUnitBlock>
               {{ item.name }}
             </ng-template>
