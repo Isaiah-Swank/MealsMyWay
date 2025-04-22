@@ -454,6 +454,8 @@ export class Tab2Page implements OnInit {
   
     // Mark that changes have been made to the calendar.
     this.calendarChanged = true;
+
+    this.saveCalendar(); // Save the calendar after adding the meal.
   }
   
   // When a recipe is clicked, show its details by setting it as hovered.
@@ -960,6 +962,9 @@ export class Tab2Page implements OnInit {
       response => console.log('Calendar saved successfully:', response),
       error => console.error('Error saving calendar:', error)
     );
+
+    // Reset calendarChanged flag
+    this.calendarChanged = false;
   
     // ------------------ Toast Notification for Freezer Items Used ------------------
     if (freezerUsed.length > 0) {
