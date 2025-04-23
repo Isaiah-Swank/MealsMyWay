@@ -44,7 +44,16 @@ export class RecipesPage implements OnInit {
   selectedRecipes: any[] = [];
   // Array of recipes added to the left container; each gets an extra 'isExpanded' property
   // for toggling detailed view display.
-  selectedRecipesList: any[] = [];
+  selectedRecipesList: any[] = []; // or the right type
+  
+  selectAllRecipes() {
+    this.selectedRecipesList = [...this.filteredRecipes];
+  }
+  
+  deselectAllRecipes() {
+    this.selectedRecipesList = [];
+  }
+  
 
   // -------------------- Device & UI Control --------------------
 
@@ -219,28 +228,25 @@ export class RecipesPage implements OnInit {
    * isRecipeSelected
    */
   isRecipeSelected(recipe: any): boolean {
-    return this.selectedRecipes.some(r => r.id === recipe.id);
+    // Use the correct property name for unique ID (id, _id, or title if that's unique)
+    return this.selectedRecipesList.some(r => r.id === recipe.id);
   }
-
   /**
    * toggleRecipeSelection
    */
-  toggleRecipeSelection(recipe: any, event: any) {
-    if (event.detail.checked) {
-      if (!this.isRecipeSelected(recipe)) {
-        this.selectedRecipes.push(recipe);
-      }
-      if (!this.selectedRecipesList.some(r => r.id === recipe.id)) {
-        this.selectedRecipesList.push({ ...recipe, isExpanded: false });
-        if (recipe.api_id && !recipe.apiDetails) {
-          this.fetchRecipeDetails(recipe);
-        }
-      }
-    } else {
-      this.selectedRecipes = this.selectedRecipes.filter(r => r.id !== recipe.id);
+  toggleRecipeSelection(recipe: any, event?: Event) {
+    // Optionally prevent default behavior
+    if (event) event.preventDefault();
+  
+    if (this.isRecipeSelected(recipe)) {
+      // Remove from selected
       this.selectedRecipesList = this.selectedRecipesList.filter(r => r.id !== recipe.id);
+    } else {
+      // Add to selected
+      this.selectedRecipesList = [...this.selectedRecipesList, recipe];
     }
   }
+  
 
   /**
    * selectRecipe

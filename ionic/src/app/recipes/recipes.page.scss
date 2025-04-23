@@ -157,6 +157,19 @@
     border-color: #246d48;
   }
 
+  ion-item.selected {
+    box-shadow: 0 0 0 3px #77ba8f;
+    background-color: #e3f2e1 !important;
+  }
+
+  .select-buttons-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    justify-content: flex-end; /* or center, if you prefer */
+  }
+  
+
   
   /* ============================
      Responsive Layout for Mobile
