@@ -113,7 +113,7 @@ ion-title {
   --padding-bottom: 10px;
   --background: #246d48; /* Dark green background */
   --color: #cbddd1; /* Light green text color */
-  --border-radius: 5px;
+  --border-radius: 30px;
 }
 
 /* Hover effect for edit buttons */
@@ -140,10 +140,11 @@ ion-title {
 ============================ */
 
 /* Shared styles for item controls (increment, decrement, delete) */
-.item-controls {
+.item-controls { 
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 6px; /* Space between controls */
+  gap: 4px; /* space between buttons */
 }
 
 /* Icon button styles */

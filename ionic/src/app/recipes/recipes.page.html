@@ -70,6 +70,7 @@
 
       <!-- Selected Recipes Section -->
       <ng-container *ngIf="selectedRecipesList.length > 0">
+        
         <h2>Selected Recipes</h2>
         <!-- Loop through each recipe in the selectedRecipesList -->
         <div *ngFor="let recipe of selectedRecipesList">
@@ -135,17 +136,29 @@
         placeholder="Search..."
         (ionInput)="filterRecipes($event)">
       </ion-searchbar>
+
+      <div style="display:flex; gap:10px; margin-bottom: 10px;">
+        <ion-button size="small" (click)="selectAllRecipes()">Select All</ion-button>
+        <ion-button size="small" (click)="deselectAllRecipes()">Deselect All</ion-button>
+      </div>
+
+
+
+
       <!-- List of recipes with checkboxes -->
       <ion-list class="recipe-list">
-        <ion-item *ngFor="let recipe of filteredRecipes">
-          <!-- Checkbox indicates whether the recipe is selected -->
-          <ion-checkbox
-            slot="start"
-            [checked]="isRecipeSelected(recipe)"
-            (ionChange)="toggleRecipeSelection(recipe, $event)">
-          </ion-checkbox>
-          <ion-label>{{ recipe.title }}</ion-label>
-        </ion-item>
+        <ion-item
+        *ngFor="let recipe of filteredRecipes"
+        (click)="toggleRecipeSelection(recipe, $event)"
+        [class.selected]="isRecipeSelected(recipe)">
+        <ion-checkbox
+          slot="start"
+          [checked]="isRecipeSelected(recipe)"
+          (click)="$event.stopPropagation()"
+          (ionChange)="toggleRecipeSelection(recipe, $event)">
+        </ion-checkbox>
+        <ion-label>{{ recipe.title }}</ion-label>
+      </ion-item>
       </ion-list>
     </div>
   </div>

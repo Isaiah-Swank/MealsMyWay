@@ -84,9 +84,14 @@
           {{ item.name }} - {{ item.quantity }} Portion{{ item.quantity > 1 ? 's' : '' }}
           <!-- Increment and decrement controls (visible when NOT in edit mode) -->
           <span class="item-controls" *ngIf="!freezerEditMode">
-            <span class="plus" (click)="incrementFreezerItem(i)">+</span>
-            <span class="minus" (click)="decrementFreezerItem(i)">-</span>
+            <ion-button fill="clear" size="small" class="icon-button" (click)="incrementFreezerItem(i)">
+              <ion-icon name="add-circle"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" class="icon-button" (click)="decrementFreezerItem(i)">
+              <ion-icon name="remove-circle"></ion-icon>
+            </ion-button>
           </span>
+          
           <!-- Delete icon (visible only in edit mode) -->
           <span class="delete-icon" *ngIf="freezerEditMode" (click)="deleteFreezerItem(i)">✖</span>
         </li>
@@ -108,9 +113,14 @@
           {{ item.name }} - {{ item.quantity }} Uses
           <!-- Increment and decrement controls (visible when NOT in edit mode) -->
           <span class="item-controls" *ngIf="!freezerEditMode">
-            <span class="plus" (click)="incrementSpiceItem(i)">+</span>
-            <span class="minus" (click)="decrementSpiceItem(i)">-</span>
+            <ion-button fill="clear" size="small" class="icon-button" (click)="incrementFreezerItem(i)">
+              <ion-icon name="add-circle"></ion-icon>
+            </ion-button>
+            <ion-button fill="clear" size="small" class="icon-button" (click)="decrementFreezerItem(i)">
+              <ion-icon name="remove-circle"></ion-icon>
+            </ion-button>
           </span>
+          
           <!-- Delete icon (visible only in edit mode) -->
           <span class="delete-icon" *ngIf="spiceEditMode" (click)="deleteSpiceItem(i)">✖</span>
         </li>
