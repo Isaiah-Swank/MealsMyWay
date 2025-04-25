@@ -112,11 +112,11 @@
         <li *ngFor="let item of spiceItems; let i = index">
           {{ item.name }} - {{ item.quantity }} Uses
           <!-- Increment and decrement controls (visible when NOT in edit mode) -->
-          <span class="item-controls" *ngIf="!freezerEditMode">
-            <ion-button fill="clear" size="small" class="icon-button" (click)="incrementFreezerItem(i)">
+          <span class="item-controls" *ngIf="!spiceEditMode">
+            <ion-button fill="clear" size="small" class="icon-button" (click)="incrementSpiceItem(i)">
               <ion-icon name="add-circle"></ion-icon>
             </ion-button>
-            <ion-button fill="clear" size="small" class="icon-button" (click)="decrementFreezerItem(i)">
+            <ion-button fill="clear" size="small" class="icon-button" (click)="decrementSpiceItem(i)">
               <ion-icon name="remove-circle"></ion-icon>
             </ion-button>
           </span>
