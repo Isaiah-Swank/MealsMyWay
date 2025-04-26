@@ -1,4 +1,5 @@
 // Import Angular core features and required services/components for the calendar page.
+import * as pluralize from 'pluralize';
 import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { AlertController } from '@ionic/angular';
@@ -691,7 +692,6 @@ export class Tab2Page implements OnInit {
   }
   
   async createShoppingList() {
-    // Normalize strings for case-insensitive and trimmed comparisons
     const normalize = (str: string | undefined) => (str ?? '').toLowerCase().trim();
   
     const weekKey = this.formatDateLocal(this.selectedPlan);
@@ -720,7 +720,6 @@ export class Tab2Page implements OnInit {
       if (weekEvents.hasOwnProperty(day)) {
         for (const category in weekEvents[day]) {
           for (const meal of weekEvents[day][category]) {
-            // Skip meals available in freezer
             if (meal.title) {
               const freezerMatch = freezerItems.find(
                 item => normalize(item.name) === normalize(meal.title) && (item.quantity ?? 0) > 0
@@ -732,7 +731,7 @@ export class Tab2Page implements OnInit {
                 continue;
               }
             }
-  
+            
             // Aggregate ingredients if not already processed
             if (!meal.processedForGrocery) {
               const ingredients = await this.getIngredientsForMeal(meal);
@@ -758,7 +757,7 @@ export class Tab2Page implements OnInit {
       }
     }
   
-    // Subtract pantry items from aggregated needs
+    // ---- Apply pantry matching ----
     for (let key in newAggregated) {
       const newReq = newAggregated[key].unit;
       const measurement = newAggregated[key].measurement;
@@ -766,16 +765,21 @@ export class Tab2Page implements OnInit {
       let remaining = newReq;
       let foundMatch = false;
   
+      // Singularize recipe name
+      const singularRecipeName = pluralize.singular(key);
+  
       // --- 1. Direct Match Check ---
       for (const item of pantryData!.item_list.pantry) {
         if ((item.unit ?? 0) <= 0) continue;
   
-        if (normalize(item.name) === key) {
+        const pantryItemName = normalize(item.name);
+        const singularPantryName = pluralize.singular(pantryItemName);
+  
+        if (singularPantryName === singularRecipeName) {
           const pantryMeas = normalize(item.measurement);
           const neededMeas = normalize(measurement);
   
           if (pantryMeas === neededMeas || item.measurement?.toLowerCase() === measurement.toLowerCase()) {
-            // Match on both name and measurement (with case-tolerance)
             if ((item.unit ?? 0) >= remaining) {
               item.unit = (item.unit ?? 0) - remaining;
               remaining = 0;
@@ -786,12 +790,6 @@ export class Tab2Page implements OnInit {
             foundMatch = true;
             break;
           } else {
-            // Mismatched measurements — trigger popup
-            console.log('[POPUP A - Direct Match Mismatch]');
-            console.log('[A] originalName:', originalName);
-            console.log('[A] measurement:', measurement);
-            console.log('[A] item.measurement:', item.measurement);
-  
             const conversionResult = await this.showGroceryConversionPopup(
               originalName,
               measurement,
@@ -812,20 +810,14 @@ export class Tab2Page implements OnInit {
       if (!foundMatch) {
         for (const item of pantryData!.item_list.pantry) {
           if ((item.unit ?? 0) <= 0) continue;
-          const recipeName = normalize(newAggregated[key].name);
-          const pantryName = normalize(item.name);
-          const recipeWords = recipeName.split(/\s+/);
-          const pantryWords = pantryName.split(/\s+/);
-          const wordOverlap = recipeWords.some(word => pantryWords.includes(word));
+          const recipeWords = singularRecipeName.split(/\s+/);
+          const pantryWords = pluralize.singular(normalize(item.name)).split(/\s+/);
+  
+          const wordOverlap = recipeWords.some((word: string) => pantryWords.includes(word));
   
           if (wordOverlap) {
-            console.log('[POPUP B - Word Overlap Match]');
-            console.log('[B] name:', newAggregated[key].name);
-            console.log('[B] pantry item:', item.name);
-            console.log('[B] measurement:', measurement, '| pantry:', item.measurement);
-  
             const conversionResult = await this.showGroceryConversionPopup(
-              newAggregated[key].name,
+              originalName,
               measurement,
               item.measurement || '',
               (item.unit ?? 0),
@@ -855,7 +847,6 @@ export class Tab2Page implements OnInit {
       if (newAggregated.hasOwnProperty(key)) {
         const spiceMatch = spiceItems.find(item => normalize(item.name) === key);
         if (spiceMatch && (spiceMatch.quantity ?? 0) > 0) {
-          console.log(`Spice "${spiceMatch.name}" decremented by 1. Remaining: ${(spiceMatch.quantity ?? 0) - 1}`);
           spiceMatch.quantity = (spiceMatch.quantity ?? 0) - 1;
           if (this.groceryListRaw[key]) {
             delete this.groceryListRaw[key];
