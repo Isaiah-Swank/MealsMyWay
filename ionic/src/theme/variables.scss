@@ -1,2 +1,55 @@
 // For information on how to create your own theme, please see:
 // http://ionicframework.com/docs/theming/
+:root {
+    --primary-color: #246d48; /* Dark Green */
+    --secondary-color: #cbddd1; /* Light Green */
+    --background-color: #fdf5d1; /* Light Beige */
+    --text-color: #246d48;
+    --highlight-color: #77ba8f;
+  }
+  
+  /* Light Theme */
+  .light-theme {
+    --primary-color: #246d48;
+    --secondary-color: #cbddd1;
+    --background-color: #fdf5d1;
+    --text-color: #246d48;
+    --highlight-color: #77ba8f;
+  }
+  
+  /* Dark Theme */
+  .dark-theme {
+    --primary-color: #77ba8f;
+    --secondary-color: #2c2c2c;
+    --background-color: #121212;
+    --text-color: #000000;
+    --highlight-color: #cbddd1;
+  }
+  
+  /* Beach Pastel Theme */
+  .beach-theme {
+    --primary-color: #f7c59f;
+    --secondary-color: #ffeead;
+    --background-color: #d5f4e6;
+    --text-color: #7c4d29;
+    --highlight-color: #80ced6;
+  }
+  
+  /* One Pride Theme (Honolulu Blue and Grey) */
+  .onepride-theme {
+    --primary-color: #0076b6; /* Honolulu Blue */
+    --secondary-color: #b0b7bc; /* Grey */
+    --background-color: #e5e5e5; /* Light Grey Background */
+    --text-color: #0076b6; /* Text same as primary */
+    --highlight-color: #66c6f2; /* Lighter Honolulu Blue for hover/highlight */
+  }
+  
+  /* Lumberjack Theme (Navy Blue and Gold) */
+  .lumberjack-theme {
+    --primary-color: #00274d; /* Navy Blue */
+    --secondary-color: #ffcb05; /* Gold */
+    --background-color: #f5f5f5; /* Light neutral background */
+    --text-color: #00274d; /* Navy Text */
+    --highlight-color: #ffd54f; /* Softer Gold for highlight */
+  }
+  

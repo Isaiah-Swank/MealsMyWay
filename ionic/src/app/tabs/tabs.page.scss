@@ -1,17 +1,18 @@
+/* ============================
+  Tabs Page Global Styles
+============================ */
+
 ion-content {
-    --background: #246d48;
-
+  --background: var(--secondary-color); /* Background matches secondary theme color */
 }
-
 
 ion-tab-button {
-  --color-selected: #77ba8f; /* Replace with your desired light green */
+  --color-selected: var(--highlight-color); /* Selected tab uses the highlight color */
+  --color: var(--primary-color); /* Default tab icon/text uses primary color */
 }
 
+/* Hover effects on tab icons and labels */
 ion-tab-button:hover ion-icon,
 ion-tab-button:hover ion-label {
-  color: #246d48; /* Your desired darker green */
+  color: var(--primary-color); /* Hover color switches to primary color */
 }
-
-
-  

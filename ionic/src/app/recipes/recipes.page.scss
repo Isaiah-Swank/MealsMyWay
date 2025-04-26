@@ -1,219 +1,254 @@
-/* Container for the entire "book" view which houses both the recipe creation/selection and the recipe list.
-   Uses a flex layout to position its children side-by-side, with centered alignment, a custom background color,
-   and a calculated height to fill most of the viewport. */
-   .book-container {
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    padding: 20px;
-    background-color: #cbddd1; /* Light greenish background */
-    position: relative;
-    z-index: 1;
-    height: calc(100vh - 100px); /* Sets the container height relative to viewport height */
-    overflow: hidden;
+/* 
+  Container for the entire "book" view which houses both the recipe creation/selection and the recipe list.
+*/
+.book-container {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  padding: 20px;
+  background-color: var(--secondary-color);
+  position: relative;
+  z-index: 1;
+  height: calc(100vh - 100px);
+  overflow: hidden;
+}
+
+/* 
+  Styling for the page title.
+*/
+ion-title {
+  font-size: 32px;
+  justify-self: center;
+  color: var(--primary-color);
+}
+
+/* 
+  Styles for both the left (my-recipes-container) and right (recipes-container) containers.
+*/
+.my-recipes-container,
+.recipes-container {
+  flex: 1;
+  padding: 20px;
+  background-color: var(--background-color);
+  border: 15px solid var(--primary-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+  overflow-y: auto;
+}
+
+/* 
+  Apply the primary color to container headers
+*/
+.my-recipes-container,
+.recipes-container h1 {
+  color: var(--primary-color);
+}
+
+/* 
+  Left container: Rounds the left side corners.
+*/
+.my-recipes-container {
+  border-radius: 15px 0 0 15px;
+  margin-right: -30px;
+}
+
+/* ==========================
+Create Recipe + Form Buttons (Large Buttons)
+========================== */
+.my-recipes-container ion-button {
+  --background: var(--primary-color);
+  --color: var(--background-color); /*  Make large button text lighter for better contrast */
+  font-weight: bold;
+}
+
+/* Hover State for Create Recipe & Form Buttons */
+.my-recipes-container ion-button:hover {
+  --background: var(--highlight-color);
+  --color: var(--text-color); /* Go back to normal readable color when hovering */
+}
+
+/* 
+  Right container: Rounds the right side corners.
+*/
+.recipes-container {
+  border-radius: 0 15px 15px 0;
+  margin-left: -30px;
+}
+
+/* 
+  Book spine between containers.
+*/
+.book-spine {
+  width: 100px;
+  background-color: var(--primary-color);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 0;
+  position: relative;
+}
+
+/* 
+  Override default Ionic button styles.
+*/
+ion-button {
+  --background: var(--primary-color);
+  --color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+/* 
+  Change button background on hover.
+*/
+ion-button:hover {
+  --background: var(--highlight-color);
+}
+
+/* 
+  Style for the search bar in the recipe list.
+*/
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  align-self: center;
+}
+
+/* 
+  Styling for the recipe list container.
+*/
+.recipe-list {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  flex-grow: 1;
+  background-color: var(--background-color);
+}
+
+/* 
+  Styling for individual recipe list items (ion-item).
+*/
+ion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  background-color: var(--primary-color);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  color: var(--text-color);
+
+  /* Force child elements (labels, divs, etc.) to also inherit text color */
+  * {
+    color: var(--text-color);
   }
-  
-  /* Styling for the page title.
-     Increases font size, centers text, and applies a green color. */
-  ion-title {
-    font-size: 32px;
-    justify-self: center;
-    color: #246d48; /* Dark green */
-  }
-  
-  /* 
-    Styles for both the left (my-recipes-container) and right (recipes-container) containers.
-    They share a flexible width (flex: 1), padding, a light background color, a border with green color,
-    vertical stacking (column layout), and scrollability for overflow content.
-  */
-  .my-recipes-container,
-  .recipes-container {
-    flex: 1;
-    padding: 20px;
-    background-color: #fdf5d1; /* Light, warm background */
-    border: 15px solid #246d48;
-    display: flex;
+}
+
+/* 
+  On hover, change the recipe list item background.
+*/
+ion-item:hover {
+  background-color: var(--secondary-color);
+}
+
+/* 
+  Ensure that recipe details are displayed as a block.
+*/
+.recipe-details {
+  display: block;
+}
+
+/* 
+  Override the modal background color for the edit recipe modal.
+*/
+::ng-deep .light-green-modal .modal-wrapper {
+  --background: var(--secondary-color) !important;
+}
+
+/* 
+  Override Ion Checkbox styles.
+*/
+::ng-deep ion-checkbox {
+  --size: 30px;
+  --checkmark-color: var(--secondary-color);
+  --border-radius: 10px;
+}
+
+/* 
+  Style the checkbox container.
+*/
+::ng-deep ion-checkbox::part(container) {
+  background: #fff !important;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+}
+
+/* 
+  Style the checkbox when it is checked.
+*/
+::ng-deep ion-checkbox[aria-checked="true"]::part(container) {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color);
+}
+
+/* 
+  Highlight selected items.
+*/
+ion-item.selected {
+  box-shadow: 0 0 0 3px var(--highlight-color);
+  background-color: #e3f2e1 !important; /* optionally make this a new CSS variable too if you want full control */
+}
+
+/* 
+  Style for the select-buttons-row.
+*/
+.select-buttons-row ion-button {
+  --background: var(--primary-color);
+  --color: var(--background-color); /* Use background color as text color for stronger contrast */
+  font-weight: bold; /* ✅ (Optional) makes small buttons easier to read */
+}
+
+/* Hover state - optional, keep hover backgrounds strong */
+.select-buttons-row ion-button:hover {
+  --background: var(--highlight-color);
+  --color: var(--text-color); /* Revert to normal text color when hovering */
+}
+
+/* ============================
+   Responsive Layout for Mobile
+============================ */
+
+@media (max-width: 768px) {
+  .book-container {
     flex-direction: column;
-    position: relative;
-    z-index: 2; /* Above the book spine */
-    overflow-y: auto;
-  }
-  
-  /* Apply the dark green color to header elements within the containers */
-  .my-recipes-container,
-  .recipes-container h1 {
-    color: #246d48;
-  }
-  
-  /* Left container: Rounds the left side corners and overlaps slightly with the right container. */
-  .my-recipes-container {
-    border-radius: 15px 0 0 15px;
-    margin-right: -30px;
-  }
-  
-  /* Right container: Rounds the right side corners and overlaps slightly with the left container. */
-  .recipes-container {
-    border-radius: 0 15px 15px 0;
-    margin-left: -30px;
-  }
-  
-  /* Visual "spine" between the left and right containers.
-     A fixed-width element with a dark green background and inner shadow to create a book-like effect. */
-  .book-spine {
-    width: 100px;
-    background-color: #1F5014; /* Darker green */
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
-    z-index: 0;
-    position: relative;
-  }
-  
-  /* Override default Ionic button styles to match the app's color scheme.
-     Applies green background, white text, and a margin at the bottom of each button. */
-  ion-button {
-    --background: #246d48;
-    --color: #fff;
-    margin-bottom: 20px;
-  }
-  
-  /* Change button background on hover to a slightly darker green. */
-  ion-button:hover {
-    --background: #1F5014;
-  }
-  
-  /* Style for the search bar in the recipe list.
-     Sets full width, padding, border, and rounded corners. */
-  .search-bar {
-    width: 100%;
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    align-self: center;
-  }
-  
-  /* Styling for the recipe list container.
-     Removes default padding/margins and bullet styles; allows the list to grow and fills its container. */
-  .recipe-list {
-    padding: 0;
-    margin: 0;
-    list-style-type: none;
-    flex-grow: 1;
-    background-color: #fdf5d1;
-  }
-  
-  /* Styling for individual recipe list items (ion-item).
-     Uses flex layout to space content, padding and margin for spacing, a beige background,
-     a light border with rounded corners, custom font styles, and a pointer cursor.
-     Note: The background color is overridden here to a green color. */
-  ion-item {
-    display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px;
-    margin-bottom: 10px;
-    background-color: #f5f5dc; /* Beige background */
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    color: #246d48;
-    background-color: #246d48; /* Overrides previous background, ensuring a green background */
-  }
-  
-  /* On hover, change the recipe list item background to a lighter tone. */
-  ion-item:hover {
-    background-color: #cbddd1;
-  }
-  
-  /* Ensure that recipe details are displayed as a block (non-flex layout). */
-  .recipe-details {
-    display: block;
-  }
-  
-  /* Override the modal background color for the edit recipe modal.
-     Uses ::ng-deep to target deep child components and force the background color with !important. */
-  ::ng-deep .light-green-modal .modal-wrapper {
-    --background: #cbddd1 !important; /* Light green background for modal */
   }
 
-  ::ng-deep ion-checkbox {
-    --size: 30px;
-    --checkmark-color: #cbddd1;
-    --border-radius: 10px;
-  }
-  
-  /* Style the checkbox container (visible box) */
-  ::ng-deep ion-checkbox::part(container) {
-    background: #fff !important; 
-    border: 2px solid #ccc;
-    border-radius: 10px;
-  }
-  
-  /* Style the checkbox when it is checked */
-  ::ng-deep ion-checkbox[aria-checked="true"]::part(container) {
-    background: #246d48 !important;
-    border-color: #246d48;
+  .my-recipes-container,
+  .recipes-container {
+    width: 100%;
+    margin: 0;
+    border-radius: 15px;
   }
 
-  ion-item.selected {
-    box-shadow: 0 0 0 3px #77ba8f;
-    background-color: #e3f2e1 !important;
+  .book-spine {
+    display: none;
   }
 
-  .select-buttons-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    justify-content: flex-end; /* or center, if you prefer */
-  }
-  
-
-  
-  /* ============================
-     Responsive Layout for Mobile
-  ============================ */
-  
-  /* Mobile-specific styles for screen widths up to 768px. */
-  @media (max-width: 768px) {
-    /* Reorient the book-container to a column layout, reduce padding, and center-align items. */
-    .book-container {
-      flex-direction: column;
-      padding: 10px;
-      align-items: center;
-    }
-  
-    /* Both the left and right containers become full width,
-       margins are removed and border radii are uniformly applied. */
-    .my-recipes-container,
-    .recipes-container {
-      width: 100%;
-      margin: 0; 
-      border-radius: 15px; 
-    }
-  
-    /* Hide the book spine on mobile as it is less necessary in a vertical layout. */
-    .book-spine {
-      display: none;
-    }
-  
-    /* Reduce the font size of the title and center the text. */
-    ion-title {
-      font-size: 20px;
-      text-align: center;
-    }
-  
-    /* Make ion-buttons span full width on mobile devices. */
-    ion-button {
-      width: 100%;
-    }
+  ion-title {
+    font-size: 20px;
+    text-align: center;
   }
 
-  .select-buttons-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    justify-content: flex-end; /* you can change to center if preferred */
+  ion-button {
+    width: 100%;
   }
-  
+}
