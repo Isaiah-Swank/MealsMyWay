@@ -137,10 +137,12 @@
         (ionInput)="filterRecipes($event)">
       </ion-searchbar>
 
-      <div style="display:flex; gap:10px; margin-bottom: 10px;">
+      <div class="select-buttons-row">
         <ion-button size="small" (click)="selectAllRecipes()">Select All</ion-button>
         <ion-button size="small" (click)="deselectAllRecipes()">Deselect All</ion-button>
+        <ion-button size="small" (click)="recommendRecipes()">Recommend Recipes</ion-button>
       </div>
+      
 
 
 

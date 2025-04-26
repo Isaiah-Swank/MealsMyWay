@@ -36,7 +36,32 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
+/* ============================
+  Smooth Transitions for Theme Changes
+============================ */
+* {
+  transition: 
+    background-color 0.6s ease, 
+    color 0.6s ease, 
+    border-color 0.6s ease, 
+    box-shadow 0.6s ease;
+}
+
+/* ============================
+  Custom Toast Styling
+============================ */
 .my-custom-toast {
-    --background: #246d48;
-    --color: #fff;
+  --background: var(--primary-color);
+  --color: var(--secondary-color);
+}
+
+/* ============================
+  Extra: Optional base fades for containers and buttons
+============================ */
+ion-button, ion-card, ion-item, .container, .pantry, .freezer, .spice, .day {
+  transition: 
+    background-color 0.6s ease, 
+    color 0.6s ease, 
+    border-color 0.6s ease, 
+    box-shadow 0.6s ease;
 }

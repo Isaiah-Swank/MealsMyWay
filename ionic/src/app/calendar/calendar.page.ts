@@ -1381,8 +1381,8 @@ export class Tab2Page implements OnInit {
   async presentToast(message: string) {
     const toast = await this.toastController.create({
       message: message,
-      duration: 2000,
-      position: 'middle',
+      duration: 2500,
+      position: 'top',
       cssClass: 'my-custom-toast' // Custom CSS class for toast styling.
     });
     toast.present();

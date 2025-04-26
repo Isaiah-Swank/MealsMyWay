@@ -1,40 +1,26 @@
-/* 
-  Global Styles for the Weekly Meal Prep Calendar
-*/
-
-/* 
-  Set the background color for the entire ion-content element.
-  This defines the overall background for the view.
-*/
+/* ============================
+  Global Styles for the Calendar
+============================ */
 ion-content {
-  --background: #cbddd1;
+  --background: var(--secondary-color);
 }
 
-/* 
-  Style for the ion-title element.
-  The title is centered with a font size of 24px and uses the #246d48 color.
-*/
 ion-title {
   font-size: 24px;
   justify-self: center;
   text-align: center;
-  color: #246d48;
+  color: var(--primary-color);
 }
 
-/* 
-  Container for the calendar.
-  It spans 90% of the width (with a maximum of 1600px) and is centered with auto margins.
-*/
+/* ============================
+  Calendar Container
+============================ */
 .calendar-container {
   width: 90%;
   max-width: 1600px;
   margin: 20px auto;
 }
 
-/* 
-  Header section for the calendar.
-  Uses flex layout to center its children, with padding and a gap between items.
-*/
 .calendar-header {
   display: flex;
   position: relative;
@@ -44,74 +30,69 @@ ion-title {
   gap: 20px;
 }
 
-/* 
-  Header date style.
-  Centers the text, uses a font size of 1.5em, spans full width, and applies the #246d48 color.
-*/
 .header-date {
   text-align: center;
   font-size: 1.5em;
   width: 100%;
-  color: #246d48;
+  color: var(--primary-color);
 }
 
-/* 
-  Base style for all ion-button elements.
-  Sets the background, text color, border-radius, padding, and pointer cursor for interactivity.
-*/
+/* ============================
+  Buttons Styling
+============================ */
 ion-button {
-  --background: #246d48;
-  --color: #fff;
+  --background: var(--primary-color);
+  --color: var(--secondary-color); /* <-- Set secondary color for button text */
   --border-radius: 5px;
   padding: 10px;
   cursor: pointer;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
-/* 
-  Calendar grid container.
-  Uses CSS Grid to create 7 equal columns with a 10px gap between grid items.
-*/
+.button-container ion-button {
+  padding: 10px 15px;
+  font-size: 16px;
+  width: 250px;
+  height: 50px;
+  --background: var(--primary-color);
+  --color: var(--secondary-color); /* <-- Also fix bottom button text color */
+  --border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ============================
+  Calendar Grid
+============================ */
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 10px;
 }
 
-/* 
-  Individual day container style.
-  Sets a white background, padding, border, rounded corners, and text color.
-*/
 .day {
   background-color: #fff;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  color: #246d48;
+  color: var(--primary-color);
 }
 
-/* 
-  Style for the heading (h3) within each day container.
-  Removes default margin, sets font size, color, and centers the text.
-*/
 .day h3 {
   margin: 0;
   font-size: 18px;
-  color: #246d48;
+  color: var(--primary-color);
   text-align: center;
 }
 
-/* 
-  Container for event items within a day.
-  Adds a margin on top of the events section.
-*/
+/* ============================
+  Events Section
+============================ */
 .events {
   margin-top: 10px;
 }
 
-/* 
-  Style for individual event items.
-  Displays as a flex container with space between contents, centers items vertically, and adds vertical padding.
-*/
 .event-item {
   display: flex;
   justify-content: space-between;
@@ -119,20 +100,14 @@ ion-button {
   padding: 4px 0;
 }
 
-/* 
-  Hover effect for event items within the calendar.
-  Changes background color and applies a smooth transition effect.
-*/
 .calendar .events div:hover {
-  background-color: #cbddd1;
+  background-color: var(--secondary-color);
   transition: background-color 0.3s ease;
 }
 
-/* 
-  Container for bottom buttons.
-  Centers the button container horizontally with a gap between buttons,
-  and limits the width to a maximum of 1200px.
-*/
+/* ============================
+  Button Containers
+============================ */
 .button-container {
   margin: 40px auto;
   display: flex;
@@ -142,10 +117,6 @@ ion-button {
   max-width: 1200px;
 }
 
-/* 
-  Styles for the generate shopping list and prep list sections.
-  Displays content in a column with no gap between items.
-*/
 .generate-shopping-list,
 .generate-prep-list {
   display: flex;
@@ -153,35 +124,15 @@ ion-button {
   gap: 0px;
 }
 
-/* 
-  Styles for the save calendar container.
-  Centers its content both vertically and horizontally.
-*/
 .save-calendar {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 
-  Button styling specifically for buttons inside the button container.
-  Sets fixed padding, font size, dimensions, background, text color, border-radius, and a pointer cursor.
-*/
-.button-container ion-button {
-  padding: 10px 15px;
-  font-size: 16px;
-  width: 250px;
-  height: 50px;
-  --background: #246d48;
-  --color: #fff;
-  --border-radius: 5px;
-  cursor: pointer;
-}
-
-/* 
-  Container for the meal section, which includes recipe details and the add meal form.
-  Uses a flex layout with a horizontal gap, centered margins, and a constrained width.
-*/
+/* ============================
+  Meal Section Layout
+============================ */
 .meal-section-container {
   display: flex;
   flex-wrap: nowrap;
@@ -192,44 +143,28 @@ ion-button {
   align-items: flex-start;
 }
 
-/* 
-  Recipe details container.
-  Takes up twice the flex space compared to the add meal form,
-  has a light background, ample padding, a colored border with rounded corners,
-  and uses a column flex layout. The minimum height is set to match the add meal form.
-*/
 .recipe-details {
   flex: 2;
   background-color: #f9f9f9;
   padding: 15px;
-  border: 15px solid #246d48;
+  border: 15px solid var(--primary-color);
   border-radius: 5px;
   display: flex;
   flex-direction: column;
-  min-height: 325px; // 👈 Matches Add Meal height to start
+  min-height: 325px;
 }
 
-/* 
-  Add meal form container.
-  Takes up less flex space, has a fixed height,
-  white background with colored border and rounded corners,
-  and uses a column flex layout.
-*/
 .add-meal-form {
   flex: 1;
-  height: 325px; // stays fixed!
+  height: 325px;
   background-color: #fff;
   padding: 15px;
-  border: 15px solid #246d48;
+  border: 15px solid var(--primary-color);
   border-radius: 5px;
   display: flex;
   flex-direction: column;
 }
 
-/* 
-  Inner container for form items in the add meal form.
-  Arranges the items in a column and distributes space evenly.
-*/
 .add-meal-form .form-items {
   flex: 1;
   display: flex;
@@ -237,101 +172,63 @@ ion-button {
   justify-content: space-evenly;
 }
 
-/* 
-  Styles for the list containing all recipes.
-  Removes default padding and margin, hides bullet points, and ensures full-width usage.
-*/
+/* ============================
+  All Recipes List
+============================ */
 .all-recipes-list {
   padding: 0;
   margin: 0;
   list-style: none;
-  width: 100%; /* Ensures full width usage */
+  width: 100%;
 }
 
-/* 
-  Styles for each list item within the all-recipes-list.
-  Makes items full width, adds padding, rounded corners, smooth transition effects,
-  and sets the layout to flex for spacing and alignment.
-*/
 .all-recipes-list li {
-  /* Make each list item occupy the full width, if desired */
   width: 100%;
-
-  /* Add some padding for comfortable spacing */
   padding: 8px 12px;
-
-  /* Round the corners to match the container, e.g., 5px or 8px */
   border-radius: 8px;
-
-  /* Use a transition so hover effects are smooth */
   transition: transform 0.2s ease, background-color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  /* You can also adjust margin if needed to space items out vertically */
   margin-bottom: 8px;
 }
 
-/* 
-  Hover effects for each recipe list item.
-  Scales the item slightly, changes background color, and maintains rounded corners.
-*/
 .all-recipes-list li:hover {
-  /* Slight scale on hover */
   transform: scale(1.05);
-  /* Light background highlight; tweak to your preference */
   background-color: rgba(118, 186, 143, 0.2);
-  /* Keep the corners curved on hover, too */
   border-radius: 8px;
 }
 
-/* 
-  Hide the remove "X" button inside each recipe list item by default.
-  The opacity is set to 0 with a smooth transition effect.
-*/
 .all-recipes-list li ion-button.remove-button {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
-/* 
-  When hovering over a recipe list item, show the remove "X" button by setting its opacity to 1.
-*/
 .all-recipes-list li:hover ion-button.remove-button {
   opacity: 1;
 }
 
-/* 
-  Style headings in both the recipe details and add meal form.
-  The text is centered and uses the #246d48 color.
-*/
+/* ============================
+  Headings Styling
+============================ */
 .recipe-details h3,
 .add-meal-form h3 {
   text-align: center;
-  color: #246d48;
+  color: var(--primary-color);
 }
 
-/* 
-  Deep style for the select popover content.
-  Constrains the maximum height to 300px and adds a vertical scrollbar if needed.
-*/
+/* ============================
+  Select Popover
+============================ */
 ::ng-deep .select-popover .popover-content {
   max-height: 300px;
   overflow-y: auto;
 }
 
-
-/* 
-  Responsive styles for devices with a maximum width of 768px.
-  Adjusts the layout for optimal viewing on smaller screens.
-*/
+/* ============================
+  Responsive Mobile View
+============================ */
 @media (max-width: 768px) {
-
-  /* 
-    Adjust the calendar header to a vertical layout.
-    Align items center with reduced gap and centered text.
-  */
   .calendar-header {
     flex-direction: column;
     align-items: center;
@@ -339,9 +236,6 @@ ion-button {
     text-align: center;
   }
 
-  /* 
-    Make ion-item and ion-button in the calendar header full-width with a maximum of 400px.
-  */
   .calendar-header ion-item,
   .calendar-header ion-button {
     width: 100%;
@@ -349,10 +243,6 @@ ion-button {
     margin: 0 auto;
   }
 
-  /* 
-    Change the calendar grid layout to a single-column layout.
-    Reduce gaps, center items, and add padding.
-  */
   .calendar {
     grid-template-columns: 1fr;
     gap: 5px;
@@ -361,19 +251,12 @@ ion-button {
     padding: 20px;
   }
 
-  /* 
-    Adjust day blocks for mobile: set width, maximum width, and center text.
-  */
   .day {
     width: 90%;
     max-width: 400px;
     text-align: center;
   }
 
-  /* 
-    Rearrange the meal section container to a column layout.
-    Center-align items with a reduced gap.
-  */
   .meal-section-container {
     flex-direction: column;
     gap: 20px;
@@ -381,9 +264,6 @@ ion-button {
     width: 100%;
   }
 
-  /* 
-    Resize the recipe details and add meal form containers for small screens.
-  */
   .recipe-details,
   .add-meal-form {
     width: 90%;
@@ -391,10 +271,6 @@ ion-button {
     text-align: center;
   }
 
-  /* 
-    Adjust the button container layout to a vertical column.
-    Center the content and reduce gaps and margins.
-  */
   .button-container {
     flex-direction: column;
     width: 100%;
@@ -404,28 +280,18 @@ ion-button {
     gap: 5px;
   }
 
-  /* 
-    Set the buttons inside the button container to full width and adjust their height.
-  */
   .button-container ion-button {
     width: 100%;
     height: 45px;
     text-align: center;
   }
 
-  /* 
-    Adjust the save calendar button dimensions for mobile view.
-  */
   .save-calendar {
     width: 101%;
     height: 45px;
-    text-align: center;   
+    text-align: center;
   }
 
-  /* 
-    Change the layout of event items to a vertical column on small screens.
-    Center align text and add a gap between items.
-  */
   .event-item {
     flex-direction: column;
     align-items: center;
@@ -433,10 +299,6 @@ ion-button {
     gap: 5px;
   }
 
-  /* 
-    Center align text for header date, add meal form, and recipe details.
-    Also reset margins for proper centering.
-  */
   .header-date,
   .add-meal-form,
   .recipe-details {
@@ -444,12 +306,8 @@ ion-button {
     margin: 0 auto;
   }
 
-  /* 
-    Adjust generate shopping and prep list containers for mobile,
-    setting full width with a maximum and centered text.
-  */
   .generate-shopping-list,
-  .generate-prep-list{
+  .generate-prep-list {
     width: 100%;
     max-width: 400px;
     text-align: center;
@@ -457,18 +315,11 @@ ion-button {
   }
 }
 
-
-/* 
-  Dark mode styles.
-  Applies when the user prefers a dark color scheme.
-*/
+/* ============================
+  Dark Mode Support
+============================ */
 @media (prefers-color-scheme: dark) {
-
-  /* 
-    Change text color for recipe details to black for better readability in dark mode.
-    The !important flag ensures this style overrides others if necessary.
-  */
-  .recipe-details{
-    color: #000 !important;  /* Change text color to black for better readability in dark mode */
+  .recipe-details {
+    color: #000 !important;
   }
 }

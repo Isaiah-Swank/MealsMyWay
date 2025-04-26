@@ -2,60 +2,53 @@
   Global Styles
 ============================ */
 ion-content {
-  --background: #cbddd1; /* Light green background for the page */
-  padding-top: 56px; /* Add padding to prevent content overlap with the header */
+  --background: var(--secondary-color);
+  padding-top: 56px;
 }
 
 /* ============================
   Header Styling
 ============================ */
-
-/* Title - Consistent across all pages */
 ion-title {
   font-size: 24px;
   text-align: center;
-  color: #246d48; /* Dark green text color */
+  color: var(--primary-color);
   width: 100%;
 }
 
 /* ============================
   Container Styles
 ============================ */
-
-/* Main container for pantry, freezer, and spice sections */
 .container {
   display: flex;
-  justify-content: center; /* Center horizontally */
+  justify-content: center;
   align-items: flex-start;
   margin: 50px auto;
   max-width: 1200px;
-  gap: 20px; /* Space between sections */
-  flex-wrap: wrap; /* Wrap items on smaller screens */
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 /* ============================
   Pantry, Freezer, and Spice Styles
 ============================ */
-
-/* Shared styles for pantry, freezer, and spice sections */
 .pantry,
 .freezer,
 .spice {
   flex: 1;
-  max-width: 30%; /* Limit width to 30% of the container */
+  max-width: 30%;
   padding: 20px;
   border-radius: 10px;
-  border: 10px solid #77ba8f; /* Light green border */
-  width: 45%; /* Default width */
+  border: 10px solid var(--highlight-color);
+  width: 45%;
   text-align: center;
-  background-color: #f6f6e9; /* Light beige background */
+  background-color: var(--background-color);
 }
 
-/* Section headings */
 .pantry h2,
 .freezer h2,
 .spice h2 {
-  color: #246d48; /* Dark green text color */
+  color: var(--primary-color);
   font-size: 2.5rem;
   margin-bottom: 20px;
 }
@@ -63,17 +56,14 @@ ion-title {
 /* ============================
   List Styles
 ============================ */
-
-/* Shared styles for lists in pantry, freezer, and spice sections */
 .pantry ul,
 .freezer ul,
 .spice ul {
-  list-style-type: none; /* Remove default list styling */
+  list-style-type: none;
   padding: 0;
   margin: 0;
 }
 
-/* Shared styles for list items */
 .pantry li,
 .freezer li,
 .spice li {
@@ -84,25 +74,22 @@ ion-title {
   padding: 10px;
   border-radius: 5px;
   font-size: 1.2rem;
-  color: #246d48; /* Dark green text color */
+  color: var(--primary-color);
   position: relative;
   width: 100%;
 }
 
-/* Hover effect for list items */
 .pantry li:hover,
 .freezer li:hover,
 .spice li:hover {
-  transform: scale(1.05); /* Slightly enlarge on hover */
-  background-color: rgba(118, 186, 143, 0.2); /* Subtle green highlight */
+  transform: scale(1.05);
+  background-color: rgba(118, 186, 143, 0.2); /* Optional: could create a hover-color var if desired */
   transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 /* ============================
   Button Styles
 ============================ */
-
-/* Shared styles for edit buttons */
 .edit-button-pantry,
 .edit-button-freezer,
 .edit-button-spice,
@@ -112,23 +99,21 @@ ion-title {
   --padding-end: 20px;
   --padding-top: 10px;
   --padding-bottom: 10px;
-  --background: #246d48; /* Dark green background */
-  --color: #cbddd1; /* Light green text color */
+  --background: var(--primary-color);
+  --color: var(--secondary-color);
   --border-radius: 30px;
 }
 
-/* Hover effect for edit buttons */
 .edit-button-pantry:hover,
 .edit-button-freezer:hover,
 .edit-button-spice:hover,
 .new-item-button:hover {
-  --background: #1d5a38; /* Darker green on hover */
+  --background: var(--highlight-color);
 }
 
-/* Style for "Add to Recipe List" button in the pantry section */
 .add-recipe-button {
-  --background: #246d48; /* Dark green background for Add to Recipe List button only */
-  --color: #ffffff; /* White text color */
+  --background: var(--primary-color);
+  --color: var(--secondary-color); /* Match the other buttons */
   font-size: 0.8rem;
   --padding-start: 8px;
   --padding-end: 8px;
@@ -137,23 +122,18 @@ ion-title {
   min-width: auto;
 }
 
-
-
 /* ============================
   Item Controls
 ============================ */
-
-/* Shared styles for item controls (increment, decrement, delete) */
-.item-controls { 
+.item-controls {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px; /* space between buttons */
+  gap: 4px;
 }
 
-/* Icon button styles */
 .icon-button {
-  --color: #246d48; /* Dark green color */
+  --color: var(--primary-color);
   --padding-start: 4px;
   --padding-end: 4px;
   font-size: 1.3rem;
@@ -164,32 +144,27 @@ ion-title {
   justify-content: center;
 }
 
-/* Delete icon styles */
 .delete-icon {
   font-size: 1.6rem;
-  color: #cc0000; /* Red color for delete */
+  color: #cc0000; /* Delete remains hardcoded red for safety signaling */
   cursor: pointer;
   transition: transform 0.2s ease;
   display: flex;
   align-items: center;
 }
 
-/* Hover effect for delete icon */
 .delete-icon:hover {
-  transform: scale(1.2); /* Enlarge slightly on hover */
+  transform: scale(1.2);
 }
 
 /* ============================
   Freezer Special Effects
 ============================ */
-
-/* Freezer section-specific styles */
 .freezer {
   position: relative;
   padding-top: 40px;
 }
 
-/* Icicles image for freezer section */
 .icicles {
   position: absolute;
   top: 0;
@@ -204,9 +179,7 @@ ion-title {
 /* ============================
   Mobile View Adjustments
 ============================ */
-
 @media (max-width: 768px) {
-  /* Stack pantry, freezer, and spice sections vertically */
   .container {
     flex-direction: column;
     align-items: center;
@@ -214,7 +187,6 @@ ion-title {
     width: 100%;
   }
 
-  /* Individual sections take full width */
   .pantry,
   .freezer,
   .spice {
@@ -224,7 +196,6 @@ ion-title {
     margin: 0 auto;
   }
 
-  /* Reduce heading size for mobile */
   .pantry h2,
   .freezer h2,
   .spice h2 {
@@ -232,7 +203,6 @@ ion-title {
     margin-bottom: 15px;
   }
 
-  /* Reduce font size and padding for list items */
   .pantry li,
   .freezer li,
   .spice li {
@@ -241,7 +211,6 @@ ion-title {
     margin: 8px 0;
   }
 
-  /* Center buttons and make them full width */
   ion-button {
     width: 100%;
     max-width: 300px;
@@ -249,7 +218,6 @@ ion-title {
     display: block;
   }
 
-  /* Style the edit buttons to take full width */
   .edit-button-pantry,
   .edit-button-freezer,
   .edit-button-spice {
@@ -257,7 +225,6 @@ ion-title {
     max-width: 300px;
   }
 
-  /* Adjust icicles size for mobile */
   .icicles {
     max-height: 50px;
     width: 100%;
