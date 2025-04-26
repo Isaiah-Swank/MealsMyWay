@@ -105,7 +105,8 @@ ion-title {
 /* Shared styles for edit buttons */
 .edit-button-pantry,
 .edit-button-freezer,
-.edit-button-spice {
+.edit-button-spice,
+.new-item-button {
   margin-top: 20px;
   --padding-start: 20px;
   --padding-end: 20px;
@@ -119,21 +120,24 @@ ion-title {
 /* Hover effect for edit buttons */
 .edit-button-pantry:hover,
 .edit-button-freezer:hover,
-.edit-button-spice:hover {
+.edit-button-spice:hover,
+.new-item-button:hover {
   --background: #1d5a38; /* Darker green on hover */
 }
 
 /* Style for "Add to Recipe List" button in the pantry section */
-.pantry .pantry-item ion-button {
-  --background: #246d48; /* Dark green background */
+.add-recipe-button {
+  --background: #246d48; /* Dark green background for Add to Recipe List button only */
   --color: #ffffff; /* White text color */
-  font-size: 0.8rem; /* Smaller font size */
-  --padding-start: 8px; /* Reduced horizontal padding */
+  font-size: 0.8rem;
+  --padding-start: 8px;
   --padding-end: 8px;
-  --padding-top: 4px; /* Reduced vertical padding */
+  --padding-top: 4px;
   --padding-bottom: 4px;
-  min-width: auto; /* Allow button to shrink to its content */
+  min-width: auto;
 }
+
+
 
 /* ============================
   Item Controls
