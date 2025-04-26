@@ -3,9 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { RecipeService } from '../services/recipe.service';
 import { Platform, ModalController } from '@ionic/angular';
 import { UserService } from '../services/user.service';
+import { PantryService } from '../services/pantry.service';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { ToastController } from '@ionic/angular';
 
 interface Recipe {
   id: number;
@@ -91,10 +93,12 @@ export class RecipesPage implements OnInit {
   constructor(
     private userService: UserService,
     private recipeService: RecipeService,
+    private pantryService: PantryService,
     private platform: Platform,
     private http: HttpClient,
     private modalCtrl: ModalController,
-    private router: Router
+    private router: Router,
+    private toastController: ToastController 
   ) {}
 
   // -------------------- Lifecycle Hook --------------------
@@ -361,6 +365,72 @@ export class RecipesPage implements OnInit {
     }
   }
 
+  /** Recommend Recipes Functions */
+  async recommendRecipes() {
+    try {
+      const user = this.userService.getUser();
+      if (!user || !user.id) {
+        alert('User not found. Please log in again.');
+        return;
+      }
+  
+      // Load pantry data
+      const pantryData = await this.pantryService.loadPantry(user.id).toPromise();
+      const pantryItems = pantryData?.item_list?.pantry || [];
+      const spiceItems = pantryData?.item_list?.spice || [];
+
+  
+      // Create a set of all pantry + spice names (lowercased for comparison)
+      const pantrySet = new Set(
+        [...pantryItems, ...spiceItems]
+          .map(item => item.name.toLowerCase().trim())
+      );
+  
+      if (pantrySet.size === 0) {
+        this.presentToast('Your pantry and spice rack are empty. Add some items to get recommendations!');
+        return;
+      }
+      
+  
+      // Map each recipe to a match count
+      const recipeMatches = this.filteredRecipes.map(recipe => {
+        // Ingredients are stored as comma-separated string
+        const ingredients = (recipe.ingredients || '').split(',')
+          .map((i: string) => i.toLowerCase().trim());
+
+  
+          const matchCount = ingredients.reduce((count: number, ingredient: string) => {
+          for (let pantryItem of pantrySet) {
+            if (ingredient.includes(pantryItem)) {
+              return count + 1;
+            }
+          }
+          return count;
+        }, 0);
+  
+        return { recipe, matchCount };
+      });
+  
+      // Sort recipes by match count (descending)
+      recipeMatches.sort((a, b) => b.matchCount - a.matchCount);
+  
+      // Take top 3 recipes
+      const topRecipes = recipeMatches.slice(0, 3).map(match => match.recipe);
+  
+      if (topRecipes.length === 0) {
+        alert('No good recipe matches found based on your pantry.');
+        return;
+      }
+  
+      // Update the selected recipes
+      this.selectedRecipesList = [...topRecipes];
+    } catch (error) {
+      console.error('Error recommending recipes:', error);
+      alert('Failed to recommend recipes. Please try again later.');
+    }
+  }
+  
+
   /**
    * addToCalendar
    */
@@ -397,5 +467,15 @@ export class RecipesPage implements OnInit {
   // Closes the edit recipe modal.
   closeEditForm() {
     this.isEditFormOpen = false;
+  }
+
+  async presentToast(message: string) {
+    const toast = await this.toastController.create({
+      message: message,
+      duration: 2500,
+      position: 'top',
+      cssClass: 'my-custom-toast' // Custom CSS class for toast styling.
+    });
+    toast.present();
   }
 }

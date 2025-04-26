@@ -209,4 +209,11 @@
       width: 100%;
     }
   }
+
+  .select-buttons-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    justify-content: flex-end; /* you can change to center if preferred */
+  }
   
