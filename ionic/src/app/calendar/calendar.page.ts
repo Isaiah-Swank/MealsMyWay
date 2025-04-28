@@ -342,15 +342,16 @@ export class Tab2Page implements OnInit {
   // Handler for date selection from a date picker.
   onDateSelected(event: any) {
     const selectedDate = new Date(event.detail.value);
-    const day = selectedDate.getDay();
-    // Calculate the most recent Sunday from the selected date.
-    const sunday = new Date(selectedDate);
-    sunday.setDate(selectedDate.getDate() - day);
+    const sunday = this.getStartOfWeek(selectedDate); // Use your helper
+  
+    // Normalize time to midnight (optional but safest)
+    sunday.setHours(0, 0, 0, 0);
   
     this.selectedPlan = sunday;
     sessionStorage.setItem('selectedPlan', sunday.toISOString());
     this.loadCalendar();
   }
+  
 
   // Opens the date picker popover.
   async openDatePopover(ev: any) {
