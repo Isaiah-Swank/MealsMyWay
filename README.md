@@ -84,6 +84,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## Contact
 
-For questions, suggestions, or collaboration inquiries, contact [Isaiah Swank](https://github.com/chavesana).
+For questions, suggestions, or collaboration inquiries, contact [Dr. Ana Paula Chaves](https://github.com/chavesana).
 
 ---
